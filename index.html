@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Training Work – Capacitação Profissional em Fibra Óptica e NRs</title>
+<meta name="description" content="Training Work - Especialistas em capacitação profissional em fibra óptica e normas regulamentadoras. Cursos presenciais e in company com certificação reconhecida.">
+<meta name="keywords" content="fibra óptica, cursos NR, treinamento profissional, capacitação, segurança do trabalho, instalador internet">
+<meta name="author" content="Training Work">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://trainingwork.com.br/">
+<meta property="og:title" content="Training Work - Capacitação Profissional em Fibra Óptica e NRs">
+<meta property="og:description" content="Cursos profissionalizantes com certificação reconhecida. Formamos profissionais de elite em fibra óptica e segurança do trabalho.">
+<meta property="og:image" content="https://trainingwork.com.br/img/og-image.jpg">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://trainingwork.com.br/">
+<meta property="twitter:title" content="Training Work - Capacitação Profissional">
+<meta property="twitter:description" content="Cursos profissionalizantes com certificação reconhecida.">
+<meta property="twitter:image" content="https://trainingwork.com.br/img/og-image.jpg">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.comicon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+</head>
+<body>
+
+<!-- SKIP TO CONTENT - Acessibilidade -->
+<a href="#hero" class="skip-link">Pular para o conteúdo principal</a>
+
+<!-- PROGRESS BAR -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- MODAL DE VÍDEOS -->
+<div class="modal" id="videoModal" aria-hidden="true">
+  <div class="modal-content">
+    <button class="modal-close" aria-label="Fechar modal">&times;</button>
+    <div class="modal-body">
+      <video id="modalVideo" controls>
+        <source src="" type="video/mp4">
+        Seu navegador não suporta vídeo.
+      </video>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <a href="#hero" class="nav-logo" aria-label="Página inicial">
+    <div class="nav-logo-icon">
+      <img src="/img/logo.png" alt="Training Work Logo" style="width:50px;height:50px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'; this.parentElement.innerHTML='TW'">
+    </div>
+    <div class="nav-logo-text"><span style="color: var(--blue);">Training</span> <span style="color: var(--orange);">Work</span></div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#hero">Início</a></li>
+    <li><a href="#sobre">Sobre</a></li>
+    <li><a href="#cursos">Cursos</a></li>
+    <li><a href="#galeria">Galeria</a></li>
+    <li><a href="#normas">Normas NR</a></li>
+    <li><a href="#metodologia">Metodologia</a></li>
+    <li><a href="#depoimentos">Depoimentos</a></li>
+    <li><a href="#contato" class="nav-cta">Matricule-se</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav" id="mobileNav" aria-hidden="true">
+  <a href="#hero" class="mob-link">Início</a>
+  <a href="#sobre" class="mob-link">Sobre</a>
+  <a href="#cursos" class="mob-link">Cursos</a>
+  <a href="#galeria" class="mob-link">Galeria</a>
+  <a href="#normas" class="mob-link">Normas NR</a>
+  <a href="#metodologia" class="mob-link">Metodologia</a>
+  <a href="#depoimentos" class="mob-link">Depoimentos</a>
+  <a href="#contato" class="mob-link" style="color:var(--orange)">Matricule-se</a>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+
+  <!-- Engrenagens Decorativas -->
+  <div class="gear-container">
+    <div class="gear gear-large">
+      <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gearGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#e8710a" stop-opacity="0.15"/>
+            <stop offset="50%" stop-color="#e8710a" stop-opacity="0.08"/>
+            <stop offset="100%" stop-color="#e8710a" stop-opacity="0.15"/>
+          </linearGradient>
+        </defs>
+        <circle cx="60" cy="60" r="48" stroke="url(#gearGrad1)" stroke-width="2" fill="none"/>
+        <circle cx="60" cy="60" r="38" stroke="url(#gearGrad1)" stroke-width="1.5" fill="none" stroke-dasharray="8 6"/>
+        <circle cx="60" cy="60" r="28" stroke="url(#gearGrad1)" stroke-width="2" fill="none"/>
+        <circle cx="60" cy="60" r="12" fill="url(#gearGrad1)"/>
+        <g stroke="url(#gearGrad1)" stroke-width="2" opacity="0.6">
+          <line x1="60" y1="12" x2="60" y2="28"/>
+          <line x1="60" y1="92" x2="60" y2="108"/>
+          <line x1="12" y1="60" x2="28" y2="60"/>
+          <line x1="92" y1="60" x2="108" y2="60"/>
+          <line x1="26" y1="26" x2="37" y2="37"/>
+          <line x1="83" y1="83" x2="94" y2="94"/>
+          <line x1="26" y1="94" x2="37" y2="83"/>
+          <line x1="83" y1="37" x2="94" y2="26"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="gear gear-medium">
+      <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gearGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1f4e8c" stop-opacity="0.12"/>
+            <stop offset="100%" stop-color="#1f4e8c" stop-opacity="0.06"/>
+          </linearGradient>
+        </defs>
+        <circle cx="40" cy="40" r="32" stroke="url(#gearGrad2)" stroke-width="2" fill="none"/>
+      </svg>
+    </div>
+
+    <div class="gear gear-small">
+      <svg viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="25" cy="25" r="20" stroke="rgba(232,113,10,0.1)" stroke-width="2" fill="none"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-tag">Capacitação Profissional Certificada</div>
+    <h1 class="hero-title">
+      <span class="line-blue">FIBRA</span> ÓPTICA<br>
+      & <span class="line-orange">TREINAMENTOS, CAPACITAÇÃO E</span><br>
+      CURSOS PROFISSIONALIZANTES.
+    </h1>
+    <p class="hero-sub">
+      Treinamentos técnicos e normativos para profissionais que buscam excelência. Certificações reconhecidas, instrutores experientes e conteúdo atualizado.
+    </p>
+    <div class="hero-actions">
+      <a href="#cursos" class="btn-primary">🎓 Ver Cursos</a>
+      <a href="#contato" class="btn-secondary">📋 Fale Conosco</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num" data-target="1200">0</div>
+        <div class="stat-label">Alunos Formados</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" data-target="18">0</div>
+        <div class="stat-label">Cursos Disponíveis</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" data-target="97">0</div>
+        <div class="stat-label">% Aprovação</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" data-target="8">0</div>
+        <div class="stat-label">Anos de Experiência</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOBRE -->
+<section id="sobre">
+  <div class="about-grid">
+    <div class="about-content reveal">
+      <div class="section-label">Sobre nós</div>
+      <h2 class="section-title">FORMANDO<br><span style="color:var(--orange)">PROFISSIONAIS</span><br>DE ELITE</h2>
+      <p class="section-desc" style="margin-bottom:1.5rem">
+        A <strong>Training Work</strong> é uma empresa especializada em capacitação profissional nas áreas de <strong>fibra óptica e normas regulamentadoras</strong>. Atuamos com foco na qualidade técnica e na conformidade com as exigências do mercado.
+      </p>
+      <p class="section-desc">
+        Nossa equipe é formada por instrutores altamente qualificados, com vasta experiência de campo e acadêmica, garantindo uma aprendizagem sólida, prática e alinhada à legislação vigente.
+      </p>
+      <div style="margin-top:2rem">
+        <a href="#cursos" class="btn-primary">Explorar cursos →</a>
+      </div>
+    </div>
+    <div class="about-visual reveal">
+      <div class="about-badge-wrap">
+        <div class="about-badge">
+          <div class="about-badge-icon">🏆</div>
+          <div class="about-badge-num">+8</div>
+          <div class="about-badge-txt">Anos de mercado</div>
+        </div>
+        <div class="about-badge">
+          <div class="about-badge-icon">📜</div>
+          <div class="about-badge-num">100%</div>
+          <div class="about-badge-txt">Certificação válida</div>
+        </div>
+        <div class="about-badge">
+          <div class="about-badge-icon">👥</div>
+          <div class="about-badge-num">+1200</div>
+          <div class="about-badge-txt">Profissionais capacitados</div>
+        </div>
+        <div class="about-badge">
+          <div class="about-badge-icon">🔧</div>
+          <div class="about-badge-num">In Loco</div>
+          <div class="about-badge-txt">Prática e laboratório</div>
+        </div>
+        <div class="about-badge featured">
+          <div class="about-badge-icon">⚡</div>
+          <div>
+            <div class="about-badge-num">MTE / MEC</div>
+            <div class="about-badge-txt" style="margin-top:4px">Treinamentos alinhados às exigências do Ministério do Trabalho e normas vigentes</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CURSOS -->
+<section id="cursos">
+  <div class="section-header reveal">
+    <div class="section-label">Cursos</div>
+    <h2 class="section-title">GRADE DE<br><span style="color:var(--orange)">TREINAMENTOS</span></h2>
+    <p class="section-desc">Selecione a categoria para filtrar os cursos disponíveis.</p>
+  </div>
+
+  <div class="course-tabs reveal">
+    <button class="course-tab active" data-cat="todos">Todos</button>
+    <button class="course-tab" data-cat="fibra">Fibra Óptica</button>
+    <button class="course-tab" data-cat="nr">Normas NR</button>
+    <button class="course-tab" data-cat="seguranca">Segurança</button>
+    <button class="course-tab" data-cat="internet">Instalador</button>
+  </div>
+
+  <div class="courses-grid" id="coursesGrid">
+    <!-- Cursos serão carregados dinamicamente via JavaScript -->
+  </div>
+</section>
+
+<!-- GALERIA -->
+<section id="galeria">
+  <div class="section-header reveal">
+    <div class="section-label">Galeria</div>
+    <h2 class="section-title">IMAGENS E<br><span style="color:var(--orange)">VÍDEOS</span> DOS CURSOS</h2>
+    <p class="section-desc">Veja como são nossos treinamentos práticos, laboratórios e aulas em campo.</p>
+  </div>
+  <div class="gallery-tabs reveal">
+    <button class="gallery-tab active" data-type="todos">Todos</button>
+    <button class="gallery-tab" data-type="foto">Fotos</button>
+    <button class="gallery-tab" data-type="video">Vídeos</button>
+  </div>
+  <div class="gallery-grid reveal" id="galleryGrid"></div>
+</section>
+
+<!-- NORMAS -->
+<section id="normas">
+  <div class="reveal">
+    <div class="section-label">Regulamentação</div>
+    <h2 class="section-title">NORMAS<br><span style="color:var(--orange)">REGULAMENTADORAS</span></h2>
+    <p class="section-desc">Certificamos sua equipe nas principais NRs exigidas pelo Ministério do Trabalho e Emprego, garantindo conformidade legal e segurança.</p>
+  </div>
+  <div class="normas-grid reveal" id="normasGrid"></div>
+</section>
+
+<!-- METODOLOGIA -->
+<section id="metodologia">
+  <div class="section-header reveal">
+    <div class="section-label">Metodologia</div>
+    <h2 class="section-title">COMO<br><span style="color:var(--orange)">APRENDEMOS</span></h2>
+    <p class="section-desc">Nossa abordagem une teoria sólida com prática intensiva, garantindo que o aluno saia preparado para o mercado de trabalho.</p>
+  </div>
+  <div class="method-grid">
+    <div class="method-step reveal">
+      <div class="step-num">01</div>
+      <div class="step-icon">📚</div>
+      <div class="step-title">Fundamentos Teóricos</div>
+      <p class="step-desc">Conteúdo atualizado e alinhado às normas vigentes, ministrado por instrutores com ampla experiência de campo e formação acadêmica.</p>
+    </div>
+    <div class="method-step reveal">
+      <div class="step-num">02</div>
+      <div class="step-icon">🔧</div>
+      <div class="step-title">Prática Supervisionada</div>
+      <p class="step-desc">Laboratórios equipados com ferramentas reais: fusora, OTDR, analisador de espectro, ferramentas de crimpagem e equipamentos de proteção.</p>
+    </div>
+    <div class="method-step reveal">
+      <div class="step-num">03</div>
+      <div class="step-icon">📝</div>
+      <div class="step-title">Avaliação & Feedback</div>
+      <p class="step-desc">Avaliações práticas e teóricas com feedback individualizado. Aprovação com critérios técnicos rigorosos que validam a competência do aluno.</p>
+    </div>
+    <div class="method-step reveal">
+      <div class="step-num">04</div>
+      <div class="step-icon">🎓</div>
+      <div class="step-title">Certificação Reconhecida</div>
+      <p class="step-desc">Emissão de certificado válido em todo o território nacional, conforme exigências do MTE, com validade e carga horária especificadas.</p>
+    </div>
+  </div>
+</section>
+
+<!-- DEPOIMENTOS -->
+<section id="depoimentos">
+  <div class="section-header reveal">
+    <div class="section-label">Depoimentos</div>
+    <h2 class="section-title">O QUE DIZEM<br><span style="color:var(--orange)">NOSSOS ALUNOS</span></h2>
+  </div>
+  <div class="testimonial-carousel reveal">
+    <button class="testimonial-nav prev" aria-label="Depoimento anterior">‹</button>
+    <div class="testimonials-track" id="testimonialsTrack"></div>
+    <button class="testimonial-nav next" aria-label="Próximo depoimento">›</button>
+  </div>
+</section>
+
+<!-- CTA BAND -->
+<section id="cta">
+  <div class="cta-inner">
+    <p class="section-label" style="justify-content:center;color:rgba(255,255,255,0.7);margin-bottom:1rem">Pronto para começar?</p>
+    <h2 class="cta-title">INVISTA NA SUA<br><span style="color:var(--orange)">QUALIFICAÇÃO</span></h2>
+    <p class="cta-sub">Turmas presenciais, in company e treinamentos customizados para sua empresa. Entre em contato e saiba mais.</p>
+    <div class="section-actions">
+      <a href="#contato" class="btn-primary">📩 Solicitar Informações</a>
+      <a href="https://wa.me/5575999999999" target="_blank" class="btn-secondary btn-border-soft">💬 WhatsApp</a>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section id="newsletter" class="newsletter-section">
+  <div class="newsletter-container reveal">
+    <div class="newsletter-icon">📧</div>
+    <h3>Receba novidades e ofertas exclusivas</h3>
+    <p>Inscreva-se em nossa newsletter e fique por dentro dos novos cursos e promoções</p>
+    <form id="newsletterForm" class="newsletter-form">
+      <input type="email" id="newsletterEmail" placeholder="Seu melhor e-mail" required>
+      <button type="submit" class="btn-primary">Inscrever-se</button>
+    </form>
+    <p id="newsletterMessage" class="newsletter-message"></p>
+  </div>
+</section>
+
+<!-- CONTATO -->
+<section id="contato">
+  <div class="section-header reveal">
+    <div class="section-label">Contato</div>
+    <h2 class="section-title">FALE COM A<br><span style="color:var(--orange)">NOSSA EQUIPE</span></h2>
+  </div>
+  <div class="contact-grid">
+    <div class="contact-info reveal">
+      <h3>Estamos prontos<br>para atender você</h3>
+      <p style="color:var(--gray-light);font-size:0.9rem;line-height:1.7;margin-bottom:2rem">
+        Oferecemos treinamentos presenciais, turmas fechadas para empresas (in company) e atendimento personalizado. Entre em contato para montar o treinamento ideal para sua equipe.
+      </p>
+      <div class="contact-item">
+        <div class="contact-icon">📍</div>
+        <div><div class="contact-item-title">Endereço</div><div class="contact-item-val">Feira de Santana, Bahia – Brasil</div></div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon">📱</div>
+        <div><div class="contact-item-title">WhatsApp / Telefone</div><div class="contact-item-val">(75) 9 9999-9999</div></div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon">✉️</div>
+        <div><div class="contact-item-title">E-mail</div><div class="contact-item-val">contato@trainingwork.com.br</div></div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon">⏰</div>
+        <div><div class="contact-item-title">Atendimento</div><div class="contact-item-val">Seg a Sex: 08h–18h | Sáb: 08h–12h</div></div>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <div class="form-card">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label" for="nome">Nome *</label><input type="text" class="form-input" id="nome" placeholder="Seu nome completo" aria-required="true"></div>
+          <div class="form-group"><label class="form-label" for="telefone">Telefone *</label><input type="tel" class="form-input" id="telefone" placeholder="(00) 00000-0000" aria-required="true"></div>
+        </div>
+        <div class="form-group"><label class="form-label" for="email">E-mail *</label><input type="email" class="form-input" id="email" placeholder="seu@email.com" aria-required="true"></div>
+        <div class="form-group">
+          <label class="form-label" for="curso">Curso de interesse</label>
+          <select class="form-select" id="curso">
+            <option value="">Selecione um curso...</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label" for="mensagem">Mensagem</label><textarea class="form-textarea" id="mensagem" placeholder="Descreva suas necessidades ou dúvidas..."></textarea></div>
+        <button class="btn-primary btn-full" onclick="submitContactForm(this)">📨 Enviar Mensagem</button>
+        <p style="font-size:0.75rem;color:var(--gray-light);text-align:center;margin-top:1rem">Retornamos em até 24 horas úteis.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="nav-logo" style="margin-bottom:1rem">
+        <div class="nav-logo-icon">TW</div>
+        <div class="nav-logo-text"><span style="color: var(--blue);">Training</span> <span style="color: var(--orange);">Work</span></div>
+      </div>
+      <p>Capacitação profissional técnica e normativa para trabalhadores e empresas que buscam segurança, qualidade e conformidade com a legislação.</p>
+    </div>
+    <div class="footer-col"><h4>Cursos</h4><ul><li><a href="#cursos">Fibra Óptica</a></li><li><a href="#cursos">Conectores</a></li><li><a href="#cursos">Instalador de Internet</a></li><li><a href="#cursos">NR-10</a></li><li><a href="#cursos">NR-33</a></li><li><a href="#cursos">NR-35</a></li></ul></div>
+    <div class="footer-col"><h4>Empresa</h4><ul><li><a href="#sobre">Sobre nós</a></li><li><a href="#metodologia">Metodologia</a></li><li><a href="#depoimentos">Depoimentos</a></li><li><a href="#contato">Contato</a></li><li><a href="#">Política de Privacidade</a></li></ul></div>
+    <div class="footer-col"><h4>Contato</h4><ul><li><a href="#">📍 Feira de Santana – BA</a></li><li><a href="tel:+557599999999">📱 (75) 9 9999-9999</a></li><li><a href="mailto:contato@trainingwork.com.br">✉️ contato@trainingwork.com.br</a></li><li><a href="#">🕐 Seg–Sex: 08h–18h</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2024 Training Work. Todos os direitos reservados.</span>
+    <div class="footer-social">
+      <a href="#" class="social-btn instagram" title="Instagram" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+      <a href="#" class="social-btn facebook" title="Facebook" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+      <a href="#" class="social-btn linkedin" title="LinkedIn" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+      <a href="#" class="social-btn youtube" title="YouTube" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+    </div>
+  </div>
+</footer>
+
+<a href="/img/whatsapp.png" target="_blank" class="whatsapp-float" aria-label="WhatsApp">
+  <img src="/img/whatsapp.png" alt="WhatsApp" style="width:60px;height:60px;border-radius:50%;object-fit:cover">
+</a>
+
+<!-- Toggle Theme Button -->
+<button class="theme-toggle" id="themeToggle" aria-label="Alternar tema claro/escuro">
+  <i class="fas fa-moon"></i>
+</button>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script src="js/script.js"></script>
+</body>
+</html>
