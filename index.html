@@ -28,7 +28,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.comicon?family=Material+Icons" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="css/resetevariaveis.css">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/galeria.css">
 <link rel="icon" type="image/png" href="/img/favicon.png">
 </head>
 <body>
@@ -247,28 +249,38 @@
 
 <!-- GALERIA -->
 <section id="galeria">
-  <div class="section-header reveal">
-    <div class="section-label">Galeria</div>
-    <h2 class="section-title">IMAGENS E<br><span style="color:var(--orange)">VÍDEOS</span> DOS CURSOS</h2>
-    <p class="section-desc">Veja como são nossos treinamentos práticos, laboratórios e aulas em campo.</p>
+  <div class="section-content">
+    <div class="section-header">
+      <div class="section-label">Galeria Multimídia</div>
+      <h2 class="section-title">NOSSO <span style="color:var(--orange)">CONTEÚDO</span></h2>
+      
+      <div class="galeria-filtros">
+        <button class="filtro-btn ativo" data-tipo="todos">Todos</button>
+        <button class="filtro-btn" data-tipo="video">Vídeos</button>
+        <button class="filtro-btn" data-tipo="imagem">Imagens</button>
+      </div>
+    </div>
+
+    <div class="galeria-container-wrapper">
+      <div class="galeria-flex" id="galeriaGrid"></div>
+    </div>
   </div>
-  <div class="gallery-tabs reveal">
-    <button class="gallery-tab active" data-type="todos">Todos</button>
-    <button class="gallery-tab" data-type="foto">Fotos</button>
-    <button class="gallery-tab" data-type="video">Vídeos</button>
-  </div>
-  <div class="gallery-grid reveal" id="galleryGrid"></div>
 </section>
 
-<!-- NORMAS -->
-<section id="normas">
-  <div class="reveal">
-    <div class="section-label">Regulamentação</div>
-    <h2 class="section-title">NORMAS<br><span style="color:var(--orange)">REGULAMENTADORAS</span></h2>
-    <p class="section-desc">Certificamos sua equipe nas principais NRs exigidas pelo Ministério do Trabalho e Emprego, garantindo conformidade legal e segurança.</p>
+<div id="meuModal" class="modal">
+  <div class="modal-content">
+    <span class="fechar">&times;</span>
+    <div class="video-wrapper" id="modalVideoContainer">
+      <iframe id="videoIframe" src="" frameborder="0" 
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+  allowfullscreen>
+</iframe>
+    </div>
+    <div class="imagem-wrapper" id="modalImagemContainer">
+      <img id="modalImagem" src="" alt="">
+    </div>
   </div>
-  <div class="normas-grid reveal" id="normasGrid"></div>
-</section>
+</div>
 
 <!-- METODOLOGIA -->
 <section id="metodologia">
@@ -432,5 +444,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <script src="js/script.js"></script>
+<script src="js/contatoemewslatter.js"></script>
+<script src="js/dados.js"></script>
+<script src="js/interacoes.js"></script>
+<script src="js/depoimentos.js"></script>
+<script src="js/galeria.js"></script>
 </body>
 </html>
