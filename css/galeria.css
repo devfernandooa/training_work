@@ -1,0 +1,278 @@
+
+
+/* Ajuste do Fundo da Seção */
+#galeria {
+  background-color: var(--bg-suave);
+  padding: 60px 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Estilização dos Botões de Filtro */
+.galeria-filtros {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.filtro-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  padding: 0.6rem 1.5rem;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.filtro-btn:hover, .filtro-btn.ativo {
+  background: var(--orange);
+  border-color: var(--orange);
+  box-shadow: 0 0 15px rgba(255, 107, 0, 0.4);
+}
+
+/* Centralização em 80% da Largura Máxima */
+.galeria-container-wrapper {
+  width: 85%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Layout em Colunas Flexíveis Estilo Banner (Igual às imagens enviadas) */
+.galeria-flex {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+  height: 480px; /* Altura imponente para os banners verticais */
+  transition: all 0.5s ease;
+}
+
+/* O Card Individual (Banner Vertical) */
+.galeria-item {
+  position: relative;
+  flex: 1; /* Todos começam com tamanhos iguais */
+  background: var(--bg-card);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  
+  /* Transição ultra suave de largura e escala */
+  transition: flex 0.6s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s ease, border-color 0.3s ease;
+}
+
+/* EFECTO HOVER ESTILO ACCORDION (O card focado expande e ganha destaque) */
+.galeria-flex:hover .galeria-item {
+  flex: 0.6; /* Diminui levemente os vizinhos */
+  filter: grayscale(0.4) brightness(0.7); /* Efeito similar à sua segunda imagem */
+}
+
+.galeria-flex .galeria-item:hover {
+  flex: 2; /* O item sob o mouse expande muito mais */
+  transform: scale(1.02);
+  border-color: var(--orange);
+  filter: grayscale(0) brightness(1); /* Fica 100% colorido e nítido */
+  box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(255, 107, 0, 0.2);
+}
+
+/* Imagem interna ocupando o banner inteiro */
+.galeria-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.galeria-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+/* Sombra e degradê para o texto não sumir */
+.galeria-thumb::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top, rgba(15, 23, 30, 0.95) 15%, rgba(15, 23, 30, 0.4) 50%, rgba(0,0,0,0) 100%);
+}
+
+/* Ícones centrais (A Lupa ou o Play) */
+.zoom-btn, .play-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.6);
+  width: 55px;
+  height: 55px;
+  background: var(--orange);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #fff;
+  opacity: 0;
+  z-index: 3;
+  box-shadow: 0 0 20px rgba(255, 107, 0, 0.5);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+}
+
+.galeria-item:hover .zoom-btn,
+.galeria-item:hover .play-btn {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Informações na base do Banner (Apenas aparecem direito no hover expandido) */
+.galeria-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 1.5rem;
+  z-index: 2;
+  white-space: nowrap; /* Evita quebras feias enquanto o card está comprimido */
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.galeria-item:hover .galeria-info {
+  opacity: 1;
+  white-space: normal;
+}
+
+.galeria-info h3 {
+  font-size: 1.2rem;
+  color: var(--white);
+  margin-bottom: 0.3rem;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+.galeria-item:hover .galeria-info h3 {
+  color: var(--orange);
+}
+
+.galeria-info p {
+  font-size: 0.8rem;
+  color: var(--gray-light);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+/* Modal Base (Escondido) */
+.modal {
+  display: flex;             /* Sempre flex para centralizar o conteúdo */
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(7, 11, 15, 0.95); /* Fundo escuro azulado */
+  backdrop-filter: blur(10px);
+  
+  /* Estado inicial: Invisível e não clicável */
+  opacity: 0;
+  pointer-events: none; 
+  transition: opacity 0.4s ease;
+}
+
+/* Modal Ativo (Quando abre) */
+.modal.mostrar {
+  opacity: 1;
+  pointer-events: auto; /* Libera os cliques dentro do modal */
+}
+
+/* Conteúdo do Modal */
+.modal-content {
+  position: relative;
+  width: 90%;
+  max-width: 950px;
+  background: #000;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  
+  /* Efeito de escala ao abrir */
+  transform: scale(0.85);
+  transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.modal.mostrar .modal-content {
+  transform: scale(1);
+}
+
+/* Containers de Mídia internos do Modal */
+.video-wrapper, .imagem-wrapper {
+  display: none; /* O JS vai controlar qual deles fica 'block' */
+  width: 100%;
+  background: #000;
+}
+
+.video-wrapper {
+  position: relative;
+  padding-bottom: 56.25%; /* Proporção 16:9 */
+}
+
+.video-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.imagem-wrapper img {
+  display: block;
+  max-width: 100%;
+  max-height: 80vh;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+/* Botão Fechar */
+.fechar {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  color: rgba(255,255,255,0.8);
+  font-size: 35px;
+  font-weight: 300;
+  cursor: pointer;
+  z-index: 99;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.fechar:hover {
+  color: #fff;
+  background: var(--orange);
+}
+/* Ajustes de Responsividade (Vira Grid normal em telas pequenas) */
+@media (max-width: 900px) {
+  .galeria-flex { flex-direction: column; height: auto; }
+  .galeria-item { height: 250px; flex: none !important; }
+  .galeria-flex:hover .galeria-item { filter: none; flex: none; }
+  .galeria-container-wrapper { width: 92%; }
+}
