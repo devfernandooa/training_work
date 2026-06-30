@@ -651,7 +651,90 @@
   }
 }
 
+/* ============================================================================
+ RESPONSIVIDADE 
+   ============================================================================ */
+
 @media (max-width: 768px) {
+  #hero {
+    padding: 120px 24px 60px 24px; /* Ajuste no respiro interno para evitar esmagamento do texto */
+    min-height: auto; /* Permite que a seção cresça organicamente de acordo com o texto */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center; /* Centraliza a leitura estrutural */
+  }
+
+  .hero-content {
+    margin-top: 40px;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Garante centralização dos elementos filhos */
+  }
+
+  .hero-title {
+    /* Ajustado o tamanho mínimo de 2.8rem para 1.9rem para impedir o corte de palavras longas */
+    /* Ajustado o valor mínimo de 1.9rem para 1.55rem para blindar a palavra longa */
+    font-size: clamp(1.55rem, 6.5vw, 2.8rem); 
+    line-height: 1.15;
+    /* Reduz um pouco o espaçamento das letras para ganhar área horizontal no mobile */
+    letter-spacing: -0.02em; 
+    word-wrap: normal;
+    word-break: keep-all; /* Impede o navegador de quebrar a palavra ao meio */
+    white-space: normal;
+    width: 100%;
+  }
+
+  .hero-sub {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    max-width: 100%;
+    padding: 0 8px;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-direction: column; /* Empilha os botões para otimizar o espaço de toque vertical */
+    gap: 1rem;
+    width: 100%;
+    max-width: 320px; /* Limita a largura máxima dos botões centralizados no mobile */
+    margin: 0 auto;
+  }
+
+  /* Força os botões primários e secundários a se comportarem de forma idêntica e harmônica */
+  .hero-actions .btn-primary,
+  .hero-actions .btn-secondary {
+    width: 100%; 
+    padding: 14px 24px; /* Diminuição sutil no padding interno para reduzir o volume do botão */
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    justify-content: center; /* Centralização do texto/ícone interno do botão */
+  }
+
+  .hero-stats {
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+    width: 100%;
+    margin-top: 3.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    /* Resoluções críticas (telas abaixo de 480px de largura) */
+    font-size: clamp(1.7rem, 8vw, 2.4rem);
+  }
+
+  .hero-tag {
+    padding: 6px 14px;
+    font-size: 0.7rem;
+    margin-bottom: 1.5rem;
+  }
+}@media (max-width: 768px) {
   .hero-content {
     margin-top: 80px;
   }
