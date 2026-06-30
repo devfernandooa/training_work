@@ -43,7 +43,7 @@ window.submitContactForm = function (button) {
   button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processando...`;
 
   // NÚMERO DE WHATSAPP DA EMPRESA (Ajuste o DDD e o número aqui se necessário)
-  const numeroWhatsApp = "5575992849369"; 
+  const numeroWhatsApp = "5575999766501"; 
 
   // Texto Institucional Solicitado Formatado para o Cliente ler no Bloco de Texto
   const textoMensagem = `*🚀 INSCRIÇÃO CONFIRMADA - TRAINING WORK*
