@@ -657,7 +657,7 @@
 
 @media (max-width: 768px) {
   #hero {
-    padding: 120px 24px 60px 24px; /* Ajuste no respiro interno para evitar esmagamento do texto */
+    padding: 50px 24px 60px 24px; /* Ajuste no respiro interno para evitar esmagamento do texto */
     min-height: auto; /* Permite que a seção cresça organicamente de acordo com o texto */
     display: flex;
     flex-direction: column;
