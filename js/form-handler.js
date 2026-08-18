@@ -48,10 +48,10 @@ window.submitContactForm = async function (button) {
   button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Registrando agendamento...`;
 
   // 🔴 COLE AQUI A SUA URL DO WEBHOOK GERADA NO MAKE.COM
-  const makeWebhookUrl = "https://hook.eu2.make.com/SUA_URL_DO_WEBHOOK_AQUI";
+  const makeWebhookUrl = "https://hook.us2.make.com/7utlbyzrd730p574oyaysvxqbqa9fanb";
 
   // 🔴 COLOQUE O SEU NÚMERO DO WHATSAPP (com DDI 55 + DDD + Número sem traços)
-  const numeroWhatsApp = "5575999999999"; 
+  const numeroWhatsApp = "5575992849369"; 
 
   // Mensagem institucional estruturada para o WhatsApp
   const textoWhatsApp = `*🚀 INSCRIÇÃO CONFIRMADA - TRAINING WORK*
