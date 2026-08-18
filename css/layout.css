@@ -1,5 +1,5 @@
 /* ============================================
-   2. LAYOUT & STRUCTURE
+   2. LAYOUT E ESTRUTURA
    ============================================ */
 section {
   padding: 100px 5%;
@@ -217,22 +217,22 @@ nav.scrolled {
   transform: rotate(-45deg) translate(5px, -5px);
 }
 /* ============================================================================
-   REFATORAÇÃO: MENU MOBILE HAMBÚRGUER (TIPOGRAFIA, TRANSPARÊNCIA & ALINHAMENTO)
+  MENU MOBILE HAMBÚRGUER (TIPOGRAFIA, TRANSPARÊNCIA & ALINHAMENTO)
    ============================================================================ */
 
 .mobile-nav {
   display: none;
   position: fixed;
   inset: 0;
-  /* Fundo branco com 85% de opacidade para a transição fluida */
+  
   background: rgba(255, 255, 255, 0); 
   
-  /* Efeito de vidro borrado (Glassmorphism) para isolamento visual elegante */
+  /* Efeito de vidro borrado (Glassmorphism) para isolamento visual */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   z-index: 900;
   
-  /* Estrutura Flexbox ajustada */
+  /* Estrutura Flexbox */
   flex-direction: column;
   justify-content: center;
   align-items: flex-start; /* Alinha todo o menu à esquerda */
@@ -242,7 +242,7 @@ nav.scrolled {
   box-sizing: border-box;
 }
 
-/* Suporte automático ao Tema Escuro do seu projeto */
+/* Suporte automático ao Tema Escuro  */
 [data-theme="dark"] .mobile-nav {
   background: rgba(11, 12, 16, 0.85);
 }
@@ -254,7 +254,7 @@ nav.scrolled {
 .mobile-nav a {
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700;
-  /* Tamanho reduzido de 2.2rem para 1.3rem para um aspecto mais limpo e profissional */
+  /* Tamanho reduzido de 2.2rem para 1.3rem para um aspecto mais limpo*/
   font-size: 1.3rem; 
   color: var(--text-primary);
   text-decoration: none;
@@ -263,7 +263,7 @@ nav.scrolled {
   transition: color var(--transition-fast), transform var(--transition-fast);
 }
 
-/* Micro-interação sutil ao tocar/passar o mouse no link do menu mobile */
+/* Interação sutil ao tocar/passar o mouse no link do menu mobile */
 .mobile-nav a:hover,
 .mobile-nav a:active {
   color: var(--orange);
