@@ -1,8 +1,8 @@
 // ============================================================================
-// TRAINING WORK - MODULE: FORM HANDLER & WHATSAPP AUTOMATION
+// TRAINING WORK - CAPTURA DE DADOS, MAKE.COM E WHATSAPP AUTOMÁTICO
 // ============================================================================
 
-// 1. Aplicação Automática da Máscara de Telefone (UX)
+// 1. Aplica máscara automática de telefone com DDD (Ex: (75) 99999-9999)
 document.addEventListener('DOMContentLoaded', () => {
   const telInput = document.getElementById('telefone');
   if (telInput) {
@@ -13,8 +13,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// 2. Processamento Principal do Formulário
-window.submitContactForm = function (button) {
+// 2. Rola suavemente até a seção de contato ao clicar em "Inscrever-se" nos cards
+window.scrollToContact = () => document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' });
+
+// 3. Função acionada ao clicar no botão de envio
+window.submitContactForm = async function (button) {
+  // Captura os elementos do formulário
   const fields = {
     nome: document.getElementById('nome'),
     telefone: document.getElementById('telefone'),
@@ -23,30 +27,34 @@ window.submitContactForm = function (button) {
     mensagem: document.getElementById('mensagem')
   };
 
+  // Coleta os valores digitados pelo usuário
   const data = {
     nome: fields.nome?.value.trim() || '',
     telefone: fields.telefone?.value.trim() || '',
     email: fields.email?.value.trim() || '',
-    curso: fields.curso?.value || '',
-    mensagem: fields.mensagem?.value.trim() || ''
+    curso: fields.curso?.value || 'Não selecionado',
+    mensagem: fields.mensagem?.value.trim() || 'Sem observações adicionais.'
   };
 
-  // Validação rígida de preenchimento e tamanho mínimo da máscara (xx) xxxxx-xxxx
+  // Validação básica de campos obrigatórios
   if (!data.nome || !data.email || data.telefone.length < 14) {
-    alert("Por favor, preencha o Nome, E-mail e um Telefone válido com DDD.");
+    alert("Por favor, preencha todos os campos obrigatórios (*)");
     return;
   }
 
-  // Feedback Visual e proteção contra múltiplos cliques por ansiedade
+  // Feedback visual no botão enquanto processa
   const originalText = button.innerHTML;
   button.disabled = true;
-  button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processando...`;
+  button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Registrando agendamento...`;
 
-  // NÚMERO DE WHATSAPP DA EMPRESA (Ajuste o DDD e o número aqui se necessário)
-  const numeroWhatsApp = "5575999766501"; 
+  // 🔴 COLE AQUI A SUA URL DO WEBHOOK GERADA NO MAKE.COM
+  const makeWebhookUrl = "https://hook.eu2.make.com/SUA_URL_DO_WEBHOOK_AQUI";
 
-  // Texto Institucional Solicitado Formatado para o Cliente ler no Bloco de Texto
-  const textoMensagem = `*🚀 INSCRIÇÃO CONFIRMADA - TRAINING WORK*
+  // 🔴 COLOQUE O SEU NÚMERO DO WHATSAPP (com DDI 55 + DDD + Número sem traços)
+  const numeroWhatsApp = "5575999999999"; 
+
+  // Mensagem institucional estruturada para o WhatsApp
+  const textoWhatsApp = `*🚀 INSCRIÇÃO CONFIRMADA - TRAINING WORK*
 
 Olá, ${data.nome}!
 A Training Work agradece o seu contato!
@@ -57,29 +65,33 @@ Agradecemos pela confiança e desejamos muito sucesso em sua jornada de aprendiz
 
 ---------------------------------------
 *📋 RESUMO DOS DADOS ENVIADOS:*
-*Curso de Interesse:* ${data.curso || 'Não selecionado'}
-*WhatsApp Cadastrado:* ${data.telefone}
-*E-mail Cadastrado:* ${data.email}
-*Observações:* ${data.mensagem || 'Nenhuma.'}`;
+*Curso:* ${data.curso}
+*WhatsApp:* ${data.telefone}
+*E-mail:* ${data.email}
+*Observações:* ${data.mensagem}`;
 
-  // Codificação segura para evitar falhas de caracteres especiais na URL
-  const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numeroWhatsApp}&text=${encodeURIComponent(textoMensagem)}`;
+  const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numeroWhatsApp}&text=${encodeURIComponent(textoWhatsApp)}`;
 
-  // Disparo assíncrono paralelo (EmailJS) + Redirecionamento
-  emailjs.send('service_xuqyqgs', 'template_blvq78f', data)
-    .then(() => {
-      // Sucesso: Limpa os inputs e abre o canal de atendimento
-      Object.values(fields).forEach(f => { if (f) f.value = ''; });
-      window.open(urlWhatsApp, '_blank');
-    })
-    .catch((error) => {
-      console.error('Falha temporária no servidor de e-mail. Direcionando para contingência WhatsApp.', error);
-      // Fallback de Segurança: Garante a abertura do WhatsApp mesmo se o EmailJS falhar
-      window.open(urlWhatsApp, '_blank');
-    })
-    .finally(() => {
-      // Restaura o estado original do botão do formulário
-      button.disabled = false;
-      button.innerHTML = originalText;
+  try {
+    // Dispara os dados em formato JSON diretamente para o Webhook do Make.com
+    await fetch(makeWebhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
     });
+
+    // Limpa os campos do formulário após envio bem-sucedido
+    Object.values(fields).forEach(f => { if (f) f.value = ''; });
+
+    // Redireciona o usuário para o WhatsApp com a mensagem pronta
+    window.open(urlWhatsApp, '_blank');
+  } catch (error) {
+    console.error("Erro ao enviar para o Make.com:", error);
+    // Redireciona para o WhatsApp mesmo em caso de oscilação de rede para não perder o lead
+    window.open(urlWhatsApp, '_blank');
+  } finally {
+    // Restaura o botão ao estado normal
+    button.disabled = false;
+    button.innerHTML = originalText;
+  }
 };
