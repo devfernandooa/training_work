@@ -179,6 +179,56 @@
   font-weight: 500;
 }
 
+.course-card-header {
+  padding: 2rem;
+  /* Cria uma base gradiente neutra caso a imagem demore um milissegundo a carregar */
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-color);
+  z-index: 1;
+}
+
+/* Pseudo-elemento que injeta e trata a imagem de fundo sem afetar o tamanho ou o texto */
+.course-card-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  /* Carrega a imagem configurada no HTML através da variável CSS */
+  background-image: var(--card-bg-img, none);
+  background-size: 100% auto;
+  background-position: center;
+  /* Opacidade muito sutil (12%) para marcar o tema sem poluir o contraste do texto */
+  opacity: 0.30; 
+  z-index: -1;
+  transition: transform var(--transition-base), opacity var(--transition-base);
+}
+
+/* Detalhe de iluminação no tema escuro */
+[data-theme="dark"] .course-card-header::before {
+  opacity: 0.08;
+}
+
+/* Efeito interativo Premium: ao passar o mouse no card, a imagem ganha um leve zoom e destaque */
+.course-card:hover .course-card-header::before {
+  transform: scale(1.1);
+  opacity: 0.50;
+}
+
+/* Mantém o círculo decorativo original do seu layout intacto */
+.course-card-header::after {
+  content: '';
+  position: absolute;
+  right: -20px;
+  top: -20px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--orange-glow);
+  z-index: -1;
+}
+
 .meta-item {
   display: flex;
   align-items: center;
