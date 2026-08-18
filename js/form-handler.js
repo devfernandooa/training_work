@@ -37,7 +37,7 @@ window.submitContactForm = function (button) {
     return;
   }
 
-  // Feedback Visual e proteção contra múltiplos cliques por ansiedade
+  // Feedback Visual e proteção contra múltiplos cliques 
   const originalText = button.innerHTML;
   button.disabled = true;
   button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processando...`;
