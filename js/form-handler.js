@@ -47,11 +47,10 @@ window.submitContactForm = async function (button) {
   button.disabled = true;
   button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Registrando agendamento...`;
 
-  // 🔴 COLE AQUI A SUA URL DO WEBHOOK GERADA NO MAKE.COM
-  const makeWebhookUrl = "https://hook.us2.make.com/7utlbyzrd730p574oyaysvxqbqa9fanb";
-
-  // 🔴 COLOQUE O SEU NÚMERO DO WHATSAPP (com DDI 55 + DDD + Número sem traços)
-  const numeroWhatsApp = "5575992849369"; 
+  //  URL DO WEBHOOK GERADA NO MAKE.COM
+  const makeWebhookUrl = "https://hook.us2.make.com/1k6vhopd7va11whfuhoi7eyjn0gpm2ik";
+  //NÚMERO DO WHATSAPP (com DDI 55 + DDD + Número sem traços)
+  const numeroWhatsApp = "5575992849369";
 
   // Mensagem institucional estruturada para o WhatsApp
   const textoWhatsApp = `*🚀 INSCRIÇÃO CONFIRMADA - TRAINING WORK*
@@ -70,7 +69,7 @@ Agradecemos pela confiança e desejamos muito sucesso em sua jornada de aprendiz
 *E-mail:* ${data.email}
 *Observações:* ${data.mensagem}`;
 
-  const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numeroWhatsApp}&text=${encodeURIComponent(textoWhatsApp)}`;
+  const urlWhatsApp = `https://w.app/ktg5dj${numeroWhatsApp}&text=${encodeURIComponent(textoWhatsApp)}`;
 
   try {
     // Dispara os dados em formato JSON diretamente para o Webhook do Make.com
