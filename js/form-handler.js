@@ -42,7 +42,7 @@ window.submitContactForm = async function (button) {
     return;
   }
 
-  // Feedback visual no botão enquanto processa
+  // Feedback visual no botão enquanto processa s
   const originalText = button.innerHTML;
   button.disabled = true;
   button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Registrando agendamento...`;
