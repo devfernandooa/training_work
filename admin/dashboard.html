@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Training Work</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body id="app-container" >
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <i class="fas fa-graduation-cap"></i>
+      <h2>Training<span>Work</span></h2>
+    </div>
+    <nav class="nav-links">
+      <a href="#" class="active"><i class="fas fa-chart-line"></i> Leads & Triagem</a>
+      <a href="cursos.html"><i class="fas fa-book"></i> Cursos</a>
+      <a href="alunos.html"><i class="fas fa-user-graduate"></i> Alunos</a>
+      <a href="matriculas.html"><i class="fas fa-file-signature"></i> Matrículas</a>
+    </nav>
+    <div class="user-profile">
+      <span id="user-display"><i class="fas fa-user-circle"></i> Carregando...</span>
+      <button id="btn-logout" title="Sair do sistema"><i class="fas fa-sign-out-alt"></i></button>
+    </div>
+  </aside>
+
+  <!-- Conteúdo Central -->
+  <main class="main-content">
+    <header class="topbar">
+      <h1>Painel de Triagem e Leads</h1>
+      <span class="live-indicator"><i class="fas fa-circle"></i> Firestore Conectado</span>
+    </header>
+
+    <!-- Cards de Métricas Rápidas -->
+    <section class="metrics-grid">
+      <div class="card metric-card">
+        <div class="metric-icon blue"><i class="fas fa-inbox"></i></div>
+        <div class="metric-info">
+          <span class="label">Total de Inscrições</span>
+          <h3 id="metric-total">0</h3>
+        </div>
+      </div>
+      <div class="card metric-card">
+        <div class="metric-icon red"><i class="fas fa-bolt"></i></div>
+        <div class="metric-info">
+          <span class="label">Alta Prioridade (IA)</span>
+          <h3 id="metric-alta">0</h3>
+        </div>
+      </div>
+      <div class="card metric-card">
+        <div class="metric-icon green"><i class="fas fa-headset"></i></div>
+        <div class="metric-info">
+          <span class="label">Em Atendimento</span>
+          <h3 id="metric-atendimento">0</h3>
+        </div>
+      </div>
+    </section>
+
+    <!-- Modal Customizado de Confirmação -->
+  <div id="modal-confirmacao" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-icon"><i class="fas fa-user-graduate"></i></div>
+      <h3 id="modal-titulo">Confirmar Matrícula</h3>
+      <p id="modal-mensagem">Deseja realmente matricular este candidato?</p>
+      <div class="modal-actions">
+        <button id="modal-btn-cancelar" class="btn-secondary">Cancelar</button>
+        <button id="modal-btn-confirmar" class="btn-primary">Confirmar Matrícula</button>
+      </div>
+    </div>
+  </div>
+
+    <!-- Tabela de Leads -->
+    <section class="card table-container">
+      <div class="table-header">
+        <h2>Inscrições Recentes</h2>
+        <div class="filters">
+          <select id="filter-priority">
+            <option value="all">Todas as prioridades</option>
+            <option value="Alta">Alta</option>
+            <option value="Média">Média</option>
+            <option value="Baixa">Baixa</option>
+          </select>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Candidato</th>
+            <th>Curso</th>
+            <th>Prioridade (IA)</th>
+            <th>Análise Gemini</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="leads-tbody">
+          <tr>
+            <td colspan="7" class="loading-state">
+              <i class="fas fa-spinner fa-spin"></i> Carregando leads...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>
