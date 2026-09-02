@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alunos - Training Work</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body id="app-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">
+            <i class="fas fa-graduation-cap"></i>
+            <h2>Training<span>Work</span></h2>
+        </div>
+        <nav class="nav-links">
+            <a href="dashboard.html"><i class="fas fa-chart-line"></i> Leads & Triagem</a>
+            <a href="cursos.html"><i class="fas fa-book"></i> Cursos</a>
+            <a href="alunos.html"><i class="fas fa-user-graduate"></i> Alunos</a>
+            <a href="matriculas.html"><i class="fas fa-file-signature"></i> Matrículas</a>
+        </nav>
+        <div class="user-profile">
+            <span id="user-display"><i class="fas fa-user-circle"></i> Admin</span>
+            <button id="btn-logout" title="Sair"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="main-content">
+        <header class="topbar">
+            <div>
+                <h1>Base de Alunos</h1>
+                <p style="color: #64748b; font-size: 0.9rem;">Consulta de cadastros convertidos e histórico de turmas
+                </p>
+            </div>
+        </header>
+
+        <!-- Cards de Métricas -->
+        <section class="metrics-grid">
+            <div class="card metric-card">
+                <div class="metric-icon blue"><i class="fas fa-user-graduate"></i></div>
+                <div class="metric-info">
+                    <span class="label">Total de Alunos</span>
+                    <h3 id="metric-total-alunos">0</h3>
+                </div>
+            </div>
+            <div class="card metric-card">
+                <div class="metric-icon green"><i class="fas fa-check"></i></div>
+                <div class="metric-info">
+                    <span class="label">Alunos Ativos</span>
+                    <h3 id="metric-alunos-ativos">0</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tabela de Alunos -->
+        <section class="card table-container">
+            <div class="table-header">
+                <h2>Alunos Cadastrados</h2>
+                <div class="filters">
+                    <input type="text" id="busca-aluno" placeholder="Buscar por nome ou e-mail..."
+                        style="padding: 0.5rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aluno</th>
+                        <th>Telefone</th>
+                        <th>Cursos Matriculados</th>
+                        <th>Data de Cadastro</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="alunos-tbody">
+                    <tr>
+                        <td colspan="6" class="loading-state">
+                            <i class="fas fa-spinner fa-spin"></i> Carregando base de alunos...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script type="module" src="alunos.js"></script>
+</body>
+
+</html>

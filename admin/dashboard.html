@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,8 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body id="app-container" >
+
+<body id="app-container">
 
   <!-- Sidebar -->
   <aside class="sidebar">
@@ -16,7 +18,7 @@
       <h2>Training<span>Work</span></h2>
     </div>
     <nav class="nav-links">
-      <a href="#" class="active"><i class="fas fa-chart-line"></i> Leads & Triagem</a>
+      <a href="dashboard.html"><i class="fas fa-chart-line"></i> Leads & Triagem</a>
       <a href="cursos.html"><i class="fas fa-book"></i> Cursos</a>
       <a href="alunos.html"><i class="fas fa-user-graduate"></i> Alunos</a>
       <a href="matriculas.html"><i class="fas fa-file-signature"></i> Matrículas</a>
@@ -60,17 +62,17 @@
     </section>
 
     <!-- Modal Customizado de Confirmação -->
-  <div id="modal-confirmacao" class="modal-overlay" style="display: none;">
-    <div class="modal-box">
-      <div class="modal-icon"><i class="fas fa-user-graduate"></i></div>
-      <h3 id="modal-titulo">Confirmar Matrícula</h3>
-      <p id="modal-mensagem">Deseja realmente matricular este candidato?</p>
-      <div class="modal-actions">
-        <button id="modal-btn-cancelar" class="btn-secondary">Cancelar</button>
-        <button id="modal-btn-confirmar" class="btn-primary">Confirmar Matrícula</button>
+    <div id="modal-confirmacao" class="modal-overlay" style="display: none;">
+      <div class="modal-box">
+        <div class="modal-icon"><i class="fas fa-user-graduate"></i></div>
+        <h3 id="modal-titulo">Confirmar Matrícula</h3>
+        <p id="modal-mensagem">Deseja realmente matricular este candidato?</p>
+        <div class="modal-actions">
+          <button id="modal-btn-cancelar" class="btn-secondary">Cancelar</button>
+          <button id="modal-btn-confirmar" class="btn-primary">Confirmar Matrícula</button>
+        </div>
       </div>
     </div>
-  </div>
 
     <!-- Tabela de Leads -->
     <section class="card table-container">
@@ -111,4 +113,5 @@
 
   <script type="module" src="dashboard.js"></script>
 </body>
+
 </html>

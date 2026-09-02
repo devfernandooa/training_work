@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body id="app-container">
 
   <!-- Sidebar -->
@@ -18,7 +20,7 @@
     </div>
     <nav class="nav-links">
       <a href="dashboard.html"><i class="fas fa-chart-line"></i> Leads & Triagem</a>
-      <a href="cursos.html" class="active"><i class="fas fa-book"></i> Cursos</a>
+      <a href="cursos.html"><i class="fas fa-book"></i> Cursos</a>
       <a href="alunos.html"><i class="fas fa-user-graduate"></i> Alunos</a>
       <a href="matriculas.html"><i class="fas fa-file-signature"></i> Matrículas</a>
     </nav>
@@ -55,7 +57,8 @@
       <div class="table-header">
         <h2>Catálogo de Cursos Cadastrados</h2>
         <div class="filters">
-          <input type="text" id="busca-curso" placeholder="Buscar por nome ou código..." style="padding: 0.5rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+          <input type="text" id="busca-curso" placeholder="Buscar por nome ou código..."
+            style="padding: 0.5rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px;">
         </div>
       </div>
 
@@ -92,7 +95,7 @@
 
       <form id="form-curso">
         <input type="hidden" id="curso-id">
-        
+
         <div class="form-row">
           <div class="form-group flex-2">
             <label for="curso-nome">Nome do Curso *</label>
@@ -140,12 +143,14 @@
 
         <div class="form-group">
           <label for="curso-descricao">Descrição do Curso *</label>
-          <textarea id="curso-descricao" rows="3" required placeholder="Resumo do objetivo técnico do curso..."></textarea>
+          <textarea id="curso-descricao" rows="3" required
+            placeholder="Resumo do objetivo técnico do curso..."></textarea>
         </div>
 
         <div class="form-group">
           <label for="curso-ementa">Ementa / Tópicos (um por linha)</label>
-          <textarea id="curso-ementa" rows="4" placeholder="Módulo 1: Riscos e perigos&#10;Módulo 2: EPI e EPC&#10;Módulo 3: Primeiros socorros"></textarea>
+          <textarea id="curso-ementa" rows="4"
+            placeholder="Módulo 1: Riscos e perigos&#10;Módulo 2: EPI e EPC&#10;Módulo 3: Primeiros socorros"></textarea>
         </div>
 
         <div class="modal-actions" style="margin-top: 1.5rem;">
@@ -158,4 +163,5 @@
 
   <script type="module" src="cursos.js"></script>
 </body>
+
 </html>
