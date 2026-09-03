@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matrículas - Training Work</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body id="app-container">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <i class="fas fa-graduation-cap"></i>
+      <h2>Training<span>Work</span></h2>
+    </div>
+    <nav class="nav-links">
+      <a href="dashboard.html"><i class="fas fa-chart-line"></i> Leads & Triagem</a>
+      <a href="cursos.html"><i class="fas fa-book"></i> Cursos</a>
+      <a href="alunos.html"><i class="fas fa-user-graduate"></i> Alunos</a>
+      <a href="matriculas.html" class="active"><i class="fas fa-file-signature"></i> Matrículas</a>
+    </nav>
+    <div class="user-profile">
+      <span id="user-display"><i class="fas fa-user-circle"></i> Carregando...</span>
+      <button id="btn-logout" title="Sair"><i class="fas fa-sign-out-alt"></i></button>
+    </div>
+  </aside>
+
+  <!-- Conteúdo Principal -->
+  <main class="main-content">
+    <header class="topbar">
+      <div>
+        <h1>Gestão de Matrículas</h1>
+        <p style="color: #64748b; font-size: 0.9rem;">Acompanhe turmas confirmadas, status financeiro e envios de confirmação</p>
+      </div>
+    </header>
+
+    <!-- Cards de Métricas -->
+    <section class="metrics-grid">
+      <div class="card metric-card">
+        <div class="metric-icon blue"><i class="fas fa-file-invoice"></i></div>
+        <div class="metric-info">
+          <span class="label">Total de Matrículas</span>
+          <h3 id="metric-total-matriculas">0</h3>
+        </div>
+      </div>
+      <div class="card metric-card">
+        <div class="metric-icon green"><i class="fas fa-check-double"></i></div>
+        <div class="metric-info">
+          <span class="label">Confirmadas</span>
+          <h3 id="metric-confirmadas">0</h3>
+        </div>
+      </div>
+      <div class="card metric-card">
+        <div class="metric-icon red"><i class="fas fa-bell"></i></div>
+        <div class="metric-info">
+          <span class="label">Avisos Pendentes</span>
+          <h3 id="metric-pendentes">0</h3>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tabela de Matrículas -->
+    <section class="card table-container">
+      <div class="table-header">
+        <h2>Histórico de Matrículas</h2>
+        <div class="filters">
+          <input type="text" id="busca-matricula" placeholder="Buscar por aluno ou curso..." style="padding: 0.5rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Aluno</th>
+            <th>Curso Vinculado</th>
+            <th>Pagamento</th>
+            <th>Status Matrícula</th>
+            <th>Aviso WhatsApp</th>
+            <th style="text-align: right;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="matriculas-tbody">
+          <tr>
+            <td colspan="7" class="loading-state">
+              <i class="fas fa-spinner fa-spin"></i> Consultando registros de matrículas...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script type="module" src="matriculas.js"></script>
+</body>
+</html>
