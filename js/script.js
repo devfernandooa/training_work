@@ -2,22 +2,6 @@
 // TRAINING WORK - MAIN SCRIPT (REFATORADO)
 // ============================================
 
-// ──────────────────────────────────────────
-// 1. DADOS ESTÁTICOS (Simulando API)
-// ──────────────────────────────────────────
-const normasData = [
-  { code: "NR-06", name: "Equipamentos de Proteção Individual – Uso e Gestão de EPIs" },
-  { code: "NR-10", name: "Segurança em Instalações e Serviços com Eletricidade" },
-  { code: "NR-17", name: "Ergonomia e Condições de Trabalho" },
-  { code: "NR-33", name: "Segurança e Saúde em Espaços Confinados" },
-  { code: "NR-35", name: "Trabalho em Altura – Autorização e Controle" },
-  { code: "PGR", name: "Programa de Prevenção de Riscos Ambientais" },
-  { code: "PCMSO", name: "Programa de Controle Médico de Saúde Ocupacional" },
-  { code: "APR", name: "Análise Preliminar de Risco – Gestão de Perigos" },
-  { code: "NR-05", name: "CIPA – Comissão Interna de Prevenção de Acidentes" },
-  { code: "NR-12", name: "Segurança no Trabalho em Máquinas e Equipamentos" }
-];
-
 const testimonialsData = [
   { name: "Ricardo Melo", role: "Técnico em Telecom – Salvador/BA", text: "O curso de NR-35 foi excelente. Saí com pleno domínio das técnicas de trabalho em altura.", stars: 5, avatar: "RM" },
   { name: "Juliana Souza", role: "Instaladora FTTH – Feira de Santana/BA", text: "Fiz o treinamento de fibra óptica e montagem de conectores. A parte prática é muito bem estruturada.", stars: 5, avatar: "JS" },
@@ -31,12 +15,12 @@ const testimonialsData = [
 const galleryData = [
   { type: "foto", url: "img/galeria/img_01.jpeg", label: "Treinamento de Fibra Óptica" },
   { type: "foto", url: "img/galeria/img_02.jpeg", label: "Treinamento em Alturas" },
-  { type: "foto", url: "img/galeria/img_03.jpeg", label: "Turma da Linknet" },
+  { type: "foto", url: "img/galeria/imagem_3.png", label: "Turma da Linknet" },
   { type: "foto", url: "img/galeria/img_04.jpeg", label: "Caixa de Emenda" },
   { type: "foto", url: "img/galeria/img_05.jpeg", label: "Turma de Fibra Óptica" },
   { type: "foto", url: "img/galeria/img_13.jpeg", label: "Manuseio de OTDR" },
-  { type: "foto", url: "img/galeria/img_07.jpeg", label: "Caixa de Emenda" },
-  { type: "foto", url: "img/galeria/img_08.jpeg", label: "Treinamento NR" },
+  { type: "foto", url: "img/galeria/imagem_1.png", label: "Caixa de Emenda" },
+  { type: "foto", url: "img/galeria/imagem_2.png", label: "Treinamento NR" },
   { type: "foto", url: "img/galeria/img_01.jpeg", label: "Treinamento de Fibra Óptica" },
   { type: "foto", url: "img/galeria/img_57.jpeg", label: "Treinamento REDEDIGITAL" },
   { type: "foto", url: "img/galeria/img_52.jpeg", label: "Treinamento BEL INFONET" },
@@ -48,20 +32,6 @@ const galleryData = [
   { type: "foto", url: "img/galeria/img_55.jpeg", label: "Treinamento NR" }
 ];
 
-// ──────────────────────────────────────────
-// 2. RENDERIZAÇÃO DINÂMICA
-// ──────────────────────────────────────────
-function renderNormas() {
-  const container = document.getElementById('normasGrid');
-  if (!container) return;
-
-  container.innerHTML = normasData.map(norma => `
-    <div class="norma-item">
-      <div class="norma-code">${norma.code}</div>
-      <div class="norma-name">${norma.name}</div>
-    </div>
-  `).join('');
-}
 
 function renderTestimonials() {
   const container = document.getElementById('testimonialsTrack');
@@ -597,7 +567,6 @@ function initGalleryCarousel() {
 // 15. INICIALIZAÇÃO
 // ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  renderNormas();
   renderTestimonials();
   renderGallery();
   populateCourseSelect();
