@@ -1,23 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Training Work Admin</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-    .login-card { background: #fff; width: 100%; max-width: 400px; padding: 2.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    h2 { margin-bottom: 1.5rem; color: #1e293b; text-align: center; font-size: 1.5rem; }
-    .form-group { margin-bottom: 1.2rem; }
-    label { display: block; margin-bottom: 0.4rem; color: #475569; font-size: 0.9rem; font-weight: 500; }
-    input { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; }
-    input:focus { outline: none; border-color: #2563eb; ring: 2px solid #93c5fd; }
-    button { width: 100%; padding: 0.75rem; background: #0f172a; color: #fff; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 0.5rem; }
-    button:hover { background: #1e293b; }
-    .error-box { display: none; background: #fee2e2; color: #991b1b; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.85rem; }
-  </style>
+  <link rel="stylesheet" href="css/login.css">
 </head>
+
 <body>
 
   <div class="login-card">
@@ -37,53 +27,7 @@
     </form>
   </div>
 
-  <script type="module">
-    import { auth, db } from "./firebase-config.js";
-    import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    const form = document.getElementById("login-form");
-    const errorBox = document.getElementById("error-msg");
-    const btn = document.getElementById("btn-submit");
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      errorBox.style.display = "none";
-      btn.disabled = true;
-      btn.textContent = "Verificando credenciais...";
-
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-
-      try {
-        // 1. Autentica no Firebase Auth
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        // 2. Valida se o UID existe na coleção de administradores e está ativo
-        const adminRef = doc(db, "administradores", user.uid);
-        let adminSnap = await getDoc(adminRef);
-
-        // Fallback: se o doc estiver salvo com o ID 'admin-master' gerado no seed
-        if (!adminSnap.exists()) {
-          const legacyRef = doc(db, "administradores", "admin-master");
-          adminSnap = await getDoc(legacyRef);
-        }
-
-        if (adminSnap.exists() && adminSnap.data().ativo === true) {
-          window.location.href = "dashboard.html";
-        } else {
-          await auth.signOut();
-          throw new Error("Este usuário não possui permissão de administrador ativa.");
-        }
-      } catch (err) {
-        errorBox.textContent = err.message.replace("Firebase: ", "");
-        errorBox.style.display = "block";
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Entrar no Painel";
-      }
-    });
-  </script>
+  <script type="module" src="js/login.js"></script>
 </body>
+
 </html>
