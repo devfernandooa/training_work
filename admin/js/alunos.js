@@ -1,9 +1,6 @@
 import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { 
-  collection, 
-  onSnapshot 
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import {  collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // 1. Autenticação
 onAuthStateChanged(auth, (user) => {
