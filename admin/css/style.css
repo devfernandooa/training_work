@@ -5,11 +5,18 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+
+
 body {
   display: flex;
   background-color: #f1f5f9;
   min-height: 100vh;
   color: #1e293b;
+  font-size: 0.95rem;
+  color: #1e293b;
+  background-color: #f8fafc;
+  margin: 0;
+  padding: 0;
 }
 
 /* Sidebar */
@@ -30,9 +37,6 @@ body {
   font-size: 1.1rem;
 }
 
-.brand span {
-  color: #38bdf8;
-}
 
 .nav-links {
   display: flex;
@@ -53,7 +57,8 @@ body {
   transition: all 0.2s;
 }
 
-.nav-links a.active, .nav-links a:hover {
+.nav-links a.active,
+.nav-links a:hover {
   background-color: #1e293b;
   color: #fff;
 }
@@ -101,7 +106,7 @@ body {
 .card {
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .metrics-grid {
@@ -111,12 +116,6 @@ body {
   margin-bottom: 2rem;
 }
 
-.metric-card {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  padding: 1.5rem;
-}
 
 .metric-icon {
   width: 50px;
@@ -128,12 +127,30 @@ body {
   font-size: 1.25rem;
 }
 
-.metric-icon.blue { background: #e0f2fe; color: #0284c7; }
-.metric-icon.red { background: #fee2e2; color: #dc2626; }
-.metric-icon.green { background: #dcfce7; color: #16a34a; }
+.metric-icon.blue {
+  background: #e0f2fe;
+  color: #0284c7;
+}
 
-.metric-info .label { font-size: 0.85rem; color: #64748b; }
-.metric-info h3 { font-size: 1.5rem; margin-top: 0.25rem; }
+.metric-icon.red {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.metric-icon.green {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.metric-info .label {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.metric-info h3 {
+  font-size: 1.5rem;
+  margin-top: 0.25rem;
+}
 
 /* Tabela */
 .table-container {
@@ -159,7 +176,8 @@ table {
   border-collapse: collapse;
 }
 
-th, td {
+th,
+td {
   padding: 0.85rem;
   text-align: left;
   border-bottom: 1px solid #e2e8f0;
@@ -181,9 +199,20 @@ th {
   text-transform: uppercase;
 }
 
-.priority-alta { background: #fee2e2; color: #991b1b; }
-.priority-media { background: #fef3c7; color: #92400e; }
-.priority-baixa { background: #f1f5f9; color: #475569; }
+.priority-alta {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.priority-media {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.priority-baixa {
+  background: #f1f5f9;
+  color: #475569;
+}
 
 .btn-whatsapp {
   display: inline-flex;
@@ -274,8 +303,15 @@ th {
 }
 
 @keyframes modalIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .modal-icon {
@@ -330,8 +366,13 @@ th {
   cursor: pointer;
 }
 
-.btn-primary:hover { background: #1e293b; }
-.btn-secondary:hover { background: #cbd5e1; }
+.btn-primary:hover {
+  background: #1e293b;
+}
+
+.btn-secondary:hover {
+  background: #cbd5e1;
+}
 
 /* Botões e Badges dos Status */
 .actions-group {
@@ -353,12 +394,30 @@ th {
   transition: opacity 0.2s;
 }
 
-.btn-action-icon:hover { opacity: 0.85; }
+.btn-action-icon:hover {
+  opacity: 0.85;
+}
 
-.btn-iniciar-contato { background: #3b82f6; color: #fff; }
-.btn-matricular-action { background: #0f172a; color: #fff; }
-.btn-perdido-action { background: #fee2e2; color: #991b1b; }
-.btn-reativar-action { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+.btn-iniciar-contato {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.btn-matricular-action {
+  background: #0f172a;
+  color: #fff;
+}
+
+.btn-perdido-action {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.btn-reativar-action {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
 
 /* Badges de Status na Tabela */
 .status-pill {
@@ -372,10 +431,25 @@ th {
   text-transform: capitalize;
 }
 
-.status-novo { background: #dbeafe; color: #1d4ed8; }
-.status-em_contato { background: #fef3c7; color: #b45309; }
-.status-matriculado { background: #dcfce7; color: #15803d; }
-.status-perdido { background: #f1f5f9; color: #64748b; }
+.status-novo {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-em_contato {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status-matriculado {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-perdido {
+  background: #f1f5f9;
+  color: #64748b;
+}
 
 
 
@@ -390,7 +464,7 @@ th {
   background: #ffffff;
   border-radius: 10px;
   padding: 1.25rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
   border-left: 4px solid #0284c7;
   display: flex;
   flex-direction: column;
@@ -480,8 +554,13 @@ th {
   gap: 1rem;
 }
 
-.flex-1 { flex: 1; }
-.flex-2 { flex: 2; }
+.flex-1 {
+  flex: 1;
+}
+
+.flex-2 {
+  flex: 2;
+}
 
 .form-group {
   margin-bottom: 1rem;
@@ -519,6 +598,14 @@ th {
   transition: background 0.2s;
 }
 
-.btn-icon-table.edit { color: #0284c7; }
-.btn-icon-table.delete { color: #dc2626; }
-.btn-icon-table:hover { background: #f1f5f9; }
+.btn-icon-table.edit {
+  color: #0284c7;
+}
+
+.btn-icon-table.delete {
+  color: #dc2626;
+}
+
+.btn-icon-table:hover {
+  background: #f1f5f9;
+}
