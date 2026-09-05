@@ -32,7 +32,7 @@ try {
 
       querySnapshot.forEach((doc) => {
         const curso = doc.data();
-        
+
         // Se for da categoria "Normas NR", pulamos aqui pois elas vão para a própria seção delas
         if (curso.categoria === "Normas NR") return;
 
@@ -70,7 +70,7 @@ try {
     }
   }
 
-  // 2. Função para carregar as Normas Regulamentadoras (Estilo Card Bootstrap)
+  // 2. Função para carregar as Normas Regulamentadoras (Espaçamento reduzido e 3 por linha)
   async function carregarNormasNR() {
     const grid = document.getElementById("nrsGrid") || document.getElementById("normasGrid");
     if (!grid) return;
@@ -78,7 +78,7 @@ try {
     try {
       const q = query(collection(db, "cursos"), where("categoria", "==", "Normas NR"));
       const querySnapshot = await getDocs(q);
-      
+
       grid.innerHTML = "";
 
       if (querySnapshot.empty) {
@@ -86,23 +86,28 @@ try {
         return;
       }
 
+      let index = 1;
       querySnapshot.forEach((doc) => {
         const norma = doc.data();
-        
-        // Coluna responsiva do Bootstrap (3 cards por linha no desktop, 2 no tablet, 1 no mobile)
+
+        // Usamos col-lg-4 e px-1 para estreitar as margens laterais internas da coluna
         const colDiv = document.createElement("div");
-        colDiv.className = "col-12 col-md-6 col-lg-4 mb-4 nr-card";
+        colDiv.className = "col-10 col-md-6 col-lg-4 px-4 mb-5 nr-card";
+
+        const imagemUrl = `https://picsum.photos/seed/nr${index}/400/250`;
+        index++;
 
         colDiv.innerHTML = `
-          <div class="card h-100 shadow-sm border-0 rounded-4 p-3 bg-white transition-card">
-            <div class="card-body d-flex flex-column justify-content-between">
+          <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden card-hover-effect" style="width: 26rem;">
+            <div class="card-body d-flex flex-column justify-content-between p-3">
               <div>
-                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold mb-3">
+                <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill fw-semibold mb-4" style="font-size: 0.70rem;">
                   ${norma.sigla || 'NR'}
                 </span>
-                <h5 class="card-title fw-bold text-dark fs-6 mb-2">${norma.nome}</h5>
-                <p class="card-text text-secondary small mb-0">${norma.descricao}</p>
+                <h5 class="card-title fw-bold text-dark fs-6">${norma.nome}</h5>
+                <p class="card-text text-secondary small mb-3" style="font-size: 0.98rem;">${norma.descricao}</p>
               </div>
+              <button class="btn btn-outline-primary rounded fw-semibold" style="width: 160px" onclick="scrollToContact()">Saiba mais</button>
             </div>
           </div>
         `;
@@ -114,10 +119,8 @@ try {
     }
   }
 
-  // Inicialização
   carregarCursosNaHome();
   carregarNormasNR();
-
 } catch (error) {
   console.error("Erro ao inicializar o Firebase:", error);
 }
