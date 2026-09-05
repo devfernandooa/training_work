@@ -1,0 +1,98 @@
+
+/* ============================================
+   1. BASE & VARIABLES
+   ============================================ */
+:root {
+  /* Paleta de cores*/
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f1f3f5;
+  --text-primary: #121212;
+  --text-secondary: #495057;
+  --text-muted: #868e96;
+  --border-color: #e9ecef;
+  --border-light: #f8f9fa;
+  --card-bg: rgba(255, 255, 255, 0.98);
+
+  --orange: #ff7b00;
+  --orange-light: #ff922b;
+  --orange-dark: #e85d04;
+  --orange-glow: rgba(255, 123, 0, 0.15);
+
+  --blue: #1c7ed6;
+  --blue-deep: #1864ab;
+  --blue-light: #339af0;
+  --blue-glow: rgba(28, 126, 214, 0.1);
+
+  --gray-dark: #343a40;
+  --gray-mid: #dee2e6;
+  --gray-light: #868e96;
+  --white: #ffffff;
+  --border: rgba(255, 123, 0, 0.15);
+
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.12);
+
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+  --border-radius-sm: 6px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 20px;
+  --border-radius-xl: 24px;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0b0c10;
+  --bg-secondary: #14151a;
+  --bg-tertiary: #1f2129;
+  --text-primary: #f8f9fa;
+  --text-secondary: #adb5bd;
+  --text-muted: #6c757d;
+  --border-color: #2b2e38;
+  --border-light: #1f2129;
+  --card-bg: rgba(20, 21, 26, 0.98);
+  --gray-dark: #14151a;
+  --gray-mid: #1f2129;
+  --white: #ffffff;
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.8);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Barlow', sans-serif;
+  font-weight: 400;
+  overflow-x: hidden;
+  transition: background-color var(--transition-base), color var(--transition-base);
+  line-height: 1.6;
+}
+.card-width {
+    width: 280px;
+}
+
+.side-bar-title {
+    font-family: "Barlow Condensed ", sans-serif;
+    font-weight: bold;
+    color: var(--blue);
+}
+
+.sub-title-side-bar {
+    color: var(--orange);
+}
