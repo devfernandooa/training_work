@@ -244,6 +244,46 @@ document.addEventListener("DOMContentLoaded", () => {
       tbody.appendChild(tr);
     });
   }
+
+  
 });
 
+// Função para buscar o endereço automaticamente via ViaCEP
+document.addEventListener("DOMContentLoaded", () => {
+    const cepInput = document.getElementById("cepAluno");
+    
+    if (cepInput) {
+        cepInput.addEventListener("blur", function() {
+            let cep = this.value.replace(/\D/g, "");
+            const loadingIndicator = document.getElementById("cep-loading");
+
+            if (cep.length === 8) {
+                if (loadingIndicator) loadingIndicator.style.display = "flex";
+
+                fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (loadingIndicator) loadingIndicator.style.display = "none";
+
+                        if (!data.erro) {
+                            document.getElementById("enderecoLogradouro").value = data.logradouro || "";
+                            document.getElementById("enderecoBairro").value = data.bairro || "";
+                            document.getElementById("enderecoCidade").value = data.localidade || "";
+                            document.getElementById("enderecoEstado").value = data.uf || "";
+                            
+                            // Joga o foco para o campo número automaticamente
+                            document.getElementById("enderecoNumero").focus();
+                        } else {
+                            alert("CEP não encontrado. Verifique o número digitado.");
+                            document.getElementById("cepAluno").focus();
+                        }
+                    })
+                    .catch(error => {
+                        if (loadingIndicator) loadingIndicator.style.display = "none";
+                        console.error("Erro ao buscar o CEP:", error);
+                    });
+            }
+        });
+    }
+});
 
