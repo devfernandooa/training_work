@@ -133,7 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const telefone = document.getElementById("telefoneAluno").value;
       const nascimento = document.getElementById("nascimentoAluno").value;
       const status = document.getElementById("statusAluno").value;
-      const endereco = document.getElementById("enderecoAluno").value;
+      
       const cep = document.getElementById("cepAluno").value;
       const logradouro = document.getElementById("enderecoLogradouro").value;
       const numero = document.getElementById("enderecoNumero").value;
