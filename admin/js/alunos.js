@@ -134,7 +134,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const nascimento = document.getElementById("nascimentoAluno").value;
       const status = document.getElementById("statusAluno").value;
       const endereco = document.getElementById("enderecoAluno").value;
+      const cep = document.getElementById("cepAluno").value;
+      const logradouro = document.getElementById("enderecoLogradouro").value;
+      const numero = document.getElementById("enderecoNumero").value;
+      const bairro = document.getElementById("enderecoBairro").value;
+      const cidade = document.getElementById("enderecoCidade").value;
+      const estado = document.getElementById("enderecoEstado").value;
       const observacoes = document.getElementById("observacoesAluno").value;
+      // Objeto de endereço estruturado para enviar ao banco
+      const enderecoCompleto = {
+        cep,
+        logradouro,
+        numero,
+        bairro,
+        cidade,
+        estado
+      };
 
       try {
         await addDoc(collection(db, "alunos"), {
@@ -144,7 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
           telefone,
           nascimento,
           status,
-          endereco,
+          endereco: enderecoCompleto,
           observacoes,
           criado_em: new Date().toISOString()
         });
@@ -245,45 +260,45 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  
+
 });
 
 // Função para buscar o endereço automaticamente via ViaCEP
 document.addEventListener("DOMContentLoaded", () => {
-    const cepInput = document.getElementById("cepAluno");
-    
-    if (cepInput) {
-        cepInput.addEventListener("blur", function() {
-            let cep = this.value.replace(/\D/g, "");
-            const loadingIndicator = document.getElementById("cep-loading");
+  const cepInput = document.getElementById("cepAluno");
 
-            if (cep.length === 8) {
-                if (loadingIndicator) loadingIndicator.style.display = "flex";
+  if (cepInput) {
+    cepInput.addEventListener("blur", function () {
+      let cep = this.value.replace(/\D/g, "");
+      const loadingIndicator = document.getElementById("cep-loading");
 
-                fetch(`https://viacep.com.br/ws/${cep}/json/`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (loadingIndicator) loadingIndicator.style.display = "none";
+      if (cep.length === 8) {
+        if (loadingIndicator) loadingIndicator.style.display = "flex";
 
-                        if (!data.erro) {
-                            document.getElementById("enderecoLogradouro").value = data.logradouro || "";
-                            document.getElementById("enderecoBairro").value = data.bairro || "";
-                            document.getElementById("enderecoCidade").value = data.localidade || "";
-                            document.getElementById("enderecoEstado").value = data.uf || "";
-                            
-                            // Joga o foco para o campo número automaticamente
-                            document.getElementById("enderecoNumero").focus();
-                        } else {
-                            alert("CEP não encontrado. Verifique o número digitado.");
-                            document.getElementById("cepAluno").focus();
-                        }
-                    })
-                    .catch(error => {
-                        if (loadingIndicator) loadingIndicator.style.display = "none";
-                        console.error("Erro ao buscar o CEP:", error);
-                    });
+        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+          .then(response => response.json())
+          .then(data => {
+            if (loadingIndicator) loadingIndicator.style.display = "none";
+
+            if (!data.erro) {
+              document.getElementById("enderecoLogradouro").value = data.logradouro || "";
+              document.getElementById("enderecoBairro").value = data.bairro || "";
+              document.getElementById("enderecoCidade").value = data.localidade || "";
+              document.getElementById("enderecoEstado").value = data.uf || "";
+
+              // Joga o foco para o campo número automaticamente
+              document.getElementById("enderecoNumero").focus();
+            } else {
+              alert("CEP não encontrado. Verifique o número digitado.");
+              document.getElementById("cepAluno").focus();
             }
-        });
-    }
+          })
+          .catch(error => {
+            if (loadingIndicator) loadingIndicator.style.display = "none";
+            console.error("Erro ao buscar o CEP:", error);
+          });
+      }
+    });
+  }
 });
 
