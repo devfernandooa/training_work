@@ -1,0 +1,22 @@
+/* ==========================================
+   MÓDULO: Cursos e Turmas (cursos.html / admin-cursos.html)
+   ================================---------- */
+
+/* Efeito de Hover nos Cards de Cursos */
+.card-hover-effect {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card-hover-effect:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Listagens de aulas e turmas em andamento */
+.curso-item-detalhe {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 1.25rem;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1rem;
+}
