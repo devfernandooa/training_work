@@ -48,6 +48,7 @@ function iniciarListeners() {
   // Listener 2: Cursos
   onSnapshot(collection(db, "cursos"), (snap) => {
     cursosCadastrados = [];
+    // console.table(cursosCadastrados);
     snap.forEach((docSnap) => {
       cursosCadastrados.push({ id: docSnap.id, ...docSnap.data() });
     });
