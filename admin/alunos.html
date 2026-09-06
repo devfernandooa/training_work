@@ -5,19 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matrículas - Training Work</title>
-    
-    <!-- 1º: O Bootstrap CSS entra primeiro para garantir o layout correto dos grids e modais -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Ícones -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <!-- O Bootstrap CSS entra primeiro para garantir o layout correto dos grids e modais -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-    <!-- 2º: O seu style.css entra POR ÚLTIMO para aplicar a sua fonte padrão com prioridade -->
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/base.css">
+  <!-- Ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
+
+  <!-- O style.css entra POR ÚLTIMO para aplicar a sua fonte padrão com prioridade -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/base.css">
 </head>
 
 <body id="app-container">
@@ -60,59 +59,63 @@
         <!-- Cards de Métricas -->
         <section class="metrics-grid">
             <!-- Seção de Métricas Compactas (4 Cards) -->
-<div class="row g-3 mb-4">
-    <!-- Total de Alunos -->
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 card-width">
-            <div class="rounded-3 p-3 text-primary bg-primary bg-opacity-10" style="font-size: 1.2rem;">
-                <i class="fas fa-users"></i>
-            </div>
-            <div>
-                <span class="text-secondary small d-block" style="font-size: 0.8rem;">Total de Alunos</span>
-                <h4 class="fw-bold mb-0" id="metric-total-alunos">0</h4>
-            </div>
-        </div>
-    </div>
+            <div class="row g-3 mb-4">
+                <!-- Total de Alunos -->
+                <div class="col-md-3">
+                    <div
+                        class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 card-width">
+                        <div class="rounded-3 p-3 text-primary bg-primary bg-opacity-10" style="font-size: 1.2rem;">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div>
+                            <span class="text-secondary small d-block" style="font-size: 0.8rem;">Total de Alunos</span>
+                            <h4 class="fw-bold mb-0" id="metric-total-alunos">0</h4>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Alunos Ativos -->
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 card-width">
-            <div class="rounded-3 p-3 text-success bg-success bg-opacity-10" style="font-size: 1.2rem;">
-                <i class="fas fa-user-check"></i>
-            </div>
-            <div>
-                <span class="text-secondary small d-block" style="font-size: 0.8rem;">Alunos Ativos</span>
-                <h4 class="fw-bold mb-0" id="metric-alunos-ativos">0</h4>
-            </div>
-        </div>
-    </div>
+                <!-- Alunos Ativos -->
+                <div class="col-md-3">
+                    <div
+                        class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 card-width">
+                        <div class="rounded-3 p-3 text-success bg-success bg-opacity-10" style="font-size: 1.2rem;">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div>
+                            <span class="text-secondary small d-block" style="font-size: 0.8rem;">Alunos Ativos</span>
+                            <h4 class="fw-bold mb-0" id="metric-alunos-ativos">0</h4>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Alunos Inativos -->
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 card-width">
-            <div class="rounded-3 p-3 text-warning bg-warning bg-opacity-10" style="font-size: 1.2rem;">
-                <i class="fas fa-user-slash"></i>
-            </div>
-            <div>
-                <span class="text-secondary small d-block" style="font-size: 0.8rem;">Alunos Inativos</span>
-                <h4 class="fw-bold mb-0" id="metric-alunos-inativos">0</h4>
-            </div>
-        </div>
-    </div>
+                <!-- Alunos Inativos -->
+                <div class="col-md-3">
+                    <div
+                        class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 card-width">
+                        <div class="rounded-3 p-3 text-warning bg-warning bg-opacity-10" style="font-size: 1.2rem;">
+                            <i class="fas fa-user-slash"></i>
+                        </div>
+                        <div>
+                            <span class="text-secondary small d-block" style="font-size: 0.8rem;">Alunos Inativos</span>
+                            <h4 class="fw-bold mb-0" id="metric-alunos-inativos">0</h4>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Alunos em Débito -->
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 card-width">
-            <div class="rounded-3 p-3 text-danger bg-danger bg-opacity-10" style="font-size: 1.2rem;">
-                <i class="fas fa-file-invoice-dollar"></i>
+                <!-- Alunos em Débito -->
+                <div class="col-md-3">
+                    <div
+                        class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 card-width">
+                        <div class="rounded-3 p-3 text-danger bg-danger bg-opacity-10" style="font-size: 1.2rem;">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div>
+                            <span class="text-secondary small d-block" style="font-size: 0.8rem;">Em Débito</span>
+                            <h4 class="fw-bold mb-0" id="metric-alunos-debitos">0</h4>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div>
-                <span class="text-secondary small d-block" style="font-size: 0.8rem;">Em Débito</span>
-                <h4 class="fw-bold mb-0" id="metric-alunos-debitos">0</h4>
-            </div>
-        </div>
-    </div>
-</div>
         </section>
 
         <!-- Tabela de Alunos -->
@@ -147,84 +150,102 @@
         </section>
     </main>
 
-    
+
     <!-- Modal de Cadastro de Novo Aluno -->
 
-<div class="modal fade" id="modalNovoAluno" tabindex="-1" aria-labelledby="modalNovoAlunoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 rounded-4 shadow-lg">
-            <div class="modal-header bg-dark text-white rounded-top-4" style="background-color: #0f172a !important;">
-                <h5 class="modal-title fw-bold" id="modalNovoAlunoLabel">
-                    <i class="fas fa-user-plus me-2"></i> Cadastro Completo de Novo Aluno
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body p-4 bg-white">
-                <form id="formNovoAluno">
-                    <!-- Linha 1: Nome e E-mail -->
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="nomeAluno" class="form-label fw-semibold small text-secondary">Nome Completo</label>
-                            <input type="text" class="form-control" id="nomeAluno" placeholder="Ex: João da Silva" required>
+    <div class="modal fade" id="modalNovoAluno" tabindex="-1" aria-labelledby="modalNovoAlunoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header bg-dark text-white rounded-top-4"
+                    style="background-color: #0f172a !important;">
+                    <h5 class="modal-title fw-bold" id="modalNovoAlunoLabel">
+                        <i class="fas fa-user-plus me-2"></i> Cadastro Completo de Novo Aluno
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-4 bg-white">
+                    <form id="formNovoAluno">
+                        <!-- Linha 1: Nome e E-mail -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nomeAluno" class="form-label fw-semibold small text-secondary">Nome
+                                    Completo</label>
+                                <input type="text" class="form-control" id="nomeAluno" placeholder="Ex: João da Silva"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="emailAluno" class="form-label fw-semibold small text-secondary">E-mail
+                                    Principal</label>
+                                <input type="email" class="form-control" id="emailAluno" placeholder="exemplo@email.com"
+                                    required>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label for="emailAluno" class="form-label fw-semibold small text-secondary">E-mail Principal</label>
-                            <input type="email" class="form-control" id="emailAluno" placeholder="exemplo@email.com" required>
-                        </div>
-                    </div>
 
-                    <!-- Linha 2: CPF e Telefone -->
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="cpfAluno" class="form-label fw-semibold small text-secondary">CPF</label>
-                            <input type="text" class="form-control" id="cpfAluno" placeholder="000.000.000-00">
+                        <!-- Linha 2: CPF e Telefone -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="cpfAluno" class="form-label fw-semibold small text-secondary">CPF</label>
+                                <input type="text" class="form-control" id="cpfAluno" placeholder="000.000.000-00">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="telefoneAluno" class="form-label fw-semibold small text-secondary">Telefone
+                                    / WhatsApp</label>
+                                <input type="text" class="form-control" id="telefoneAluno"
+                                    placeholder="(00) 00000-0000">
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label for="telefoneAluno" class="form-label fw-semibold small text-secondary">Telefone / WhatsApp</label>
-                            <input type="text" class="form-control" id="telefoneAluno" placeholder="(00) 00000-0000">
+
+                        <!-- Linha 3: Data de Nascimento e Status -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nascimentoAluno" class="form-label fw-semibold small text-secondary">Data de
+                                    Nascimento</label>
+                                <input type="date" class="form-control" id="nascimentoAluno">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="statusAluno" class="form-label fw-semibold small text-secondary">Status
+                                    Inicial</label>
+                                <select class="form-select" id="statusAluno">
+                                    <option value="ativo">Ativo</option>
+                                    <option value="inativo">Inativo</option>
+                                    <option value="debito">Em Débito</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Linha 3: Data de Nascimento e Status -->
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="nascimentoAluno" class="form-label fw-semibold small text-secondary">Data de Nascimento</label>
-                            <input type="date" class="form-control" id="nascimentoAluno">
+                        <!-- Linha 4: Endereço Completo -->
+                        <div class="mb-3">
+                            <label for="enderecoAluno" class="form-label fw-semibold small text-secondary">Endereço
+                                Residencial</label>
+                            <input type="text" class="form-control" id="enderecoAluno"
+                                placeholder="Rua, Número, Bairro, Cidade - UF">
                         </div>
-                        <div class="col-md-6">
-                            <label for="statusAluno" class="form-label fw-semibold small text-secondary">Status Inicial</label>
-                            <select class="form-select" id="statusAluno">
-                                <option value="ativo">Ativo</option>
-                                <option value="inativo">Inativo</option>
-                                <option value="debito">Em Débito</option>
-                            </select>
+
+                        <!-- Linha 5: Observações -->
+                        <div class="mb-3">
+                            <label for="observacoesAluno"
+                                class="form-label fw-semibold small text-secondary">Observações / Anotações
+                                Internas</label>
+                            <textarea class="form-control" id="observacoesAluno" rows="2"
+                                placeholder="Informações relevantes sobre o aluno..."></textarea>
                         </div>
-                    </div>
 
-                    <!-- Linha 4: Endereço Completo -->
-                    <div class="mb-3">
-                        <label for="enderecoAluno" class="form-label fw-semibold small text-secondary">Endereço Residencial</label>
-                        <input type="text" class="form-control" id="enderecoAluno" placeholder="Rua, Número, Bairro, Cidade - UF">
-                    </div>
-
-                    <!-- Linha 5: Observações -->
-                    <div class="mb-3">
-                        <label for="observacoesAluno" class="form-label fw-semibold small text-secondary">Observações / Anotações Internas</label>
-                        <textarea class="form-control" id="observacoesAluno" rows="2" placeholder="Informações relevantes sobre o aluno..."></textarea>
-                    </div>
-
-                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                        <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-dark px-4 py-2" style="background-color: #0f172a; border-color: #0f172a;">Salvar Aluno</button>
-                    </div>
-                </form>
+                        <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                            <button type="button" class="btn btn-outline-secondary px-4 py-2"
+                                data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-dark px-4 py-2"
+                                style="background-color: #0f172a; border-color: #0f172a;">Salvar Aluno</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <!-- Scripts no final do body -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="js/alunos.js"></script>
 </body>
+
 </html>
