@@ -132,8 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const cpf = document.getElementById("cpfAluno").value;
       const telefone = document.getElementById("telefoneAluno").value;
       const nascimento = document.getElementById("nascimentoAluno").value;
-      const status = document.getElementById("statusAluno").value;
-      
+      const status = document.getElementById("statusAluno").value;      
       const cep = document.getElementById("cepAluno").value;
       const logradouro = document.getElementById("enderecoLogradouro").value;
       const numero = document.getElementById("enderecoNumero").value;
