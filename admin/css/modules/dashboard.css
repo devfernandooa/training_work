@@ -70,6 +70,20 @@ body.app-container {
   border-radius: var(--border-radius-md);
 }
 
+/* Força a tabela a respeitar a largura do container */
+table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+/* Define o comportamento para o texto das células */
+td {
+  overflow: hidden;
+  text-overflow: ellipsis; /* Adiciona "..." caso o texto ultrapasse */
+  white-space: nowrap;     /* Evita quebra desordenada de linha */
+}
+
 table.table th,
 table.table td {
   vertical-align: middle;
@@ -93,3 +107,4 @@ table.table td {
     padding: 1.25rem;
   }
 }
+
