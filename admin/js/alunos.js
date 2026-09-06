@@ -59,8 +59,8 @@ function renderizarTabelaAlunos(alunos) {
   const termo = (document.getElementById("busca-aluno")?.value || "").toLowerCase();
 
   tbody.innerHTML = "";
-  const filtrados = alunos.filter(a => 
-    (a.nome || "").toLowerCase().includes(termo) || 
+  const filtrados = alunos.filter(a =>
+    (a.nome || "").toLowerCase().includes(termo) ||
     (a.email || "").toLowerCase().includes(termo)
   );
 
@@ -81,7 +81,7 @@ function renderizarTabelaAlunos(alunos) {
 
   filtrados.forEach(aluno => {
     const cursos = matriculasPorAluno[aluno.id] || [];
-    const cursosTags = cursos.length > 0 
+    const cursosTags = cursos.length > 0
       ? cursos.map(c => `<span style="display:inline-block; background:#f1f5f9; color:#334155; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; margin: 2px;">${c}</span>`).join(" ")
       : `<span style="color:#94a3b8; font-size:0.8rem;">Sem matrículas ativas</span>`;
 
@@ -91,7 +91,7 @@ function renderizarTabelaAlunos(alunos) {
 
     const dataOriginal = aluno.criado_em || aluno.data_cadastro;
     const dataFormatada = dataOriginal ? new Date(dataOriginal).toLocaleDateString("pt-BR") : "Recente";
-    
+
     const statusText = aluno.status === "inativo" ? "Inativo" : "Ativo";
     const statusColor = aluno.status === "inativo" ? "#dc2626" : "#16a34a";
 
@@ -122,105 +122,111 @@ document.getElementById("busca-aluno")?.addEventListener("input", () => {
 
 // 3. Cadastro de Novo Aluno via Modal
 document.addEventListener("DOMContentLoaded", () => {
-    const formNovoAluno = document.getElementById("formNovoAluno");
-    if (formNovoAluno) {
-        formNovoAluno.addEventListener("submit", async (e) => {
-            e.preventDefault();
+  const formNovoAluno = document.getElementById("formNovoAluno");
+  if (formNovoAluno) {
+    formNovoAluno.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-            const nome = document.getElementById("nomeAluno").value;
-            const email = document.getElementById("emailAluno").value;
-            const telefone = document.getElementById("telefoneAluno").value;
-            const status = document.getElementById("statusAluno").value;
-            const endereco = document.getElementById("enderecoAluno").value;
+      const nome = document.getElementById("nomeAluno").value;
+      const email = document.getElementById("emailAluno").value;
+      const cpf = document.getElementById("cpfAluno").value;
+      const telefone = document.getElementById("telefoneAluno").value;
+      const nascimento = document.getElementById("nascimentoAluno").value;
+      const status = document.getElementById("statusAluno").value;
+      const endereco = document.getElementById("enderecoAluno").value;
+      const observacoes = document.getElementById("observacoesAluno").value;
 
-            try {
-                await addDoc(collection(db, "alunos"), {
-                    nome: nome,
-                    email: email,
-                    telefone: telefone,
-                    status: status,
-                    endereco: endereco,
-                    criado_em: new Date().toISOString()
-                });
-
-                // Fecha o modal do Bootstrap de forma segura
-                const modalElement = document.getElementById('modalNovoAluno');
-                const modalInstance = window.bootstrap.Modal.getInstance(modalElement) || new window.bootstrap.Modal(modalElement);
-                modalInstance.hide();
-
-                // Limpa o formulário
-                formNovoAluno.reset();
-            } catch (error) {
-                console.error("Erro ao cadastrar novo aluno:", error);
-                alert("Erro ao salvar o aluno. Tente novamente.");
-            }
+      try {
+        await addDoc(collection(db, "alunos"), {
+          nome,
+          email,
+          cpf,
+          telefone,
+          nascimento,
+          status,
+          endereco,
+          observacoes,
+          criado_em: new Date().toISOString()
         });
-    }
 
-    function renderizarTabelaAlunos(alunos) {
-  const tbody = document.getElementById("alunos-tbody");
-  if (!tbody) return;
+        // Fecha o modal do Bootstrap de forma segura
+        const modalElement = document.getElementById('modalNovoAluno');
+        const modalInstance = window.bootstrap.Modal.getInstance(modalElement) || new window.bootstrap.Modal(modalElement);
+        modalInstance.hide();
 
-  const termo = (document.getElementById("busca-aluno")?.value || "").toLowerCase();
-
-  tbody.innerHTML = "";
-  const filtrados = alunos.filter(a => 
-    (a.nome || "").toLowerCase().includes(termo) || 
-    (a.email || "").toLowerCase().includes(termo)
-  );
-
-  let ativos = 0;
-  let inativos = 0;
-  let debitos = 0;
-
-  alunos.forEach(a => {
-    const status = (a.status || "ativo").toLowerCase();
-    if (status === "ativo") ativos++;
-    else if (status === "inativo") inativos++;
-    
-    if (status === "debito" || a.financeiro === "pendente" || a.em_debito === true) {
-      debitos++;
-    }
-  });
-
-  // Atualiza os cards compactos
-  document.getElementById("metric-total-alunos").textContent = alunos.length;
-  document.getElementById("metric-alunos-ativos").textContent = ativos;
-  document.getElementById("metric-alunos-inativos").textContent = inativos;
-  document.getElementById("metric-alunos-debitos").textContent = debitos;
-
-  if (filtrados.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhum aluno encontrado.</td></tr>`;
-    return;
+        // Limpa o formulário
+        formNovoAluno.reset();
+      } catch (error) {
+        console.error("Erro ao cadastrar novo aluno:", error);
+        alert("Erro ao salvar o aluno. Tente novamente.");
+      }
+    });
   }
 
-  filtrados.forEach(aluno => {
-    const cursos = matriculasPorAluno[aluno.id] || [];
-    const cursosTags = cursos.length > 0 
-      ? cursos.map(c => `<span style="display:inline-block; background:#f1f5f9; color:#334155; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; margin: 2px;">${c}</span>`).join(" ")
-      : `<span style="color:#94a3b8; font-size:0.8rem;">Sem matrículas ativas</span>`;
+  function renderizarTabelaAlunos(alunos) {
+    const tbody = document.getElementById("alunos-tbody");
+    if (!tbody) return;
 
-    const cleanPhone = (aluno.telefone || "").replace(/\D/g, "");
-    const ddiPhone = cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`;
-    const zapLink = `https://wa.me/${ddiPhone}`;
+    const termo = (document.getElementById("busca-aluno")?.value || "").toLowerCase();
 
-    const dataOriginal = aluno.criado_em || aluno.data_cadastro;
-    const dataFormatada = dataOriginal ? new Date(dataOriginal).toLocaleDateString("pt-BR") : "Recente";
-    
-    const statusAluno = (aluno.status || "ativo").toLowerCase();
-    let statusText = "Ativo";
-    let statusColor = "#16a34a";
+    tbody.innerHTML = "";
+    const filtrados = alunos.filter(a =>
+      (a.nome || "").toLowerCase().includes(termo) ||
+      (a.email || "").toLowerCase().includes(termo)
+    );
 
-    if (statusAluno === "inativo") {
-      statusText = "Inativo";
-      statusColor = "#dc2626";
-    } else if (statusAluno === "debito") {
-      statusText = "Em Débito";
-      statusColor = "#d97706";
+    let ativos = 0;
+    let inativos = 0;
+    let debitos = 0;
+
+    alunos.forEach(a => {
+      const status = (a.status || "ativo").toLowerCase();
+      if (status === "ativo") ativos++;
+      else if (status === "inativo") inativos++;
+
+      if (status === "debito" || a.financeiro === "pendente" || a.em_debito === true) {
+        debitos++;
+      }
+    });
+
+    // Atualiza os cards compactos
+    document.getElementById("metric-total-alunos").textContent = alunos.length;
+    document.getElementById("metric-alunos-ativos").textContent = ativos;
+    document.getElementById("metric-alunos-inativos").textContent = inativos;
+    document.getElementById("metric-alunos-debitos").textContent = debitos;
+
+    if (filtrados.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhum aluno encontrado.</td></tr>`;
+      return;
     }
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
+    filtrados.forEach(aluno => {
+      const cursos = matriculasPorAluno[aluno.id] || [];
+      const cursosTags = cursos.length > 0
+        ? cursos.map(c => `<span style="display:inline-block; background:#f1f5f9; color:#334155; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; margin: 2px;">${c}</span>`).join(" ")
+        : `<span style="color:#94a3b8; font-size:0.8rem;">Sem matrículas ativas</span>`;
+
+      const cleanPhone = (aluno.telefone || "").replace(/\D/g, "");
+      const ddiPhone = cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`;
+      const zapLink = `https://wa.me/${ddiPhone}`;
+
+      const dataOriginal = aluno.criado_em || aluno.data_cadastro;
+      const dataFormatada = dataOriginal ? new Date(dataOriginal).toLocaleDateString("pt-BR") : "Recente";
+
+      const statusAluno = (aluno.status || "ativo").toLowerCase();
+      let statusText = "Ativo";
+      let statusColor = "#16a34a";
+
+      if (statusAluno === "inativo") {
+        statusText = "Inativo";
+        statusColor = "#dc2626";
+      } else if (statusAluno === "debito") {
+        statusText = "Em Débito";
+        statusColor = "#d97706";
+      }
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
       <td>
         <strong>${aluno.nome || "Não informado"}</strong><br>
         <small style="color: #64748b;">${aluno.email || ""}</small>
@@ -235,9 +241,9 @@ document.addEventListener("DOMContentLoaded", () => {
         </a>
       </td>
     `;
-    tbody.appendChild(tr);
-  });
-}
+      tbody.appendChild(tr);
+    });
+  }
 });
 
 
