@@ -90,7 +90,25 @@ table.table td {
   padding: 1rem 0.75rem;
   color: var(--text-primary);
 }
+/* Garante alinhamento e previne quebras desordenadas */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
 
+table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+/* Coluna de texto longo comprimida */
+td.col-analise {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
 .filters select {
   padding: 0.45rem 0.8rem;
   border: 1px solid var(--border-color);
