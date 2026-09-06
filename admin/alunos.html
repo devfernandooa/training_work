@@ -147,52 +147,75 @@
         </section>
     </main>
 
-    <!-- Cole o modal aqui, totalmente fora do conteúdo principal -->
-    <!-- Modal de Cadastro de Novo Aluno (Padrão Bootstrap) -->
+    
+    <!-- Modal de Cadastro de Novo Aluno -->
+
 <div class="modal fade" id="modalNovoAluno" tabindex="-1" aria-labelledby="modalNovoAlunoLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalNovoAlunoLabel">
-                    <i class="fas fa-user-plus me-2"></i>Cadastrar Novo Aluno
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header bg-dark text-white rounded-top-4" style="background-color: #0f172a !important;">
+                <h5 class="modal-title fw-bold" id="modalNovoAlunoLabel">
+                    <i class="fas fa-user-plus me-2"></i> Cadastro Completo de Novo Aluno
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-4 bg-white">
                 <form id="formNovoAluno">
+                    <!-- Linha 1: Nome e E-mail -->
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="nomeAluno" class="form-label">Nome Completo</label>
+                            <label for="nomeAluno" class="form-label fw-semibold small text-secondary">Nome Completo</label>
                             <input type="text" class="form-control" id="nomeAluno" placeholder="Ex: João da Silva" required>
                         </div>
                         <div class="col-md-6">
-                            <label for="emailAluno" class="form-label">E-mail</label>
+                            <label for="emailAluno" class="form-label fw-semibold small text-secondary">E-mail Principal</label>
                             <input type="email" class="form-control" id="emailAluno" placeholder="exemplo@email.com" required>
                         </div>
                     </div>
 
+                    <!-- Linha 2: CPF e Telefone -->
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="telefoneAluno" class="form-label">Telefone / WhatsApp</label>
-                            <input type="text" class="form-control" id="telefoneAluno" placeholder="(00) 00000-0000">
+                            <label for="cpfAluno" class="form-label fw-semibold small text-secondary">CPF</label>
+                            <input type="text" class="form-control" id="cpfAluno" placeholder="000.000.000-00">
                         </div>
                         <div class="col-md-6">
-                            <label for="statusAluno" class="form-label">Status Inicial</label>
+                            <label for="telefoneAluno" class="form-label fw-semibold small text-secondary">Telefone / WhatsApp</label>
+                            <input type="text" class="form-control" id="telefoneAluno" placeholder="(00) 00000-0000">
+                        </div>
+                    </div>
+
+                    <!-- Linha 3: Data de Nascimento e Status -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="nascimentoAluno" class="form-label fw-semibold small text-secondary">Data de Nascimento</label>
+                            <input type="date" class="form-control" id="nascimentoAluno">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="statusAluno" class="form-label fw-semibold small text-secondary">Status Inicial</label>
                             <select class="form-select" id="statusAluno">
                                 <option value="ativo">Ativo</option>
                                 <option value="inativo">Inativo</option>
+                                <option value="debito">Em Débito</option>
                             </select>
                         </div>
                     </div>
 
+                    <!-- Linha 4: Endereço Completo -->
                     <div class="mb-3">
-                        <label for="enderecoAluno" class="form-label">Endereço / Observações</label>
-                        <textarea class="form-control" id="enderecoAluno" rows="2" placeholder="Informações adicionais..."></textarea>
+                        <label for="enderecoAluno" class="form-label fw-semibold small text-secondary">Endereço Residencial</label>
+                        <input type="text" class="form-control" id="enderecoAluno" placeholder="Rua, Número, Bairro, Cidade - UF">
                     </div>
 
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar Aluno</button>
+                    <!-- Linha 5: Observações -->
+                    <div class="mb-3">
+                        <label for="observacoesAluno" class="form-label fw-semibold small text-secondary">Observações / Anotações Internas</label>
+                        <textarea class="form-control" id="observacoesAluno" rows="2" placeholder="Informações relevantes sobre o aluno..."></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-dark px-4 py-2" style="background-color: #0f172a; border-color: #0f172a;">Salvar Aluno</button>
                     </div>
                 </form>
             </div>
