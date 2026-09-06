@@ -22,58 +22,62 @@
 
 <body id="app-container">
 
-   <nav class="sidebar p-3 d-flex flex-column">
-            <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="text-white m-0">TrainingWork</h4>
-                    <button class="btn btn-sm btn-outline-light d-lg-none rounded-circle p-2" id="sidebarClose"
-                        type="button" style="width: 36px; height: 36px;">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
+  <nav class="sidebar p-3 d-flex flex-column">
+    <div class="mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="text-white m-0">TrainingWork</h4>
+        <button class="btn btn-sm btn-outline-light d-lg-none rounded-circle p-2" id="sidebarClose" type="button"
+          style="width: 36px; height: 36px;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
 
-                <div class="d-flex align-items-center justify-content-between pt-2 border-top border-secondary">
-                    <div class="text-white small text-truncate pe-2">
-                        <i class="fas fa-user me-1 text-secondary"></i> <span id="user-name">Fernando</span>
-                    </div>
-                    <button class="btn btn-sm btn-link text-danger p-0 text-decoration-none" id="btnLogout"
-                        title="Sair do sistema">
-                        <i class="fas fa-sign-out-alt"></i> Sair
-                    </button>
-                </div>
-            </div>
+      <div class="d-flex align-items-center justify-content-between pt-2 border-top border-secondary">
+        <div class="text-white small text-truncate pe-2">
+          <i class="fas fa-user me-1 text-secondary"></i> <span id="user-name">Fernando</span>
+        </div>
+        <button class="btn btn-sm btn-link text-danger p-0 text-decoration-none" id="btnLogout" title="Sair do sistema">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+      </div>
+    </div>
 
-            <ul class="nav flex-column gap-2">
-                <li class="nav-item">
-                    <a href="dashboard.html" class="nav-link text-white d-flex align-items-center gap-2">
-                        <i class="fas fa-chart-line fa-fw"></i> Leads & Triagem
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="cursos.html" class="nav-link text-white d-flex align-items-center gap-2">
-                        <i class="fas fa-book fa-fw"></i> Cursos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="admin-cursos.html" class="nav-link text-white d-flex align-items-center gap-2">
-                       <i class="fa-solid fa-play"></i> Em Andamento
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="alunos.html" class="nav-link text-white active d-flex align-items-center gap-2">
-                        <i class="fas fa-user-graduate fa-fw"></i> Alunos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="matriculas.html" class="nav-link text-white d-flex align-items-center gap-2">
-                        <i class="fas fa-file-signature fa-fw"></i> Matrículas
-                    </a>
-                </li>
-            </ul>
-        </nav>
+    <ul class="nav flex-column gap-2">
+      <li class="nav-item">
+        <a href="dashboard.html" class="nav-link text-white d-flex align-items-center gap-2">
+          <i class="fas fa-chart-line fa-fw"></i> Leads & Triagem
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="cursos.html" class="nav-link text-white d-flex align-items-center gap-2">
+          <i class="fas fa-book fa-fw"></i> Cursos
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="admin-cursos.html" class="nav-link text-white d-flex align-items-center gap-2">
+          <i class="fa-solid fa-play"></i> Em Andamento
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="alunos.html" class="nav-link text-white active d-flex align-items-center gap-2">
+          <i class="fas fa-user-graduate fa-fw"></i> Alunos
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="matriculas.html" class="nav-link text-white d-flex align-items-center gap-2">
+          <i class="fas fa-file-signature fa-fw"></i> Matrículas
+        </a>
+      </li>
+    </ul>
+  </nav>
 
   <!-- Conteúdo Principal -->
   <main class="main-content">
+    <div class="d-lg-none mb-3">
+      <button class="btn btn-dark btn-sm px-3 py-2 rounded-3 shadow-sm" id="sidebarToggle" type="button">
+        <i class="fas fa-bars me-1"></i> Menu
+      </button>
+    </div>
     <header class="topbar">
       <div>
         <h1>Gestão de Matrículas</h1>

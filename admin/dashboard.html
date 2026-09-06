@@ -9,7 +9,7 @@
   <!-- Frameworks e Ícones -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
   <!-- Estilos Modulares Unificados -->
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/modules/dashboard.css">
@@ -19,57 +19,61 @@
 <body class="app-container">
 
   <nav class="sidebar p-3 d-flex flex-column">
-            <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="text-white m-0">TrainingWork</h4>
-                    <button class="btn btn-sm btn-outline-light d-lg-none rounded-circle p-2" id="sidebarClose"
-                        type="button" style="width: 36px; height: 36px;">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
+    <div class="mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="text-white m-0">TrainingWork</h4>
+        <button class="btn btn-sm btn-outline-light d-lg-none rounded-circle p-2" id="sidebarClose" type="button"
+          style="width: 36px; height: 36px;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
 
-                <div class="d-flex align-items-center justify-content-between pt-2 border-top border-secondary">
-                    <div class="text-white small text-truncate pe-2">
-                        <i class="fas fa-user me-1 text-secondary"></i> <span id="user-name">Fernando</span>
-                    </div>
-                    <button class="btn btn-sm btn-link text-danger p-0 text-decoration-none" id="btnLogout"
-                        title="Sair do sistema">
-                        <i class="fas fa-sign-out-alt"></i> Sair
-                    </button>
-                </div>
-            </div>
+      <div class="d-flex align-items-center justify-content-between pt-2 border-top border-secondary">
+        <div class="text-white small text-truncate pe-2">
+          <i class="fas fa-user me-1 text-secondary"></i> <span id="user-name">Fernando</span>
+        </div>
+        <button class="btn btn-sm btn-link text-danger p-0 text-decoration-none" id="btnLogout" title="Sair do sistema">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+      </div>
+    </div>
 
-            <ul class="nav flex-column gap-2">
-                <li class="nav-item">
-                    <a href="dashboard.html" class="nav-link text-white d-flex align-items-center gap-2">
-                        <i class="fas fa-chart-line fa-fw"></i> Leads & Triagem
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="cursos.html" class="nav-link text-white d-flex align-items-center gap-2">
-                        <i class="fas fa-book fa-fw"></i> Cursos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="admin-cursos.html" class="nav-link text-white d-flex align-items-center gap-2">
-                       <i class="fa-solid fa-play"></i> Em Andamento
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="alunos.html" class="nav-link text-white active d-flex align-items-center gap-2">
-                        <i class="fas fa-user-graduate fa-fw"></i> Alunos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="matriculas.html" class="nav-link text-white d-flex align-items-center gap-2">
-                        <i class="fas fa-file-signature fa-fw"></i> Matrículas
-                    </a>
-                </li>
-            </ul>
-        </nav>
+    <ul class="nav flex-column gap-2">
+      <li class="nav-item">
+        <a href="dashboard.html" class="nav-link text-white d-flex align-items-center gap-2">
+          <i class="fas fa-chart-line fa-fw"></i> Leads & Triagem
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="cursos.html" class="nav-link text-white d-flex align-items-center gap-2">
+          <i class="fas fa-book fa-fw"></i> Cursos
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="admin-cursos.html" class="nav-link text-white d-flex align-items-center gap-2">
+          <i class="fa-solid fa-play"></i> Em Andamento
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="alunos.html" class="nav-link text-white active d-flex align-items-center gap-2">
+          <i class="fas fa-user-graduate fa-fw"></i> Alunos
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="matriculas.html" class="nav-link text-white d-flex align-items-center gap-2">
+          <i class="fas fa-file-signature fa-fw"></i> Matrículas
+        </a>
+      </li>
+    </ul>
+  </nav>
 
   <!-- Conteúdo Principal Responsivo -->
   <main class="main-content">
+    <div class="d-lg-none mb-3">
+                <button class="btn btn-dark btn-sm px-3 py-2 rounded-3 shadow-sm" id="sidebarToggle" type="button">
+                    <i class="fas fa-bars me-1"></i> Menu
+                </button>
+            </div>
     <header class="topbar mb-4">
       <div>
         <h1 class="h3 fw-bold mb-1" style="color: var(--text-primary);">Painel de Triagem e Leads</h1>
@@ -80,7 +84,8 @@
     <!-- Cards de Métricas com as Cores Padrão -->
     <div class="row g-3 mb-4">
       <div class="col-md-4">
-        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card-box">
+        <div
+          class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card-box">
           <div class="metric-icon blue"><i class="fas fa-inbox"></i></div>
           <div class="metric-info">
             <span class="label">Total de Inscrições</span>
@@ -89,7 +94,8 @@
         </div>
       </div>
       <div class="col-md-4">
-        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card-box">
+        <div
+          class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card-box">
           <div class="metric-icon red"><i class="fas fa-bolt"></i></div>
           <div class="metric-info">
             <span class="label">Alta Prioridade (IA)</span>
@@ -98,7 +104,8 @@
         </div>
       </div>
       <div class="col-md-4">
-        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card-box">
+        <div
+          class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card-box">
           <div class="metric-icon green"><i class="fas fa-headset"></i></div>
           <div class="metric-info">
             <span class="label">Em Atendimento</span>
@@ -147,9 +154,9 @@
     </section>
   </main>
 
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="js/dashboard.js"></script>
-    <script type="module" src="js/modules/sidebar.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="js/dashboard.js"></script>
+  <script type="module" src="js/modules/sidebar.js"></script>
 
 </body>
 
