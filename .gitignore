@@ -1,4 +1,5 @@
 node_modules/
 serviceAccountKey*.json
 serviceAccountKey.json.json
+index copy.html
 .env
