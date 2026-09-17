@@ -1,0 +1,144 @@
+/* ==========================================================================
+   SIDEBAR PADRONIZADA E BLINDADA (CORREÇÃO VERTICAL)
+   ========================================================================== */
+
+aside.sidebar {
+  width: var(--sidebar-width) !important;
+  min-width: var(--sidebar-width) !important;
+  max-width: var(--sidebar-width) !important;
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 1.5rem !important;
+  position: sticky !important;
+  top: 0 !important;
+  height: 100vh !important;
+  z-index: 1000 !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
+  float: none !important;
+}
+
+aside.sidebar .brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  margin-bottom: 2rem !important;
+  flex-direction: row !important;
+  width: 100% !important;
+}
+
+aside.sidebar .brand i {
+  font-size: 1.5rem !important;
+  color: var(--orange) !important;
+}
+
+aside.sidebar .title {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
+
+aside.sidebar .title span {
+  color: var(--orange) !important;
+}
+
+/* Força a navegação e os links a ficarem em coluna rigorosamente */
+aside.sidebar nav.nav-links,
+aside.sidebar .nav-links {
+  display: flex !important;
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;
+  gap: 0.5rem !important;
+  flex: 1 !important;
+  width: 100% !important;
+  float: none !important;
+}
+
+aside.sidebar .nav-links a {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  padding: 0.75rem 1rem !important;
+  color: #94a3b8 !important;
+  text-decoration: none !important;
+  border-radius: var(--border-radius-sm) !important;
+  font-weight: 500 !important;
+  font-size: 0.95rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+aside.sidebar .nav-links a i {
+  width: 20px !important;
+  text-align: center !important;
+  flex-shrink: 0 !important;
+}
+
+aside.sidebar .nav-links a.active,
+aside.sidebar .nav-links a:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+aside.sidebar .user-profile {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding-top: 1rem !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  font-size: 0.85rem !important;
+  color: #cbd5e1 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+aside.sidebar .user-profile span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+aside.sidebar .user-profile button {
+  background: transparent !important;
+  border: none !important;
+  color: #ef4444 !important;
+  cursor: pointer !important;
+  font-size: 1rem !important;
+  padding: 0 !important;
+}
+
+/* Responsividade da Sidebar */
+@media (max-width: 992px) {
+  aside.sidebar {
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+    padding: 1rem 0.5rem !important;
+  }
+
+  aside.sidebar .brand h2,
+  aside.sidebar .nav-links span,
+  aside.sidebar .user-profile span {
+    display: none !important;
+  }
+
+  aside.sidebar .brand {
+    justify-content: center !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  aside.sidebar .nav-links a {
+    justify-content: center !important;
+    padding: 0.75rem !important;
+  }
+
+  aside.sidebar .user-profile {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    align-items: center !important;
+  }
+}

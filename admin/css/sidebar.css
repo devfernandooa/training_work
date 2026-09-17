@@ -1,4 +1,7 @@
-/* Variáveis de Layout */
+/* =========================================
+   SIDEBAR - ESTILIZAÇÃO MODERNA E LIMPA
+   ========================================= */
+
 :root {
   --sidebar-width: 260px;
   --bg-sidebar: #0f172a; /* Azul escuro moderno / Slate */
@@ -7,10 +10,8 @@
   --text-active: #ffffff;
 }
 
-/* 📂 Estrutura Padrão da Sidebar (Desktop) */
-.sidebar {
-  width: var(--sidebar-width);
-  background-color: var(--bg-sidebar);
+/* 🖥️ COMPORTAMENTO DESKTOP (Padrão) */
+aside.sidebar {
   position: fixed;
   top: 0;
   left: 0;
