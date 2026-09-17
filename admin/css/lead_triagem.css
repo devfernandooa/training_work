@@ -1,0 +1,146 @@
+/* Container Principal */
+.card-leads-container {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.leads-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.leads-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+    color: #1a202c;
+}
+
+.filtro-select {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    font-size: 0.875rem;
+    outline: none;
+}
+
+/* Visibilidade por tamanho de tela */
+@media (min-width: 769px) {
+    .view-desktop {
+        display: block;
+    }
+
+    .view-mobile {
+        display: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .view-desktop {
+        display: none !important;
+    }
+
+    .view-mobile {
+        display: block;
+    }
+}
+
+/* Estilos da Tabela Desktop */
+.tabela-leads {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tabela-leads th {
+    background-color: #f8fafc;
+    color: #64748b;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    padding: 12px;
+    text-align: left;
+}
+
+.tabela-leads td {
+    padding: 12px;
+    border-top: 1px solid #f1f5f9;
+    font-size: 0.875rem;
+}
+
+/* Estilos dos Cards Mobile */
+.card-lead-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 12px;
+    background: #fff;
+}
+
+.card-lead-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.card-lead-info {
+    display: flex;
+    justify-content: space-between;
+    margin: 8px 0;
+    font-size: 0.85rem;
+}
+
+.box-gemini {
+    background: #f8fafc;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #475569;
+    margin-top: 8px;
+}
+
+.card-lead-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+}
+
+/* Badges e Botões */
+.badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-status {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.badge-baixa {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.btn-aluno {
+    color: #16a34a;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.btn-icon {
+    border: 1px solid #cbd5e1;
+    background: white;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    margin-left: 4px;
+}

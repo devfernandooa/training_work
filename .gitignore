@@ -3,3 +3,5 @@ serviceAccountKey*.json
 serviceAccountKey.json.json
 index copy.html
 .env
+.vscode
+seeds.js
