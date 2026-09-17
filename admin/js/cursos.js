@@ -21,14 +21,17 @@ onAuthStateChanged(auth, (user) => {
   iniciarListeners();
 });
 
-// Logout
-document.getElementById("btn-logout").addEventListener("click", () => {
-  signOut(auth).then(() => window.location.replace("login.html"));
-});
+// Logout (com proteção caso o botão não exista na tela)
+const btnLogout = document.getElementById("btn-logout");
+if (btnLogout) {
+  btnLogout.addEventListener("click", () => {
+    signOut(auth).then(() => window.location.replace("login.html"));
+  });
+}
 
-// 2. Escuta de Cursos e Matrículas em Tempo Real
-let cursosCadastrados = [];
+// Declaração de variáveis globais do módulo
 let totalMatriculasPorCurso = {};
+let cursosCadastrados = [];
 
 function iniciarListeners() {
   // Listener 1: Matrículas (para contar alunos em cada curso em andamento)
@@ -45,6 +48,7 @@ function iniciarListeners() {
   // Listener 2: Cursos
   onSnapshot(collection(db, "cursos"), (snap) => {
     cursosCadastrados = [];
+    // console.table(cursosCadastrados);
     snap.forEach((docSnap) => {
       cursosCadastrados.push({ id: docSnap.id, ...docSnap.data() });
     });
@@ -59,7 +63,6 @@ function renderizarCardsAndamento(cursos) {
   const container = document.getElementById("cards-turmas-andamento");
   if (!container) return;
 
-  // Cursos com status 'em_andamento' ou com alunos matriculados
   const emAndamento = cursos.filter(c => c.status === "em_andamento" || c.status === "ativo");
 
   if (emAndamento.length === 0) {
@@ -102,6 +105,8 @@ function renderizarCardsAndamento(cursos) {
 // 4. Renderizar Tabela do Catálogo Completo
 function renderizarTabelaCursos(cursos) {
   const tbody = document.getElementById("cursos-tbody");
+  if (!tbody) return;
+
   const termo = (document.getElementById("busca-curso")?.value || "").toLowerCase();
 
   tbody.innerHTML = "";
@@ -146,59 +151,69 @@ function renderizarTabelaCursos(cursos) {
   configurarBotoesExcluir();
 }
 
-// 5. Abertura e Manipulação do Modal
+// 5. Abertura e Manipulação do Modal (Blindado com verificações de nulidade)
 const modalCurso = document.getElementById("modal-curso");
 const formCurso = document.getElementById("form-curso");
+const btnNovoCurso = document.getElementById("btn-novo-curso");
 
-document.getElementById("btn-novo-curso").addEventListener("click", () => {
-  formCurso.reset();
-  document.getElementById("curso-id").value = "";
-  document.getElementById("modal-curso-titulo").textContent = "Novo Treinamento";
-  document.getElementById("curso-slug").disabled = false;
-  modalCurso.style.display = "flex";
-});
+if (btnNovoCurso && modalCurso && formCurso) {
+  btnNovoCurso.addEventListener("click", () => {
+    formCurso.reset();
+    document.getElementById("curso-id").value = "";
+    document.getElementById("modal-curso-titulo").textContent = "Novo Treinamento";
+    document.getElementById("curso-slug").disabled = false;
+    modalCurso.style.display = "flex";
+  });
+}
 
-document.getElementById("modal-curso-fechar").addEventListener("click", () => modalCurso.style.display = "none");
-document.getElementById("btn-cancelar-curso").addEventListener("click", () => modalCurso.style.display = "none");
+document.getElementById("modal-curso-fechar")?.addEventListener("click", () => modalCurso.style.display = "none");
+document.getElementById("btn-cancelar-curso")?.addEventListener("click", () => modalCurso.style.display = "none");
 
 // Salvar / Editar (Create / Update)
-formCurso.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const btnSalvar = document.getElementById("btn-salvar-curso");
-  btnSalvar.disabled = true;
-  btnSalvar.textContent = "Salvando...";
+if (formCurso) {
+  formCurso.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btnSalvar = document.getElementById("btn-salvar-curso");
+    if (btnSalvar) {
+      btnSalvar.disabled = true;
+      btnSalvar.textContent = "Salvando...";
+    }
 
-  const idExistente = document.getElementById("curso-id").value;
-  const slug = document.getElementById("curso-slug").value.trim().toLowerCase().replace(/\s+/g, "-");
-  const idDocumento = idExistente || slug;
+    const idExistente = document.getElementById("curso-id").value;
+    const slugInput = document.getElementById("curso-slug");
+    const slug = (slugInput?.value || "").trim().toLowerCase().replace(/\s+/g, "-");
+    const idDocumento = idExistente || slug;
 
-  const ementaTexto = document.getElementById("curso-ementa").value;
-  const ementaArray = ementaTexto.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+    const ementaTexto = document.getElementById("curso-ementa")?.value || "";
+    const ementaArray = ementaTexto.split("\n").map(l => l.trim()).filter(l => l.length > 0);
 
-  const dadosCurso = {
-    nome: document.getElementById("curso-nome").value.trim(),
-    slug: slug,
-    carga_horaria: Number(document.getElementById("curso-carga").value),
-    valor: Number(document.getElementById("curso-valor").value),
-    modalidade: document.getElementById("curso-modalidade").value,
-    professor: document.getElementById("curso-professor").value.trim() || "Instrutor Técnico Training Work",
-    status: document.getElementById("curso-status").value,
-    descricao: document.getElementById("curso-descricao").value.trim(),
-    ementa: ementaArray,
-    atualizado_em: serverTimestamp()
-  };
+    const dadosCurso = {
+      nome: document.getElementById("curso-nome")?.value.trim() || "",
+      slug: slug,
+      carga_horaria: Number(document.getElementById("curso-carga")?.value || 0),
+      valor: Number(document.getElementById("curso-valor")?.value || 0),
+      modalidade: document.getElementById("curso-modalidade")?.value || "Presencial",
+      professor: document.getElementById("curso-professor")?.value.trim() || "Instrutor Técnico Training Work",
+      status: document.getElementById("curso-status")?.value || "ativo",
+      descricao: document.getElementById("curso-descricao")?.value.trim() || "",
+      ementa: ementaArray,
+      atualizado_em: serverTimestamp()
+    };
 
-  try {
-    await setDoc(doc(db, "cursos", idDocumento), dadosCurso, { merge: true });
-    modalCurso.style.display = "none";
-  } catch (err) {
-    console.error("Erro ao salvar curso:", err);
-    alert("Erro ao salvar curso: " + err.message);
-  } finally {
-    btnSalvar.disabled = false;
-    btnSalvar.textContent = "Salvar Curso";
-  }
-});
+    try {
+      await setDoc(doc(db, "cursos", idDocumento), dadosCurso, { merge: true });
+      if (modalCurso) modalCurso.style.display = "none";
+    } catch (err) {
+      console.error("Erro ao salvar curso:", err);
+      alert("Erro ao salvar curso: " + err.message);
+    } finally {
+      if (btnSalvar) {
+        btnSalvar.disabled = false;
+        btnSalvar.textContent = "Salvar Curso";
+      }
+    }
+  });
+}
 
 // Configurar Ações de Edição
 function configurarBotoesEditar() {
@@ -206,12 +221,12 @@ function configurarBotoesEditar() {
     btn.addEventListener("click", (e) => {
       const id = e.currentTarget.getAttribute("data-edit-id");
       const curso = cursosCadastrados.find(c => c.id === id);
-      if (!curso) return;
+      if (!curso || !modalCurso) return;
 
       document.getElementById("curso-id").value = curso.id;
       document.getElementById("curso-nome").value = curso.nome || "";
       document.getElementById("curso-slug").value = curso.slug || curso.id;
-      document.getElementById("curso-slug").disabled = true; // Mantém a chave fixa
+      document.getElementById("curso-slug").disabled = true;
       document.getElementById("curso-carga").value = curso.carga_horaria || 40;
       document.getElementById("curso-valor").value = curso.valor || 0;
       document.getElementById("curso-modalidade").value = curso.modalidade || "Presencial";

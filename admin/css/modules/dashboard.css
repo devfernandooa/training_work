@@ -1,0 +1,128 @@
+/* ==========================================================================
+   ESTILOS ESPECÍFICOS DO DASHBOARD (Baseado no padrão de Alunos)
+   ========================================================================== */
+
+/* Configuração do container principal em duas colunas */
+body.app-container {
+  display: flex;
+  min-height: 100vh;
+  margin: 0;
+  background-color: var(--bg-secondary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text-primary);
+  overflow-x: hidden;
+}
+
+/* Área de Conteúdo Principal */
+.main-content {
+  flex: 1;
+  padding: 2.5rem;
+  overflow-y: auto;
+  height: 100vh;
+  background-color: var(--bg-secondary);
+}
+
+/* Caixa dos Cards de Métricas */
+.metric-card-box {
+  background-color: var(--white) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--border-radius-md) !important;
+  box-shadow: var(--shadow-sm) !important;
+  padding: 1.25rem !important;
+}
+
+.metric-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--border-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.metric-icon.blue { background-color: var(--blue-glow); color: var(--blue); }
+.metric-icon.red { background-color: var(--orange-glow); color: var(--orange); }
+.metric-icon.green { background-color: rgba(40, 167, 69, 0.1); color: #28a745; }
+
+.metric-info .label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  display: block;
+}
+
+/* Container da Tabela */
+.table-container {
+  background-color: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--white);
+  border-radius: var(--border-radius-md);
+}
+
+/* Força a tabela a respeitar a largura do container */
+table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+/* Define o comportamento para o texto das células */
+td {
+  overflow: hidden;
+  text-overflow: ellipsis; /* Adiciona "..." caso o texto ultrapasse */
+  white-space: nowrap;     /* Evita quebra desordenada de linha */
+}
+
+table.table th,
+table.table td {
+  vertical-align: middle;
+  padding: 1rem 0.75rem;
+  color: var(--text-primary);
+}
+/* Garante alinhamento e previne quebras desordenadas */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+/* Coluna de texto longo comprimida */
+td.col-analise {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+.filters select {
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  outline: none;
+}
+
+/* Responsividade Avançada */
+@media (max-width: 992px) {
+  .main-content {
+    padding: 1.25rem;
+  }
+}
+
