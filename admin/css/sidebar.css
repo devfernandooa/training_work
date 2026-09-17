@@ -1,5 +1,5 @@
 /* =========================================
-   SIDEBAR - ESTILIZAÇÃO MODERNA E LIMPA
+   SIDEBAR - ESTILIZAÇÃO
    ========================================= */
 
 :root {
@@ -10,7 +10,7 @@
   --text-active: #ffffff;
 }
 
-/* 🖥️ COMPORTAMENTO DESKTOP (Padrão) */
+/* COMPORTAMENTO DESKTOP (Padrão) */
 aside.sidebar {
   position: fixed;
   top: 0;
