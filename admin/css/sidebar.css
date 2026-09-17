@@ -1,29 +1,25 @@
-/* =========================================
-   SIDEBAR - ESTILIZAÇÃO MODERNA E LIMPA
-   ========================================= */
-
+/* Variáveis de Layout */
 :root {
   --sidebar-width: 260px;
-  --bg-sidebar: #0f172a;
-  --accent-color: #3b82f6;
+  --bg-sidebar: #0f172a; /* Azul escuro moderno / Slate */
+  --accent-color: #3b82f6; /* Azul vibrante */
   --text-sidebar: #94a3b8;
   --text-active: #ffffff;
 }
 
-/* 🖥️ COMPORTAMENTO DESKTOP (Padrão) */
-aside.sidebar {
+/* 📂 Estrutura Padrão da Sidebar (Desktop) */
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--bg-sidebar);
   position: fixed;
   top: 0;
   left: 0;
-  width: var(--sidebar-width);
   height: 100vh;
-  background-color: var(--bg-sidebar);
   display: flex;
   flex-direction: column;
   z-index: 1050;
-  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
-  overflow-y: auto;
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
 }
 
 /* Marca / Logotipo */
@@ -59,7 +55,7 @@ aside.sidebar {
   font-size: 0.75rem;
 }
 
-/* Perfil do Usuário */
+/* Perfil do Usuário na Sidebar */
 .sidebar-user {
   padding: 16px 20px;
   display: flex;
@@ -94,12 +90,13 @@ aside.sidebar {
   gap: 4px;
 }
 
-/* Menu de Navegação */
+/* Links de Navegação */
 .sidebar-menu {
   list-style: none;
   padding: 16px 12px;
   margin: 0;
   flex-grow: 1;
+  overflow-y: auto;
 }
 
 .sidebar-menu li {
@@ -116,7 +113,7 @@ aside.sidebar {
   font-size: 0.9rem;
   font-weight: 500;
   border-radius: 8px;
-  transition: background 0.2s, color 0.2s;
+  transition: all 0.2s ease;
 }
 
 .sidebar-link i {
@@ -133,12 +130,13 @@ aside.sidebar {
 .sidebar-link.active {
   color: var(--text-active);
   background: var(--accent-color);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-/* Rodapé / Logout */
+/* Rodapé do Menu (Botão Sair) */
 .sidebar-footer {
   padding: 16px 20px;
-  border-top: 1px solid rgba(255, 255, 205, 0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .btn-logout-modern {
@@ -151,6 +149,7 @@ aside.sidebar {
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -161,50 +160,48 @@ aside.sidebar {
   color: #fff;
 }
 
-/* Overlay Escuro Mobile com Efeito Blur */
-.sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(3px);
-  z-index: 1040;
-  display: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.sidebar-overlay.show {
-  display: block;
-  opacity: 1;
-}
-
-/* =========================================
-   RESPONSIVIDADE E GAVETA MOBILE
-   ========================================= */
-
-/* Computador: Empurra o conteúdo principal para a direita */
-@media (min-width: 993px) {
+/* 📱 Ajuste de Conteúdo Principal para Desktop */
+@media (min-width: 769px) {
   body {
-    padding-left: var(--sidebar-width);
+    padding-left: var(--sidebar-width); /* Empurra o conteúdo para a direita no PC */
+    background-color: #f8fafc;
+  }
+  .sidebar-overlay {
+    display: none !important;
   }
 }
 
-/* Celular/Tablet: Esconde a sidebar por padrão empurrando para fora da tela */
-@media (max-width: 992px) {
-  aside.sidebar {
-    transform: translateX(-100%);
-    background-color: var(--bg-sidebar);
-  }
-
-  /* Quando ativa, desliza suavemente para dentro como uma gaveta moderna */
-  aside.sidebar.show {
-    transform: translateX(0);
-  }
-
+/* 📱 Comportamento Mobile (Telas abaixo de 768px) */
+@media (max-width: 768px) {
   body {
     padding-left: 0 !important;
+  }
+
+  .sidebar {
+    transform: translateX(-100%); /* Oculta a sidebar para fora da tela à esquerda */
+  }
+
+  .sidebar.show {
+    transform: translateX(0); /* Mostra a sidebar quando ganha a classe .show */
+  }
+
+  /* Overlay Escuro */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(2px);
+    z-index: 1040;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .sidebar-overlay.show {
+    display: block;
+    opacity: 1;
   }
 }
