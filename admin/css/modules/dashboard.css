@@ -70,13 +70,45 @@ body.app-container {
   border-radius: var(--border-radius-md);
 }
 
+/* Força a tabela a respeitar a largura do container */
+table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+/* Define o comportamento para o texto das células */
+td {
+  overflow: hidden;
+  text-overflow: ellipsis; /* Adiciona "..." caso o texto ultrapasse */
+  white-space: nowrap;     /* Evita quebra desordenada de linha */
+}
+
 table.table th,
 table.table td {
   vertical-align: middle;
   padding: 1rem 0.75rem;
   color: var(--text-primary);
 }
+/* Garante alinhamento e previne quebras desordenadas */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
 
+table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+/* Coluna de texto longo comprimida */
+td.col-analise {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
 .filters select {
   padding: 0.45rem 0.8rem;
   border: 1px solid var(--border-color);
@@ -93,3 +125,4 @@ table.table td {
     padding: 1.25rem;
   }
 }
+
