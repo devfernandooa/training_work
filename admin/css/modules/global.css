@@ -70,42 +70,18 @@ h6 {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
-body {
-    margin: 0;
-    background-color: #f8fafc;
-    color: #1e293b;
-    font-size: 0.95rem;
-}
-
-#app-container {
-    display: flex;
-    min-height: 100vh;
-    position: relative;
-}
-
-/* Garantir alinhamento e largura da Sidebar */
-.sidebar {
-    width: 260px !important;
-    min-width: 260px !important;
-    background-color: #0f172a !important;
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 1050;
-    transition: transform 0.3s ease-in-out;
-}
-
 .main-content {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+/* .main-content {
     margin-left: 260px !important;
     flex: 1;
     padding: 2rem;
     background-color: #f8fafc;
     width: calc(100% - 260px) !important;
-}
+} */
 
 /* Comportamento responsivo para mobile e tablets */
 @media (max-width: 992px) {
