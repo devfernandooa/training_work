@@ -25,14 +25,24 @@
       </div>
     </div>
 
-    <div class="sidebar-user">
-      <div class="user-avatar">
-        <i class="fas fa-user-circle"></i>
+    <div class="user-profile-bar loaded">
+      <div class="user-avatar-container">
+        <!-- Ícone padrão de utilizador do FontAwesome -->
+        <div class="user-avatar-icon">
+          <i class="fas fa-user"></i>
+        </div>
+        <span class="user-status-dot"></span>
       </div>
-      <div class="user-info">
-        <span class="user-name" id="user-name">Fernando</span>
-        <span class="user-status"><i class="fas fa-circle text-success fs-8"></i> Online</span>
+
+      <div class="user-info-text">
+        <span class="user-name">Carregando...</span>
+        <span class="user-email">...</span>
+        <a href="#editar-perfil" class="user-edit-profile">Editar perfil</a>
       </div>
+
+      <button type="button" onclick="fazerL0gout()" class="logout-icon-btn" title="Sair do Sistema">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
     </div>
 
     <ul class="sidebar-menu">
@@ -62,12 +72,6 @@
         </a>
       </li>
     </ul>
-
-    <div class="sidebar-footer">
-      <button onclick="fazerLogout()" class="btn-logout-modern">
-        <i class="fas fa-sign-out-alt me-2"></i> Sair do Sistema
-      </button>
-    </div>
   </aside>
 
   <!-- Conteúdo Principal Responsivo -->
@@ -203,8 +207,9 @@
 
   <script type="module" src="js/sidebar.js"></script>
   <script type="module" src="js/dashboard.js"></script>
+  <script type="module" src="js/auth-guard.js"></script>
   <script type="module" src="js/modules/sidebar.js"></script>
-
+  <script type="module" src="js/auth.js"></script>
 </body>
 
 </html>
