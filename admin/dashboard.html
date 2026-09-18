@@ -5,30 +5,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard - Training Work</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/lead_triagem.css">
-  <link rel="stylesheet" href="css/sidebar.css">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <!-- Estilos Modulares Unificados -->
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/modules/dashboard.css">
+  <link rel="stylesheet" href="css/modules/global.css">
   <link rel="stylesheet" href="css/modules/sidebar.css">
+  <link rel="stylesheet" href="css/modules/dashboard.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body class="app-container">
-
-  <!-- Sidebar -->
-  <!-- 📱 Botão de Menu Mobile (Fica fixo ou no topo da tela em telas pequenas) -->
-  <button class="btn btn-dark d-md-none mb-3 " id="sidebarToggle">
-    <i class="fas fa-bars me-2"></i> Menu
-  </button>
-
-  <!-- Overlay Escuro de Fundo (Para fechar o menu ao tocar fora no mobile) -->
-  <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-  <!-- 📂 Sidebar Reposicionada e Moderna -->
+<body>
+  <!-- components/sidebar.html -->
   <aside class="sidebar" id="appSidebar">
     <div class="sidebar-brand">
       <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
@@ -50,7 +37,7 @@
 
     <ul class="sidebar-menu">
       <li>
-        <a href="dashboard.html" class="sidebar-link active">
+        <a href="dashboard.html" class="sidebar-link">
           <i class="fas fa-chart-pie"></i> <span>Leads & Triagem</span>
         </a>
       </li>
@@ -60,7 +47,7 @@
         </a>
       </li>
       <li>
-        <a href="admin-cursos.html" class="sidebar-link">
+        <a href="cursos-em-andamento.html" class="sidebar-link">
           <i class="fas fa-laptop-code"></i> <span>Em Andamento</span>
         </a>
       </li>
@@ -81,43 +68,15 @@
         <i class="fas fa-sign-out-alt me-2"></i> Sair do Sistema
       </button>
     </div>
-
-    <ul class="nav flex-column gap-2">
-      <li class="nav-item">
-        <a href="dashboard.html" class="nav-link text-white d-flex align-items-center gap-2">
-          <i class="fas fa-chart-line fa-fw"></i> Leads & Triagem
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="cursos.html" class="nav-link text-white d-flex align-items-center gap-2">
-          <i class="fas fa-book fa-fw"></i> Cursos
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="admin-cursos.html" class="nav-link text-white d-flex align-items-center gap-2">
-          <i class="fa-solid fa-play"></i> Em Andamento
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="alunos.html" class="nav-link text-white active d-flex align-items-center gap-2">
-          <i class="fas fa-user-graduate fa-fw"></i> Alunos
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="matriculas.html" class="nav-link text-white d-flex align-items-center gap-2">
-          <i class="fas fa-file-signature fa-fw"></i> Matrículas
-        </a>
-      </li>
-    </ul>
-  </nav>
+  </aside>
 
   <!-- Conteúdo Principal Responsivo -->
   <main class="main-content">
     <div class="d-lg-none mb-3">
-                <button class="btn btn-dark btn-sm px-3 py-2 rounded-3 shadow-sm" id="sidebarToggle" type="button">
-                    <i class="fas fa-bars me-1"></i> Menu
-                </button>
-            </div>
+      <button class="btn btn-dark btn-sm px-3 py-2 rounded-3 shadow-sm" id="sidebarToggle" type="button">
+        <i class="fas fa-bars me-1"></i> Menu
+      </button>
+    </div>
     <header class="topbar mb-4">
       <div>
         <h1 class="h3 fw-bold mb-1" style="color: var(--text-primary);">Painel de Triagem e Leads</h1>
