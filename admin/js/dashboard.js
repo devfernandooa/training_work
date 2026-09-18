@@ -12,14 +12,15 @@ import {
 // 1. Verificação de Autenticação
 onAuthStateChanged(auth, (user) => {
   const userDisplay = document.getElementById("user-display");
-
+//console.table(user)
   if (!user) {
     window.location.replace("login.html");
     return;
   }
 
   if (userDisplay) {
-    userDisplay.innerHTML = `<i class="fas fa-user-circle"></i> ${user.email}`;
+    userDisplay.innerHTML = `
+    <i class="fas fa-user-circle"></i> ${user.email}`;
   }
 
   escutarInscricoes();

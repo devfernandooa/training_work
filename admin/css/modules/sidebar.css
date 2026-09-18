@@ -250,6 +250,204 @@ aside.sidebar .user-profile button {
   opacity: 1;
 }
 
+/* Container Principal da Barra do Usuário */
+/* Container Principal */
+.user-profile-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    margin: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+}
+
+.user-profile-bar.loaded {
+    opacity: 1;
+}
+
+/* Container do Avatar / Ícone */
+.user-avatar-container {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+}
+
+.user-avatar-icon {
+    color: #94a3b8;
+    font-size: 1.1rem;
+}
+
+.user-status-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    background-color: #27ae60;
+    border: 2px solid #0f172a; /* Cor de fundo da sidebar */
+    border-radius: 50%;
+}
+
+/* Bloco de Textos */
+.user-info-text {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 0; /* Impede que textos longos quebrem o flex */
+}
+
+.user-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-email {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+
+.user-edit-profile {
+    font-size: 0.7rem;
+    color: #38bdf8;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.user-edit-profile:hover {
+    color: #7dd3fc;
+    text-decoration: underline;
+}
+
+/* Botão de Logout Compacto */
+.logout-icon-btn {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.logout-icon-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+}
+
+/* Avatar e Indicador Online */
+.user-avatar-container {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+}
+
+.user-avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-status-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    background-color: #27ae60;
+    border: 2px solid #0f172a; /* Cor de fundo da sidebar */
+    border-radius: 50%;
+}
+
+/* Informações de Texto (Nome, E-mail e Link) */
+.user-info-text {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 0; /* Evita que o texto quebre o layout */
+}
+
+.user-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-email {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+
+.user-edit-profile {
+    font-size: 0.7rem;
+    color: #38bdf8;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.user-edit-profile:hover {
+    color: #7dd3fc;
+    text-decoration: underline;
+}
+
+/* Botão de Logout Compacto */
+.logout-form-inline {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.logout-icon-btn {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.logout-icon-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+}
+
 /* ==========================================================================
    RESPONSIVIDADE E COMPORTAMENTO MOBILE (GAVETA)
    ========================================================================== */

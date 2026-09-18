@@ -32,7 +32,6 @@ const galleryData = [
   { type: "foto", url: "img/galeria/img_55.jpeg", label: "Treinamento NR" }
 ];
 
-
 function renderTestimonials() {
   const container = document.getElementById('testimonialsTrack');
   if (!container) return;
@@ -57,11 +56,8 @@ function renderGallery() {
   if (!container) return;
 
   container.innerHTML = galleryData.map((item, index) => `
-    <article class="gallery-card ${item.type === 'video' ? 'gallery-video' : ''}" data-type="${item.type}" data-index="${index}">
-      ${item.type === 'video' ?
-      `<img src="${item.poster}" alt="${item.label}" class="gallery-image" loading="lazy" style="cursor:pointer" onclick="openVideoModal('${item.url}')">` :
-      `<img src="${item.url}" alt="${item.label}" class="gallery-image" loading="lazy">`
-    }
+    <article class="gallery-card" data-type="${item.type}" data-index="${index}">
+      <img src="${item.url}" alt="${item.label}" class="gallery-image" loading="lazy">
       <div class="gallery-label">${item.label}</div>
     </article>
   `).join('');
@@ -71,7 +67,6 @@ function populateCourseSelect() {
   const select = document.getElementById('curso');
   if (!select) return;
 
-  // Lendo os títulos diretamente do HTML montado
   const courseCards = document.querySelectorAll('.course-card');
   const titles = Array.from(courseCards).map(card => card.querySelector('.course-title')?.textContent.trim()).filter(Boolean);
   const uniqueCourses = [...new Set(titles)];
@@ -81,7 +76,7 @@ function populateCourseSelect() {
 }
 
 // ──────────────────────────────────────────
-// 3. FILTRO DE CURSOS E GALERIA
+// FILTRO DE CURSOS E GALERIA
 // ──────────────────────────────────────────
 function initFilters() {
   const savedCourseFilter = localStorage.getItem('selectedCourseFilter') || 'todos';
@@ -115,7 +110,6 @@ function initFilters() {
     }
   }
 
-  // Filtro de Galeria
   const galleryTabs = document.querySelectorAll('.gallery-tab');
   const galleryCards = document.querySelectorAll('.gallery-card');
   const galleryGrid = document.getElementById('galleryGrid');
@@ -143,44 +137,7 @@ function initFilters() {
 }
 
 // ──────────────────────────────────────────
-// 4. GALERIA COM MODAL DE VÍDEO
-// ──────────────────────────────────────────
-window.openVideoModal = function (videoUrl) {
-  const modal = document.getElementById('videoModal');
-  const video = document.getElementById('modalVideo');
-  if (!modal || !video) return;
-
-  video.querySelector('source').src = videoUrl;
-  video.load();
-  modal.classList.add('active');
-  modal.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
-};
-
-function closeVideoModal() {
-  const modal = document.getElementById('videoModal');
-  const video = document.getElementById('modalVideo');
-  if (!modal || !video) return;
-
-  modal.classList.remove('active');
-  modal.setAttribute('aria-hidden', 'true');
-  video.pause();
-  document.body.style.overflow = '';
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const modal = document.getElementById('videoModal');
-  const closeBtn = document.querySelector('.modal-close');
-  if (modal && closeBtn) {
-    closeBtn.addEventListener('click', closeVideoModal);
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeVideoModal();
-    });
-  }
-});
-
-// ──────────────────────────────────────────
-// 5. NEWSLETTER
+// NEWSLETTER
 // ──────────────────────────────────────────
 function initNewsletter() {
   const form = document.getElementById('newsletterForm');
@@ -242,7 +199,7 @@ function showNewsletterMessage(element, message, type) {
 }
 
 // ──────────────────────────────────────────
-// 6. TEMA CLARO/ESCURO
+// TEMA CLARO/ESCURO
 // ──────────────────────────────────────────
 function initThemeToggle() {
   const toggle = document.getElementById('themeToggle');
@@ -272,7 +229,7 @@ function updateThemeIcon(theme) {
 }
 
 // ──────────────────────────────────────────
-// 7. ANIMAÇÕES DE ENTRADA (Intersection Observer)
+// ANIMAÇÕES DE ENTRADA (Intersection Observer)
 // ──────────────────────────────────────────
 function initScrollReveal() {
   const elements = document.querySelectorAll('.reveal');
@@ -296,7 +253,7 @@ function initScrollReveal() {
 }
 
 // ──────────────────────────────────────────
-// 8. MICRO-INTERAÇÕES
+// MICRO-INTERAÇÕES
 // ──────────────────────────────────────────
 function initMicroInteractions() {
   const buttons = document.querySelectorAll('.btn-primary, .btn-secondary, .btn-card, .course-tab, .gallery-tab');
@@ -339,7 +296,7 @@ rippleStyle.textContent = `
 document.head.appendChild(rippleStyle);
 
 // ──────────────────────────────────────────
-// 9. PROGRESS BAR, NAV E OUTROS
+// PROGRESS BAR E NAV SCROLL
 // ──────────────────────────────────────────
 window.addEventListener('scroll', () => {
   const winScroll = document.documentElement.scrollTop;
@@ -353,7 +310,7 @@ window.addEventListener('scroll', () => {
 });
 
 // ──────────────────────────────────────────
-// 10. HAMBURGER MENU
+// HAMBURGER MENU
 // ──────────────────────────────────────────
 function initHamburgerMenu() {
   const hamburger = document.getElementById('hamburger');
@@ -381,7 +338,7 @@ function initHamburgerMenu() {
 }
 
 // ──────────────────────────────────────────
-// 11. COUNTER ANIMATION
+// COUNTER ANIMATION
 // ──────────────────────────────────────────
 function initCounters() {
   const counterObserver = new IntersectionObserver((entries) => {
@@ -411,11 +368,8 @@ function initCounters() {
 }
 
 // ──────────────────────────────────────────
-// 12. TESTIMONIAL CAROUSEL
+// TESTIMONIAL CAROUSEL
 // ──────────────────────────────────────────
-let testimonialAutoplay = null;
-let testimonialIndex = 0;
-
 function initTestimonialCarousel() {
   const track = document.querySelector('.testimonials-track');
   const prevBtn = document.querySelector('.testimonial-nav.prev');
@@ -423,6 +377,9 @@ function initTestimonialCarousel() {
   const cards = document.querySelectorAll('.testimonial-card');
 
   if (!track || !prevBtn || !nextBtn || !cards.length) return;
+
+  let testimonialIndex = 0;
+  let testimonialAutoplay = null;
 
   function updateButtons() {
     prevBtn.disabled = testimonialIndex <= 0;
@@ -475,9 +432,11 @@ function initTestimonialCarousel() {
 }
 
 // ──────────────────────────────────────────
-// 13. EMAILJS E FORMULÁRIO
+// EMAILJS E FORMULÁRIO DE CONTACTO
 // ──────────────────────────────────────────
-emailjs.init("R5hAfW7DI_BCx1tVj");
+if (typeof emailjs !== 'undefined') {
+  emailjs.init("R5hAfW7DI_BCx1tVj");
+}
 
 window.scrollToContact = function () {
   document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' });
@@ -525,13 +484,13 @@ window.submitContactForm = function (button) {
 };
 
 // ──────────────────────────────────────────
-// 14. GALLERY CAROUSEL (AUTOPLAY)
+// GALLERY CAROUSEL (AUTOPLAY)
 // ──────────────────────────────────────────
-let galleryAutoplay = null;
-
 function initGalleryCarousel() {
   const galleryGrid = document.getElementById('galleryGrid');
   if (!galleryGrid) return;
+
+  let galleryAutoplay = null;
 
   function startGalleryAutoplay() {
     if (galleryAutoplay) return;
@@ -564,7 +523,7 @@ function initGalleryCarousel() {
 }
 
 // ──────────────────────────────────────────
-// 15. INICIALIZAÇÃO
+// INICIALIZAÇÃO GERAL
 // ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   renderTestimonials();

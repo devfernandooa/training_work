@@ -48,3 +48,20 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+
+import { logout } from '../auth-guard.js'; // Ajuste o caminho se necessário
+
+// Procura pelo botão de sair e adiciona o evento de clique via código
+document.addEventListener('click', async (e) => {
+  const btnLogout = e.target.closest('.btn-logout-modern') || e.target.closest('#btnLogout');
+  if (btnLogout) {
+    e.preventDefault();
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
+  }
+});
+
