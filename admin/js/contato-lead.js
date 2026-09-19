@@ -4,7 +4,7 @@ import { collection, getDocs, addDoc, serverTimestamp } from "https://www.gstati
 // 1. Carregar os cursos da coleção "cursos" do Firestore para o <select id="curso">
 async function carregarCursosNoSelect() {
     const selectCurso = document.getElementById("curso");
-    
+
     if (!selectCurso) {
         console.warn("Aviso: Elemento <select id='curso'> não foi encontrado na página.");
         return;
@@ -13,7 +13,7 @@ async function carregarCursosNoSelect() {
     try {
         console.log("A carregar cursos do Firestore...");
         const querySnapshot = await getDocs(collection(db, "cursos"));
-        
+
         if (querySnapshot.empty) {
             console.warn("A coleção 'cursos' no Firestore está vazia.");
             return;
@@ -25,12 +25,12 @@ async function carregarCursosNoSelect() {
         querySnapshot.forEach((docSnap) => {
             const curso = docSnap.data();
             console.log("Documento encontrado:", docSnap.id, curso); // Adicione isto para ver no F12
-            
+
             const option = document.createElement("option");
-            
+
             // Tente testar qual campo realmente existe no seu documento:
             const nomeCurso = curso.nome || curso.titulo || docSnap.id;
-            
+
             option.value = nomeCurso;
             option.textContent = nomeCurso;
             selectCurso.appendChild(option);
@@ -66,7 +66,7 @@ if (formularioContato) {
 
         try {
             console.log("A tentar gravar na coleção 'inscricoes'...");
-            
+
             // Certifique-se se a coleção no Firestore se chama exatamente "inscricoes" ou "leads"
             await addDoc(collection(db, "inscricoes"), {
                 nome: nome,
@@ -74,14 +74,14 @@ if (formularioContato) {
                 email: email,
                 curso: cursoSelecionado,
                 mensagem: mensagem,
-                status: "Pendente",
-                data: serverTimestamp()
+                status: "novo", // Importante: usar "novo" para condizer com a regra do dashboard
+                prioridade: "Média", // Opcional para preencher a prioridade padrão
+                criado_em: new Date().toISOString() // Alinhado com o painel administrativo
             });
-
             console.log("Lead guardado com sucesso no Firestore!");
 
             // Substitua pelo número real do WhatsApp do administrador (com DDI e DDD)
-            const numeroAdmin = "5575999999999"; 
+            const numeroAdmin = "5575999999999";
 
             const textoWpp = `*Novo Lead / Inscrição - Training Work*%0A%0A*Nome:* ${nome}%0A*Telefone:* ${telefone}%0A*E-mail:* ${email}%0A*Curso:* ${cursoSelecionado}%0A*Mensagem:* ${mensagem}`;
 
@@ -89,7 +89,7 @@ if (formularioContato) {
 
             alert("Mensagem enviada e lead cadastrado com sucesso!");
             formularioContato.reset();
-            
+
         } catch (error) {
             console.error("Erro crítico ao registar lead no Firestore:", error);
             alert("Ocorreu um erro ao enviar. Verifique o console (F12).");

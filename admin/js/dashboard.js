@@ -1,9 +1,9 @@
 import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { 
-  collection, 
-  onSnapshot, 
-  doc, 
+import {
+  collection,
+  onSnapshot,
+  doc,
   updateDoc,
   setDoc,
   addDoc
@@ -12,15 +12,13 @@ import {
 // 1. Verificação de Autenticação
 onAuthStateChanged(auth, (user) => {
   const userDisplay = document.getElementById("user-display");
-//console.table(user)
   if (!user) {
     window.location.replace("login.html");
     return;
   }
 
   if (userDisplay) {
-    userDisplay.innerHTML = `
-    <i class="fas fa-user-circle"></i> ${user.email}`;
+    userDisplay.innerHTML = `<i class="fas fa-user-circle"></i> ${user.email}`;
   }
 
   escutarInscricoes();
@@ -44,13 +42,15 @@ function escutarInscricoes() {
     listaInscricoes = [];
 
     snapshot.forEach((docSnap) => {
-      listaInscricoes.push({ id: docSnap.id, ...docSnap.data() });
+      const dataLead = docSnap.data();
+      listaInscricoes.post ? null : listaInscricoes.push({ id: docSnap.id, ...dataLead });
     });
 
+    // Ordenação segura por data (compatível com timestamp ou string)
     listaInscricoes.sort((a, b) => {
-      const dataA = new Date(a.criado_em || 0).getTime();
-      const dataB = new Date(b.criado_em || 0).getTime();
-      return dataB - dataA;
+      const tempoA = a.criado_em ? new Date(a.criado_em).getTime() : (a.data?.seconds ? a.data.seconds * 1000 : 0);
+      const tempoB = b.criado_em ? new Date(b.criado_em).getTime() : (b.data?.seconds ? b.data.seconds * 1000 : 0);
+      return tempoB - tempoA;
     });
 
     renderizarTabela(listaInscricoes);
@@ -59,23 +59,31 @@ function escutarInscricoes() {
   });
 }
 
-// 3. Renderização com Ícones e Ações Dinâmicas por Status
+// 3. Renderização com Segurança contra Erros e Suporte Mobile
 function renderizarTabela(leads) {
   const tbody = document.getElementById("leads-tbody");
+  const mobileContainer = document.getElementById("leads-mobile-container");
   const filterElement = document.getElementById("filter-priority");
   const filtro = filterElement ? filterElement.value : "all";
 
-  if (!tbody) return;
-  tbody.innerHTML = "";
+  if (!tbody) {
+    console.warn("Elemento 'leads-tbody' não encontrado no HTML.");
+    return;
+  }
 
-  const filtrados = filtro === "all" ? leads : leads.filter(l => (l.prioridade || "Média") === filtro);
+  tbody.innerHTML = "";
+  if (mobileContainer) mobileContainer.innerHTML = "";
+
+  const filtrados = filtro === "all" ? leads : leads.filter(l => (l.prioridade || "Média").toLowerCase() === filtro.toLowerCase());
 
   let alta = 0;
   let emAtendimento = 0;
 
   leads.forEach(l => {
-    if ((l.prioridade || "").toLowerCase() === "alta") alta++;
-    if (l.status === "em_contato") emAtendimento++;
+    const prio = (l.prioridade || "").toLowerCase();
+    const stat = (l.status || "").toLowerCase();
+    if (prio === "alta") alta++;
+    if (stat === "em_contato" || stat === "em atendimento") emAtendimento++;
   });
 
   const elTotal = document.getElementById("metric-total");
@@ -87,12 +95,19 @@ function renderizarTabela(leads) {
   if (elAtendimento) elAtendimento.textContent = emAtendimento;
 
   if (filtrados.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhuma inscrição encontrada.</td></tr>`;
+    const msgVazia = `<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhuma inscrição encontrada.</td></tr>`;
+    tbody.innerHTML = msgVazia;
+    if (mobileContainer) {
+      mobileContainer.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhuma inscrição encontrada.</div>`;
+    }
     return;
   }
 
+  let htmlDesktop = "";
+  let htmlMobile = "";
+
   filtrados.forEach(lead => {
-    const status = lead.status || "novo";
+    const status = (lead.status || "novo").toLowerCase();
     const prioridade = lead.prioridade || "Média";
 
     let badgeClass = "priority-media";
@@ -104,11 +119,10 @@ function renderizarTabela(leads) {
     const zapMsg = encodeURIComponent(`Olá ${lead.nome || ""}! Sou da Training Work sobre seu interesse no curso de ${lead.curso || ""}.`);
     const zapLink = `https://wa.me/${ddiPhone}?text=${zapMsg}`;
 
-    // Coluna Status (Badge com Ícone)
     let statusPill = "";
-    if (status === "novo") {
+    if (status === "novo" || status === "pendente") {
       statusPill = `<span class="status-pill status-novo"><i class="fas fa-sparkles"></i> Novo</span>`;
-    } else if (status === "em_contato") {
+    } else if (status === "em_contato" || status === "em atendimento") {
       statusPill = `<span class="status-pill status-em_contato"><i class="fas fa-headset"></i> Em Contato</span>`;
     } else if (status === "matriculado") {
       statusPill = `<span class="status-pill status-matriculado"><i class="fas fa-check-circle"></i> Matriculado</span>`;
@@ -116,15 +130,14 @@ function renderizarTabela(leads) {
       statusPill = `<span class="status-pill status-perdido"><i class="fas fa-archive"></i> Perdido</span>`;
     }
 
-    // Coluna Ações (Adaptada ao Status Atual)
     let botoesAcao = "";
-    if (status === "novo") {
+    if (status === "novo" || status === "pendente") {
       botoesAcao = `
         <a href="${zapLink}" target="_blank" class="btn-whatsapp" data-action="contatar" data-id="${lead.id}" title="Falar e mover para Em Contato">
           <i class="fab fa-whatsapp"></i> Contatar
         </a>
       `;
-    } else if (status === "em_contato") {
+    } else if (status === "em_contato" || status === "em atendimento") {
       botoesAcao = `
         <a href="${zapLink}" target="_blank" class="btn-whatsapp" title="Continuar no WhatsApp">
           <i class="fab fa-whatsapp"></i>
@@ -150,27 +163,83 @@ function renderizarTabela(leads) {
       `;
     }
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${lead.criado_em ? new Date(lead.criado_em).toLocaleDateString("pt-BR") : "Recente"}</td>
-      <td>
-        <strong>${lead.nome || "Não informado"}</strong><br>
-        <small style="color: #64748b;">${lead.email || ""}</small>
-      </td>
-      <td>${lead.curso || "Geral"}</td>
-      <td><span class="badge-priority ${badgeClass}">${prioridade}</span></td>
-      <td style="max-width: 250px; font-size: 0.8rem; color: #475569; line-height: 1.3;">
-        ${lead.resumo_ia || lead.mensagem || "-"}
-      </td>
-      <td>${statusPill}</td>
-      <td>
-        <div class="actions-group">
-          ${botoesAcao}
-        </div>
-      </td>
+    // Formatação segura da data
+    let dataFormatada = "Recente";
+    if (lead.criado_em) {
+      dataFormatada = new Date(lead.criado_em).toLocaleDateString("pt-BR");
+    } else if (lead.data?.toDate) {
+      dataFormatada = lead.data.toDate().toLocaleDateString("pt-BR");
+    } else if (lead.data?.seconds) {
+      dataFormatada = new Date(lead.data.seconds * 1000).toLocaleDateString("pt-BR");
+    }
+
+    // 1. Linha Desktop (com os ícones de ação alinhados que construímos)
+    htmlDesktop += `
+      <tr>
+        <td>${dataFormatada}</td>
+        <td>
+          <strong>${lead.nome || "Não informado"}</strong><br>
+          <small style="color: #64748b;">${lead.email || ""}</small>
+        </td>
+        <td>${lead.curso || "Geral"}</td>
+        <td><span class="badge-priority ${badgeClass}">${prioridade}</span></td>
+        <td style="max-width: 250px; font-size: 0.8rem; color: #475569; line-height: 1.3;">
+          ${lead.resumo_ia || lead.mensagem || "-"}
+        </td>
+        <td>${statusPill}</td>
+        <td style="text-align: center;">
+          <div class="actions-group" style="display: inline-flex; gap: 0.4rem; justify-content: center;">
+            <a href="https://wa.me/${lead.telefone || ''}" target="_blank" class="btn-icon" title="Contatar WhatsApp">
+              <i class="fab fa-whatsapp"></i>
+            </a>
+            <button onclick="abrirModalEditar('${lead.id}')" class="btn-icon" title="Editar Lead">
+              <i class="fas fa-pen"></i>
+            </button>
+            <button onclick="excluirLeadLogico('${lead.id}')" class="btn-icon" title="Excluir Lead" style="color: #dc3545;">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
     `;
-    tbody.appendChild(tr);
+
+    // 2. Bloco Mobile (Cartões)
+    htmlMobile += `
+      <div class="card-lead-item" style="background: white; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+          <div>
+            <strong>${lead.nome || "Não informado"}</strong><br>
+            <small style="color: #64748b;">${lead.email || ""}</small>
+          </div>
+          <span class="badge-priority ${badgeClass}">${prioridade}</span>
+        </div>
+        <div style="font-size: 0.85rem; color: #475569; margin-bottom: 0.75rem;">
+          <p style="margin: 0.2rem 0;"><strong>Curso:</strong> ${lead.curso || "Geral"}</p>
+          <p style="margin: 0.2rem 0;"><strong>Análise:</strong> ${lead.resumo_ia || lead.mensagem || "-"}</p>
+          <p style="margin: 0.2rem 0;"><strong>Status:</strong> ${statusPill}</p>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; pt: 0.5rem; margin-top: 0.5rem; padding-top: 0.5rem;">
+          <span style="font-size: 0.75rem; color: #94a3b8;">${dataFormatada}</span>
+          <div style="display: inline-flex; gap: 0.4rem;">
+            <a href="https://wa.me/${lead.telefone || ''}" target="_blank" class="btn-icon" title="Contatar WhatsApp">
+              <i class="fab fa-whatsapp"></i>
+            </a>
+            <button onclick="abrirModalEditar('${lead.id}')" class="btn-icon" title="Editar Lead">
+              <i class="fas fa-pen"></i>
+            </button>
+            <button onclick="excluirLeadLogico('${lead.id}')" class="btn-icon" title="Excluir Lead" style="color: #dc3545;">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
   });
+
+  tbody.innerHTML = htmlDesktop;
+  if (mobileContainer) {
+    mobileContainer.innerHTML = htmlMobile;
+  }
 
   configurarInteracoes(leads);
 }
@@ -179,7 +248,6 @@ function renderizarTabela(leads) {
 let leadSelecionadoParaMatricula = null;
 
 function configurarInteracoes(leads) {
-  // Quando clica em "Contatar" no WhatsApp no status Novo, move automaticamente para "Em Contato"
   document.querySelectorAll("[data-action='contatar']").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       const id = e.currentTarget.getAttribute("data-id");
@@ -187,7 +255,6 @@ function configurarInteracoes(leads) {
     });
   });
 
-  // Botão Marcar como Perdido
   document.querySelectorAll(".btn-perdido-action").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       const id = e.currentTarget.getAttribute("data-id");
@@ -195,7 +262,6 @@ function configurarInteracoes(leads) {
     });
   });
 
-  // Botão Reativar
   document.querySelectorAll(".btn-reativar-action").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       const id = e.currentTarget.getAttribute("data-id");
@@ -203,7 +269,6 @@ function configurarInteracoes(leads) {
     });
   });
 
-  // Abrir Modal de Matrícula
   document.querySelectorAll(".btn-matricular-action").forEach(btn => {
     btn.addEventListener("click", (e) => {
       const id = e.currentTarget.getAttribute("data-id");
@@ -242,7 +307,6 @@ if (btnModalConfirmar) {
       const cleanPhone = (lead.telefone || "").replace(/\D/g, "");
       const alunoId = lead.cpf ? lead.cpf.replace(/\D/g, "") : `aluno_${Date.now()}`;
 
-      // 1. Grava no Aluno
       await setDoc(doc(db, "alunos", alunoId), {
         nome: lead.nome || "Não informado",
         email: lead.email || "",
@@ -252,7 +316,6 @@ if (btnModalConfirmar) {
         criado_em: new Date().toISOString()
       }, { merge: true });
 
-      // 2. Cria Matrícula
       await addDoc(collection(db, "matriculas"), {
         aluno_id: alunoId,
         aluno_nome: lead.nome || "Não informado",
@@ -261,13 +324,9 @@ if (btnModalConfirmar) {
         curso_nome: lead.curso || "Geral",
         status_pagamento: "aprovado",
         status_matricula: "confirmada",
-        notificacao_enviada: false,
-        canal_notificacao: "whatsapp",
-        data_envio_notificacao: null,
         data_matricula: new Date().toISOString()
       });
 
-      // 3. Atualiza o Lead para Matriculado
       await updateDoc(doc(db, "inscricoes", lead.id), { status: "matriculado" });
 
       modalConfirmacao.style.display = "none";
@@ -282,7 +341,6 @@ if (btnModalConfirmar) {
   });
 }
 
-// Filtro de Prioridade
 const filterPriority = document.getElementById("filter-priority");
 if (filterPriority) {
   filterPriority.addEventListener("change", () => {
