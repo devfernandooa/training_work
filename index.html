@@ -14,7 +14,7 @@
   <meta name="robots" content="index, follow">
 
   <link rel="canonical" href="https://trainingwork.com.br/">
-<!---->
+  <!---->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://trainingwork.com.br/">
   <meta property="og:title" content="Training Work - Capacitação Profissional em Fibra Óptica e NRs">
@@ -427,30 +427,32 @@
         </div>
       </div>
 
-      <div class="reveal">
-        <div class="form-card">
-          <div class="form-row">
-            <div class="form-group"><label class="form-label" for="nome">Nome *</label><input type="text"
-                class="form-input" id="nome" placeholder="Seu nome completo" aria-required="true"></div>
-            <div class="form-group"><label class="form-label" for="telefone">Telefone *</label><input type="tel"
-                class="form-input" id="telefone" placeholder="(00) 00000-0000" aria-required="true"></div>
+      <form action="" id="formContato">
+        <div class="reveal">
+          <div class="form-card">
+            <div class="form-row">
+              <div class="form-group"><label class="form-label" for="nome">Nome *</label><input type="text"
+                  class="form-input" id="nome" placeholder="Seu nome completo" aria-required="true"></div>
+              <div class="form-group"><label class="form-label" for="telefone">Telefone *</label><input type="tel"
+                  class="form-input" id="telefone" placeholder="(00) 00000-0000" aria-required="true"></div>
+            </div>
+            <div class="form-group"><label class="form-label" for="email">E-mail *</label><input type="email"
+                class="form-input" id="email" placeholder="seu@email.com" aria-required="true"></div>
+            <div class="form-group">
+              <label class="form-label" for="curso">Curso de interesse</label>
+              <select class="form-select" id="curso">
+                <option value="">Selecione um curso...</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label" for="mensagem">Mensagem</label><textarea
+                class="form-textarea" id="mensagem" placeholder="Descreva suas necessidades ou dúvidas..."></textarea>
+            </div>
+            <button type="submit" class="btn-primary btn-full">📨 Enviar Mensagem</button>
+            <p style="font-size:0.75rem;color:var(--gray-light);text-align:center;margin-top:1rem">Retornamos em até 24
+              horas úteis.</p>
           </div>
-          <div class="form-group"><label class="form-label" for="email">E-mail *</label><input type="email"
-              class="form-input" id="email" placeholder="seu@email.com" aria-required="true"></div>
-          <div class="form-group">
-            <label class="form-label" for="curso">Curso de interesse</label>
-            <select class="form-select" id="curso">
-              <option value="">Selecione um curso...</option>
-            </select>
-          </div>
-          <div class="form-group"><label class="form-label" for="mensagem">Mensagem</label><textarea
-              class="form-textarea" id="mensagem" placeholder="Descreva suas necessidades ou dúvidas..."></textarea>
-          </div>
-          <button class="btn-primary btn-full" onclick="submitContactForm(this)">📨 Enviar Mensagem</button>
-          <p style="font-size:0.75rem;color:var(--gray-light);text-align:center;margin-top:1rem">Retornamos em até 24
-            horas úteis.</p>
         </div>
-      </div>
+      </form>
     </div>
   </section>
 
@@ -537,9 +539,10 @@
 
   <!-- Scripts Globais e Módulos Isolados -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script src="js/script.js" defer></script>
-  <script src="js/form-handler.js" defer></script>
+  <script type="module" src="js/script.js" defer></script>
+  <script type="module" src="js/form-handler.js" defer></script>
   <script type="module" src="js/main.js" defer></script>
+  <script type="module" src="admin/js/contato-lead.js"></script>
 </body>
 
 </body>
