@@ -473,3 +473,27 @@ aside.sidebar .user-profile button {
     padding-left: 0;
   }
 }
+/* ==========================================================================
+   ESTILIZAÇÃO DO BOTÃO HAMBÚRGUER (MOBILE)
+   ========================================================================== */
+.btn-toggle-sidebar {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.btn-toggle-sidebar:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #3b82f6;
+}
