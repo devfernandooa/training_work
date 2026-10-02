@@ -15,7 +15,7 @@
 </head>
 
 <body>
-  <!-- components/sidebar.html -->
+  <!-- SIDEBAR FIXA E DIRETA NO HTML (Evita bloqueio de CORS / file://) -->
   <aside class="sidebar" id="appSidebar">
     <div class="sidebar-brand">
       <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
@@ -27,7 +27,6 @@
 
     <div class="user-profile-bar loaded">
       <div class="user-avatar-container">
-        <!-- Ícone padrão de utilizador do FontAwesome -->
         <div class="user-avatar-icon">
           <i class="fas fa-user"></i>
         </div>
@@ -40,14 +39,14 @@
         <a href="#editar-perfil" class="user-edit-profile">Editar perfil</a>
       </div>
 
-      <button type="button" onclick="fazerL0gout()" class="logout-icon-btn" title="Sair do Sistema">
+      <button type="button" id="btnLogoutSidebar" class="logout-icon-btn" title="Sair do Sistema">
         <i class="fas fa-sign-out-alt"></i>
       </button>
     </div>
 
     <ul class="sidebar-menu">
       <li>
-        <a href="dashboard.html" class="sidebar-link">
+        <a href="dashboard.html" class="sidebar-link active">
           <i class="fas fa-chart-pie"></i> <span>Leads & Triagem</span>
         </a>
       </li>
@@ -76,7 +75,13 @@
 
   <!-- Conteúdo Principal Responsivo -->
   <main class="main-content">
-    <div class="dashboard-header-container">
+
+    <!-- Botão Hambúrguer para Dispositivos Móveis -->
+    <button class="btn btn-dark btn-sm px-3 py-2 rounded-3 shadow-sm" id="sidebarToggle" type="button">
+      <i class="fas fa-bars me-1"></i> Menu
+    </button>
+
+    <div class="dashboard-header-container mb-4">
       <div class="header-titles">
         <h1 class="page-title">
           <i class="fas fa-filter-circle-dollar"></i> Central de Oportunidades & Leads
@@ -89,9 +94,8 @@
         <span>Firestore Conectado</span>
       </div>
     </div>
-    </header>
 
-    <!-- Cards de Métricas com as Cores Padrão -->
+    <!-- Cards de Métricas -->
     <div class="row g-3 mb-4">
       <div class="col-md-4">
         <div
@@ -127,7 +131,6 @@
 
     <!-- Tabela de Leads -->
     <section class="card table-container">
-      <!-- Seção de Inscrições Recentes -->
       <div class="card-leads-container">
 
         <div class="leads-header">
@@ -139,7 +142,7 @@
           </select>
         </div>
 
-        <!-- DESKTOP: Tabela (Exibida em telas acima de 768px) -->
+        <!-- DESKTOP: Tabela -->
         <div class="view-desktop">
           <table class="tabela-leads">
             <thead>
@@ -154,25 +157,24 @@
               </tr>
             </thead>
             <tbody id="leads-tbody">
-              <!-- Os dados entram aqui via JS -->
+              <!-- Dados via JS -->
             </tbody>
           </table>
         </div>
 
-        <!-- MOBILE: Cards Empilhados (Exibido APENAS em telas pequenas abaixo de 768px) -->
+        <!-- MOBILE: Cards Empilhados -->
         <div class="view-mobile" id="leads-mobile-container">
-          <!-- Os cartões mobile entram aqui via JavaScript -->
+          <!-- Cartões mobile via JS -->
         </div>
 
       </div>
     </section>
   </main>
 
-  <script type="module" src="js/sidebar.js"></script>
+  <!-- Scripts -->
+  <script type="module" src="js/modules/sidebar.js"></script>
   <script type="module" src="js/dashboard.js"></script>
   <script type="module" src="js/auth-guard.js"></script>
-  <script type="module" src="js/modules/sidebar.js"></script>
-  <script type="module" src="js/auth.js"></script>
 </body>
 
 </html>
