@@ -343,6 +343,7 @@ async function salvarCurso(e) {
     instrutor: getVal("instrutorCurso"),
     descricao: getVal("descricaoCurso"),
     ementa: getVal("ementaCurso"),
+    secaoExibicao: getVal("secaoExibicao") || "grade",
     atualizado_por: adminEmail,
     atualizado_em: dataHoraAtual
   };
