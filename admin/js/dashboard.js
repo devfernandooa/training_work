@@ -50,6 +50,7 @@ function escutarInscricoes() {
 
     snapshot.forEach((docSnap) => {
       const dataLead = docSnap.data();
+      // Ignora registos marcados como excluídos/inativos
       if (!dataLead.excluido) {
         listaInscricoes.push({ id: docSnap.id, ...dataLead });
       }
@@ -530,4 +531,89 @@ if (filterPriority) {
   filterPriority.addEventListener("change", () => {
     renderizarTabela(listaInscricoes);
   });
+}
+
+/* ==========================================================================
+ * Função global para inativar o lead (exclusão lógica) sem apagá-lo do Firestore
+ * ========================================================================== */
+window.excluirLeadLogico = async function (id) {
+  if (confirm("Tem a certeza que deseja remover este lead da listagem?")) {
+    try {
+      const docRef = doc(db, "inscricoes", id);
+      const adminEmail = auth.currentUser ? auth.currentUser.email : "Sistema";
+      const dataHoraAtual = new Date().toISOString();
+
+      // Atualiza o documento marcando como excluído/inativo
+      await updateDoc(docRef, {
+        excluido: true,
+        atualizado_por: adminEmail,
+        atualizado_em: dataHoraAtual
+      });
+
+      // O listener em tempo real (onSnapshot) atualizará a tabela automaticamente
+    } catch (error) {
+      console.error("Erro ao inativar lead:", error);
+      alert("Não foi possível remover o lead.");
+    }
+  }
+};
+
+// Variáveis para controlar a exclusão via modal padronizado
+let leadIdParaExcluir = null;
+let excluirModalInstance = null;
+
+document.addEventListener("DOMContentLoaded", () => {
+  const modalEl = document.getElementById("modalConfirmarExclusao");
+  if (modalEl && window.bootstrap) {
+    excluirModalInstance = new bootstrap.Modal(modalEl);
+  }
+
+  const btnConfirmar = document.getElementById("btn-confirmar-exclusao");
+  if (btnConfirmar) {
+    btnConfirmar.addEventListener("click", executarExclusaoLogica);
+  }
+});
+
+// Chamado pelo botão da lixeira na tabela
+window.excluirLeadLogico = function (id) {
+  leadIdParaExcluir = id;
+  if (excluirModalInstance) {
+    excluirModalInstance.show();
+  }
+};
+
+// Executa a inativação no Firestore após confirmação no modal
+async function executarExclusaoLogica() {
+  if (!leadIdParaExcluir) return;
+
+  const btnConfirmar = document.getElementById("btn-confirmar-exclusao");
+  if (btnConfirmar) {
+    btnConfirmar.disabled = true;
+    btnConfirmar.textContent = "A remover...";
+  }
+
+  try {
+    const docRef = doc(db, "inscricoes", leadIdParaExcluir);
+    const adminEmail = auth.currentUser ? auth.currentUser.email : "Sistema";
+    const dataHoraAtual = new Date().toISOString();
+
+    await updateDoc(docRef, {
+      excluido: true,
+      atualizado_por: adminEmail,
+      atualizado_em: dataHoraAtual
+    });
+
+    if (excluirModalInstance) {
+      excluirModalInstance.hide();
+    }
+  } catch (error) {
+    console.error("Erro ao inativar lead:", error);
+    alert("Não foi possível remover o lead.");
+  } finally {
+    if (btnConfirmar) {
+      btnConfirmar.disabled = false;
+      btnConfirmar.textContent = "Sim, Remover";
+    }
+    leadIdParaExcluir = null;
+  }
 }

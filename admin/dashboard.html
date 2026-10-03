@@ -76,10 +76,10 @@
   <!-- Conteúdo Principal Responsivo -->
   <main class="main-content">
 
-    <!-- Botão Hambúrguer para Dispositivos Móveis -->
+    <!-- Botão Hambúrguer Padronizado para Dispositivos Móveis -->
     <div class="d-lg-none mb-3">
-      <button id="btn-toggle-sidebar" class="btn-toggle-sidebar" title="Menu">
-        <i class="fas fa-bars"></i>
+      <button class="btn btn-dark btn-sm px-3 py-2 rounded-3 shadow-sm" id="sidebarToggle" type="button">
+        <i class="fas fa-bars me-1"></i> Menu
       </button>
     </div>
     <div class="dashboard-header-container mb-4">
@@ -391,7 +391,32 @@
 
         </div>
       </div>
-    </div>
+    </div><!--Fim do modal de editar lead-->
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="modalConfirmarExclusao" tabindex="-1" aria-labelledby="modalConfirmarExclusaoLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-bold text-danger" id="modalConfirmarExclusaoLabel">
+              <i class="fas fa-exclamation-triangle me-2"></i> Remover Lead da Listagem
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body py-4">
+            <p class="text-muted mb-0" id="texto-confirmacao-exclusao">Tem a certeza que deseja remover este lead da
+              listagem? O registo será inativado.</p>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-light px-4 rounded-pill btn-sm"
+              data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-danger px-4 rounded-pill btn-sm" id="btn-confirmar-exclusao">Sim,
+              Remover</button>
+          </div>
+        </div>
+      </div>
+    </div> <!--Confirmação de Exclusão-->
   </main>
 
   <!-- Importação obrigatória do Bootstrap JS -->
