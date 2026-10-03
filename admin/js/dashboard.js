@@ -4,12 +4,16 @@ import {
   collection,
   onSnapshot,
   doc,
+  getDoc,
   updateDoc,
   setDoc,
   addDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// 1. Verificação de Autenticação
+/* ==========================================================================
+ * CONTROLO DE SESSÃO E AUTENTICAÇÃO
+ * ========================================================================== */
+
 onAuthStateChanged(auth, (user) => {
   const userDisplay = document.getElementById("user-display");
   if (!user) {
@@ -24,7 +28,6 @@ onAuthStateChanged(auth, (user) => {
   escutarInscricoes();
 });
 
-// Logout
 const btnLogout = document.getElementById("btn-logout");
 if (btnLogout) {
   btnLogout.addEventListener("click", () => {
@@ -32,7 +35,11 @@ if (btnLogout) {
   });
 }
 
-// 2. Escuta Firestore em Tempo Real
+
+/* ==========================================================================
+ * SINCRONIZAÇÃO EM TEMPO REAL (FIRESTORE)
+ * ========================================================================== */
+
 let listaInscricoes = [];
 
 function escutarInscricoes() {
@@ -43,10 +50,11 @@ function escutarInscricoes() {
 
     snapshot.forEach((docSnap) => {
       const dataLead = docSnap.data();
-      listaInscricoes.post ? null : listaInscricoes.push({ id: docSnap.id, ...dataLead });
+      if (!dataLead.excluido) {
+        listaInscricoes.push({ id: docSnap.id, ...dataLead });
+      }
     });
 
-    // Ordenação segura por data (compatível com timestamp ou string)
     listaInscricoes.sort((a, b) => {
       const tempoA = a.criado_em ? new Date(a.criado_em).getTime() : (a.data?.seconds ? a.data.seconds * 1000 : 0);
       const tempoB = b.criado_em ? new Date(b.criado_em).getTime() : (b.data?.seconds ? b.data.seconds * 1000 : 0);
@@ -59,7 +67,11 @@ function escutarInscricoes() {
   });
 }
 
-// 3. Renderização com Segurança contra Erros e Suporte Mobile
+
+/* ==========================================================================
+ * RENDERIZAÇÃO DA TABELA (DESKTOP) E DOS CARTÕES (MOBILE)
+ * ========================================================================== */
+
 function renderizarTabela(leads) {
   const tbody = document.getElementById("leads-tbody");
   const mobileContainer = document.getElementById("leads-mobile-container");
@@ -110,60 +122,24 @@ function renderizarTabela(leads) {
     const status = (lead.status || "novo").toLowerCase();
     const prioridade = lead.prioridade || "Média";
 
-    let badgeClass = "priority-media";
-    if (prioridade.toLowerCase() === "alta") badgeClass = "priority-alta";
-    if (prioridade.toLowerCase() === "baixa") badgeClass = "priority-baixa";
+    let badgeClass = "bg-warning text-dark";
+    if (prioridade.toLowerCase() === "alta") badgeClass = "bg-danger text-white";
+    if (prioridade.toLowerCase() === "baixa") badgeClass = "bg-success text-white";
+    const prioridadePill = `<span class="badge rounded-pill ${badgeClass} px-3 py-1" style="font-size: 0.8rem; font-weight: 500;">${prioridade}</span>`;
 
-    const cleanPhone = (lead.telefone || "").replace(/\D/g, "");
-    const ddiPhone = cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`;
-    const zapMsg = encodeURIComponent(`Olá ${lead.nome || ""}! Sou da Training Work sobre seu interesse no curso de ${lead.curso || ""}.`);
-    const zapLink = `https://wa.me/${ddiPhone}?text=${zapMsg}`;
-
-    let statusPill = "";
+    let statusStyle = "border: 1px solid #cbd5e1; color: #64748b; background: #f8fafc;";
     if (status === "novo" || status === "pendente") {
-      statusPill = `<span class="status-pill status-novo"><i class="fas fa-sparkles"></i> Novo</span>`;
+      statusStyle = "border: 1px solid #3b82f6; color: #1d4ed8; background: #eff6ff;";
     } else if (status === "em_contato" || status === "em atendimento") {
-      statusPill = `<span class="status-pill status-em_contato"><i class="fas fa-headset"></i> Em Contato</span>`;
+      statusStyle = "border: 1px solid #f97316; color: #c2410c; background: #fff7ed;";
     } else if (status === "matriculado") {
-      statusPill = `<span class="status-pill status-matriculado"><i class="fas fa-check-circle"></i> Matriculado</span>`;
-    } else if (status === "perdido") {
-      statusPill = `<span class="status-pill status-perdido"><i class="fas fa-archive"></i> Perdido</span>`;
+      statusStyle = "border: 1px solid #22c55e; color: #15803d; background: #f0fdf4;";
+    } else if (status === "cancelado" || status === "perdido") {
+      statusStyle = "border: 1px solid #94a3b8; color: #475569; background: #f1f5f9;";
     }
 
-    let botoesAcao = "";
-    if (status === "novo" || status === "pendente") {
-      botoesAcao = `
-        <a href="${zapLink}" target="_blank" class="btn-whatsapp" data-action="contatar" data-id="${lead.id}" title="Falar e mover para Em Contato">
-          <i class="fab fa-whatsapp"></i> Contatar
-        </a>
-      `;
-    } else if (status === "em_contato" || status === "em atendimento") {
-      botoesAcao = `
-        <a href="${zapLink}" target="_blank" class="btn-whatsapp" title="Continuar no WhatsApp">
-          <i class="fab fa-whatsapp"></i>
-        </a>
-        <button class="btn-action-icon btn-matricular-action" data-id="${lead.id}" title="Matricular Aluno">
-          <i class="fas fa-user-plus"></i> Matricular
-        </button>
-        <button class="btn-action-icon btn-perdido-action" data-id="${lead.id}" title="Marcar como Perdido">
-          <i class="fas fa-times"></i>
-        </button>
-      `;
-    } else if (status === "matriculado") {
-      botoesAcao = `
-        <span style="color: #15803d; font-size: 0.85rem; font-weight: 600;">
-          <i class="fas fa-user-check"></i> Aluno Oficial
-        </span>
-      `;
-    } else if (status === "perdido") {
-      botoesAcao = `
-        <button class="btn-action-icon btn-reativar-action" data-id="${lead.id}" title="Reativar Lead">
-          <i class="fas fa-redo"></i> Reativar
-        </button>
-      `;
-    }
+    const statusPill = `<span class="status-pill px-3 py-1 rounded-pill d-inline-flex align-items-center gap-1" style="${statusStyle} font-size: 0.82rem; font-weight: 500;">${lead.status || "Novo"}</span>`;
 
-    // Formatação segura da data
     let dataFormatada = "Recente";
     if (lead.criado_em) {
       dataFormatada = new Date(lead.criado_em).toLocaleDateString("pt-BR");
@@ -173,7 +149,20 @@ function renderizarTabela(leads) {
       dataFormatada = new Date(lead.data.seconds * 1000).toLocaleDateString("pt-BR");
     }
 
-    // 1. Linha Desktop (com os ícones de ação alinhados que construímos)
+    const acoesBotoes = `
+      <div class="actions-group" style="display: inline-flex; gap: 0.4rem; justify-content: center;">
+        <a href="https://wa.me/${lead.telefone || ''}" target="_blank" class="btn-icon btn-icon-whatsapp text-decoration-none" title="Contatar WhatsApp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+        <button onclick="abrirModalEditar('${lead.id}')" class="btn-icon btn-icon-edit" data-id="${lead.id}" title="Editar Lead">
+          <i class="fas fa-pen"></i>
+        </button>
+        <button onclick="excluirLeadLogico('${lead.id}')" class="btn-icon btn-icon-delete" title="Excluir Lead">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </div>
+    `;
+
     htmlDesktop += `
       <tr>
         <td>${dataFormatada}</td>
@@ -182,28 +171,15 @@ function renderizarTabela(leads) {
           <small style="color: #64748b;">${lead.email || ""}</small>
         </td>
         <td>${lead.curso || "Geral"}</td>
-        <td><span class="badge-priority ${badgeClass}">${prioridade}</span></td>
+        <td>${prioridadePill}</td>
         <td style="max-width: 250px; font-size: 0.8rem; color: #475569; line-height: 1.3;">
           ${lead.resumo_ia || lead.mensagem || "-"}
         </td>
         <td>${statusPill}</td>
-        <td style="text-align: center;">
-          <div class="actions-group" style="display: inline-flex; gap: 0.4rem; justify-content: center;">
-            <a href="https://wa.me/${lead.telefone || ''}" target="_blank" class="btn-icon" title="Contatar WhatsApp">
-              <i class="fab fa-whatsapp"></i>
-            </a>
-            <button onclick="abrirModalEditar('${lead.id}')" class="btn-icon" title="Editar Lead">
-              <i class="fas fa-pen"></i>
-            </button>
-            <button onclick="excluirLeadLogico('${lead.id}')" class="btn-icon" title="Excluir Lead" style="color: #dc3545;">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          </div>
-        </td>
+        <td style="text-align: center;">${acoesBotoes}</td>
       </tr>
     `;
 
-    // 2. Bloco Mobile (Cartões)
     htmlMobile += `
       <div class="card-lead-item" style="background: white; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
@@ -211,26 +187,16 @@ function renderizarTabela(leads) {
             <strong>${lead.nome || "Não informado"}</strong><br>
             <small style="color: #64748b;">${lead.email || ""}</small>
           </div>
-          <span class="badge-priority ${badgeClass}">${prioridade}</span>
+          <div>${prioridadePill}</div>
         </div>
         <div style="font-size: 0.85rem; color: #475569; margin-bottom: 0.75rem;">
           <p style="margin: 0.2rem 0;"><strong>Curso:</strong> ${lead.curso || "Geral"}</p>
           <p style="margin: 0.2rem 0;"><strong>Análise:</strong> ${lead.resumo_ia || lead.mensagem || "-"}</p>
           <p style="margin: 0.2rem 0;"><strong>Status:</strong> ${statusPill}</p>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; pt: 0.5rem; margin-top: 0.5rem; padding-top: 0.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; margin-top: 0.5rem; padding-top: 0.5rem;">
           <span style="font-size: 0.75rem; color: #94a3b8;">${dataFormatada}</span>
-          <div style="display: inline-flex; gap: 0.4rem;">
-            <a href="https://wa.me/${lead.telefone || ''}" target="_blank" class="btn-icon" title="Contatar WhatsApp">
-              <i class="fab fa-whatsapp"></i>
-            </a>
-            <button onclick="abrirModalEditar('${lead.id}')" class="btn-icon" title="Editar Lead">
-              <i class="fas fa-pen"></i>
-            </button>
-            <button onclick="excluirLeadLogico('${lead.id}')" class="btn-icon" title="Excluir Lead" style="color: #dc3545;">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          </div>
+          <div>${acoesBotoes}</div>
         </div>
       </div>
     `;
@@ -244,7 +210,11 @@ function renderizarTabela(leads) {
   configurarInteracoes(leads);
 }
 
-// 4. Modal e Eventos de Status
+
+/* ==========================================================================
+ * GESTÃO DE INTERAÇÕES E MUDANÇAS DE ESTADO (WHATSAPP E MATRÍCULAS)
+ * ========================================================================== */
+
 let leadSelecionadoParaMatricula = null;
 
 function configurarInteracoes(leads) {
@@ -283,7 +253,11 @@ function configurarInteracoes(leads) {
   });
 }
 
-// Eventos do Modal
+
+/* ==========================================================================
+ * FLUXO DE CONVERSÃO DE LEAD EM ALUNO (MODAL DE MATRÍCULA)
+ * ========================================================================== */
+
 const modalConfirmacao = document.getElementById("modal-confirmacao");
 const btnModalCancelar = document.getElementById("modal-btn-cancelar");
 const btnModalConfirmar = document.getElementById("modal-btn-confirmar");
@@ -340,6 +314,216 @@ if (btnModalConfirmar) {
     }
   });
 }
+
+
+// Preenchimento automático de Endereço via ViaCEP
+document.addEventListener("DOMContentLoaded", () => {
+  const cepInput = document.getElementById("edit-cep");
+  if (cepInput) {
+    cepInput.addEventListener("blur", async (e) => {
+      const cep = e.target.value.replace(/\D/g, "");
+      if (cep.length === 8) {
+        try {
+          const response = `https://viacep.com.br/ws/${cep}/json/`;
+          const res = await fetch(response);
+          const data = await res.json();
+
+          if (!data.erro) {
+            const setVal = (id, val) => {
+              const el = document.getElementById(id);
+              if (el) el.value = val || "";
+            };
+            setVal("edit-logradouro", data.logradouro);
+            setVal("edit-bairro", data.bairro);
+            setVal("edit-cidade", data.localidade);
+            setVal("edit-estado", data.uf);
+
+            // Foca automaticamente no campo de número após preencher
+            const numEl = document.getElementById("edit-numero");
+            if (numEl) numEl.focus();
+          } else {
+            alert("CEP não encontrado.");
+          }
+        } catch (error) {
+          console.error("Erro ao consultar o ViaCEP:", error);
+        }
+      }
+    });
+  }
+});
+
+
+/* ==========================================================================
+ * MODAL DE EDIÇÃO DE LEADS (FICHA COMPLETA)
+ * ========================================================================== */
+
+let editModalInstance = null;
+
+document.addEventListener("DOMContentLoaded", () => {
+  const modalEl = document.getElementById("editLeadModal");
+  if (modalEl && window.bootstrap) {
+    editModalInstance = new bootstrap.Modal(modalEl);
+  }
+});
+
+// Função global chamada pelo botão de editar na tabela/cards
+window.abrirModalEditar = async function (id) {
+  try {
+    const docRef = doc(db, "inscricoes", id);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+
+      // Função auxiliar para atribuir valor com segurança se o elemento existir no HTML
+      const setFieldValue = (elementId, value) => {
+        const el = document.getElementById(elementId);
+        if (el) el.value = value;
+      };
+
+      const setCheckboxValue = (elementId, checked) => {
+        const el = document.getElementById(elementId);
+        if (el) el.checked = checked;
+      };
+
+      // Preenche os campos básicos
+      setFieldValue("edit-lead-id", id);
+      setFieldValue("edit-nome", data.nome || data.candidato || "");
+      setFieldValue("edit-email", data.email || "");
+      setFieldValue("edit-telefone", data.telefone || "");
+      setFieldValue("edit-curso", data.curso || "");
+      setFieldValue("edit-resumo-ia", data.resumo_ia || data.mensagem || "");
+      setFieldValue("edit-redes", data.redes_sociais || "");
+      setFieldValue("edit-status", data.status || "Novo");
+      setFieldValue("edit-prioridade", data.prioridade || "Média");
+
+      // Preenche Documentos e Profissional
+      setFieldValue("edit-cpf", data.cpf || "");
+      setFieldValue("edit-rg", data.rg || "");
+      setFieldValue("edit-empresa", data.empresa || "");
+      setFieldValue("edit-cargo", data.cargo || "");
+
+      // Preenche Endereço
+      setFieldValue("edit-cep", data.cep || "");
+      setFieldValue("edit-logradouro", data.logradouro || "");
+      setFieldValue("edit-numero", data.numero || "");
+      setFieldValue("edit-bairro", data.bairro || "");
+      setFieldValue("edit-cidade", data.cidade || "");
+      setFieldValue("edit-estado", data.estado || "");
+
+      //Redes sociais
+      setFieldValue("edit-linkedin", data.linkedin || data.redes_sociais || "");
+      setFieldValue("edit-instagram", data.instagram || "");
+      setFieldValue("edit-facebook", data.facebook || "");
+      setFieldValue("edit-threads", data.threads || "");
+      setFieldValue("edit-x", data.x || data.twitter || "");
+
+      // Auditoria (E-mail + Data e Hora formatada)
+      if (data.atualizado_por && data.atualizado_em) {
+        const dataFormatada = new Date(data.atualizado_em).toLocaleString("pt-BR");
+        setFieldValue("edit-atualizado-por", `${data.atualizado_por} em ${dataFormatada}`);
+      } else {
+        setFieldValue("edit-atualizado-por", "Nenhuma alteração registada anteriormente");
+      }
+
+      // Checkboxes de preferências
+      setCheckboxValue("edit-zap-msg", !!data.aceita_msg_zap);
+      setCheckboxValue("edit-zap-ligacao", !!data.aceita_ligacao_zap);
+      setCheckboxValue("edit-email-validado", !!data.email_validado);
+
+      if (editModalInstance) {
+        editModalInstance.show();
+      }
+    } else {
+      alert("Inscrição não encontrada.");
+    }
+  } catch (error) {
+    console.error("Erro ao carregar dados do lead:", error);
+  }
+};
+
+// Submissão do formulário de edição completa
+const editForm = document.getElementById("edit-lead-form");
+if (editForm) {
+  editForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = document.getElementById("edit-lead-id").value;
+
+    const btnSave = document.getElementById("btn-save-edit");
+    if (btnSave) {
+      btnSave.disabled = true;
+      btnSave.textContent = "A guardar...";
+    }
+
+    const adminEmail = auth.currentUser ? auth.currentUser.email : "Sistema";
+    const dataHoraAtual = new Date().toISOString();
+
+    const getInputValue = (elementId) => {
+      const el = document.getElementById(elementId);
+      return el ? el.value : "";
+    };
+
+    const getCheckboxValue = (elementId) => {
+      const el = document.getElementById(elementId);
+      return el ? el.checked : false;
+    };
+
+    try {
+      const docRef = doc(db, "inscricoes", id);
+      await updateDoc(docRef, {
+        nome: getInputValue("edit-nome"),
+        email: getInputValue("edit-email"),
+        telefone: getInputValue("edit-telefone"),
+        curso: getInputValue("edit-curso"),
+
+        cpf: getInputValue("edit-cpf"),
+        rg: getInputValue("edit-rg"),
+        empresa: getInputValue("edit-empresa"),
+        cargo: getInputValue("edit-cargo"),
+
+        cep: getInputValue("edit-cep"),
+        logradouro: getInputValue("edit-logradouro"),
+        numero: getInputValue("edit-numero"),
+        bairro: getInputValue("edit-bairro"),
+        cidade: getInputValue("edit-cidade"),
+        estado: getInputValue("edit-estado"),
+
+        status: getInputValue("edit-status"),
+        prioridade: getInputValue("edit-prioridade"),
+        linkedin: getInputValue("edit-linkedin"),
+        instagram: getInputValue("edit-instagram"),
+        facebook: getInputValue("edit-facebook"),
+        threads: getInputValue("edit-threads"),
+        x: getInputValue("edit-x"),
+        resumo_ia: getInputValue("edit-resumo-ia"),
+
+        aceita_msg_zap: getCheckboxValue("edit-zap-msg"),
+        aceita_ligacao_zap: getCheckboxValue("edit-zap-ligacao"),
+        email_validado: getCheckboxValue("edit-email-validado"),
+
+        atualizado_por: adminEmail,
+        atualizado_em: dataHoraAtual
+      });
+
+      if (editModalInstance) {
+        editModalInstance.hide();
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar lead:", error);
+      alert("Não foi possível atualizar as alterações.");
+    } finally {
+      if (btnSave) {
+        btnSave.disabled = false;
+        btnSave.textContent = "Guardar Alterações";
+      }
+    }
+  });
+}
+
+
+/* ==========================================================================
+ * FILTROS E EVENTOS GLOBAIS DA INTERFACE
+ * ========================================================================== */
 
 const filterPriority = document.getElementById("filter-priority");
 if (filterPriority) {

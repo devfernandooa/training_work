@@ -77,10 +77,11 @@
   <main class="main-content">
 
     <!-- Botão Hambúrguer para Dispositivos Móveis -->
-    <button class="btn btn-dark btn-sm px-3 py-2 rounded-3 shadow-sm" id="sidebarToggle" type="button">
-      <i class="fas fa-bars me-1"></i> Menu
-    </button>
-
+    <div class="d-lg-none mb-3">
+      <button id="btn-toggle-sidebar" class="btn-toggle-sidebar" title="Menu">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
     <div class="dashboard-header-container mb-4">
       <div class="header-titles">
         <h1 class="page-title">
@@ -169,9 +170,234 @@
 
       </div>
     </section>
+
+    <!-- Modal de Edição de Lead / Ficha Completa -->
+    <div class="modal fade" id="editLeadModal" tabindex="-1" aria-labelledby="editLeadModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+
+          <div class="modal-header border-0 pb-2">
+            <h5 class="modal-title fw-bold fs-5" id="editLeadModalLabel">
+              <i class="fas fa-user-edit me-2 text-primary"></i> Ficha Completa do Lead
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+
+          <div class="modal-body pt-1">
+            <form id="edit-lead-form">
+              <input type="hidden" id="edit-lead-id">
+
+              <div class="row g-2">
+
+                <!-- Bloco 1: Dados Pessoais -->
+                <div class="col-12">
+                  <div class="p-2 bg-light rounded-3 border">
+                    <span class="d-block small fw-bold text-secondary mb-1"><i
+                        class="fas fa-user me-1 text-primary"></i> Dados Pessoais e Inscrição</span>
+                    <div class="row g-2">
+                      <div class="col-md-6">
+                        <label for="edit-nome" class="form-label small text-muted mb-0">Nome do Candidato</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-nome" required>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="edit-email" class="form-label small text-muted mb-0">E-mail</label>
+                        <input type="email" class="form-control form-control-sm" id="edit-email">
+                      </div>
+                      <div class="col-md-6">
+                        <label for="edit-telefone" class="form-label small text-muted mb-0">Telemóvel / WhatsApp</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-telefone">
+                      </div>
+                      <div class="col-md-6">
+                        <label for="edit-curso" class="form-label small text-muted mb-0">Curso de Interesse</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-curso">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bloco 2: Documentação e Profissional -->
+                <div class="col-12">
+                  <div class="p-2 bg-light rounded-3 border">
+                    <span class="d-block small fw-bold text-secondary mb-1"><i
+                        class="fas fa-id-card me-1 text-primary"></i> Documentação e Vínculo Profissional</span>
+                    <div class="row g-2">
+                      <div class="col-md-3">
+                        <label for="edit-cpf" class="form-label small text-muted mb-0">CPF</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-cpf"
+                          placeholder="000.000.000-00">
+                      </div>
+                      <div class="col-md-3">
+                        <label for="edit-rg" class="form-label small text-muted mb-0">RG</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-rg">
+                      </div>
+                      <div class="col-md-3">
+                        <label for="edit-empresa" class="form-label small text-muted mb-0">Empresa</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-empresa" placeholder="Empresa">
+                      </div>
+                      <div class="col-md-3">
+                        <label for="edit-cargo" class="form-label small text-muted mb-0">Cargo</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-cargo" placeholder="Cargo">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bloco 3: Endereço -->
+                <div class="col-12">
+                  <div class="p-2 bg-light rounded-3 border">
+                    <span class="d-block small fw-bold text-secondary mb-1"><i
+                        class="fas fa-map-marker-alt me-1 text-primary"></i> Endereço (ViaCEP)</span>
+                    <div class="row g-2">
+                      <div class="col-md-2">
+                        <label for="edit-cep" class="form-label small text-muted mb-0">CEP</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-cep" placeholder="00000-000">
+                      </div>
+                      <div class="col-md-4">
+                        <label for="edit-logradouro" class="form-label small text-muted mb-0">Logradouro / Rua</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-logradouro">
+                      </div>
+                      <div class="col-md-2">
+                        <label for="edit-numero" class="form-label small text-muted mb-0">Número</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-numero">
+                      </div>
+                      <div class="col-md-4">
+                        <label for="edit-bairro" class="form-label small text-muted mb-0">Bairro</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-bairro">
+                      </div>
+                      <div class="col-md-6">
+                        <label for="edit-cidade" class="form-label small text-muted mb-0">Cidade</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-cidade">
+                      </div>
+                      <div class="col-md-6">
+                        <label for="edit-estado" class="form-label small text-muted mb-0">Estado (UF)</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-estado" maxlength="2">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bloco 4: Status, Prioridade e Preferências -->
+                <div class="col-12">
+                  <div class="p-2 bg-light rounded-3 border">
+                    <span class="d-block small fw-bold text-secondary mb-1"><i
+                        class="fas fa-tasks me-1 text-primary"></i> Gestão e Preferências</span>
+                    <div class="row g-2">
+                      <div class="col-md-6">
+                        <label for="edit-status" class="form-label small text-muted mb-0">Status</label>
+                        <select class="form-select form-select-sm" id="edit-status">
+                          <option value="Novo">Novo</option>
+                          <option value="Em Atendimento">Em Atendimento</option>
+                          <option value="Matriculado">Matriculado</option>
+                          <option value="Cancelado">Cancelado</option>
+                        </select>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="edit-prioridade" class="form-label small text-muted mb-0">Prioridade</label>
+                        <select class="form-select form-select-sm" id="edit-prioridade">
+                          <option value="Baixa">Baixa</option>
+                          <option value="Média">Média</option>
+                          <option value="Alta">Alta</option>
+                        </select>
+                      </div>
+                      <div class="col-12 mt-1">
+                        <div class="form-check form-check-inline mb-0">
+                          <input class="form-check-input" type="checkbox" id="edit-zap-msg">
+                          <label class="form-check-label small" for="edit-zap-msg">Aceita Msg WhatsApp</label>
+                        </div>
+                        <div class="form-check form-check-inline mb-0">
+                          <input class="form-check-input" type="checkbox" id="edit-zap-ligacao">
+                          <label class="form-check-label small" for="edit-zap-ligacao">Aceita Ligações WhatsApp</label>
+                        </div>
+                        <div class="form-check form-check-inline mb-0">
+                          <input class="form-check-input" type="checkbox" id="edit-email-validado">
+                          <label class="form-check-label small" for="edit-email-validado">E-mail Validado</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bloco 5: Redes Sociais -->
+                <div class="col-12">
+                  <div class="p-2 bg-light rounded-3 border">
+                    <span class="d-block small fw-bold text-secondary mb-1"><i
+                        class="fas fa-share-alt me-1 text-primary"></i> Redes Sociais</span>
+                    <div class="row g-2">
+                      <div class="col-md-6">
+                        <label for="edit-linkedin" class="form-label small text-muted mb-0"><i
+                            class="fab fa-linkedin text-primary me-1"></i> LinkedIn</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-linkedin"
+                          placeholder="Perfil ou URL">
+                      </div>
+                      <div class="col-md-6">
+                        <label for="edit-instagram" class="form-label small text-muted mb-0"><i
+                            class="fab fa-instagram text-danger me-1"></i> Instagram</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-instagram"
+                          placeholder="@usuario">
+                      </div>
+                      <div class="col-md-4">
+                        <label for="edit-facebook" class="form-label small text-muted mb-0"><i
+                            class="fab fa-facebook text-primary me-1"></i> Facebook</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-facebook"
+                          placeholder="Perfil ou link">
+                      </div>
+                      <div class="col-md-4">
+                        <label for="edit-threads" class="form-label small text-muted mb-0"><i
+                            class="fas fa-at me-1"></i> Threads</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-threads"
+                          placeholder="@usuario">
+                      </div>
+                      <div class="col-md-4">
+                        <label for="edit-x" class="form-label small text-muted mb-0"><i
+                            class="fab fa-x-twitter me-1"></i> X (Twitter)</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-x" placeholder="@usuario">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bloco 6: Observações e Auditoria -->
+                <div class="col-12">
+                  <div class="p-2 bg-light rounded-3 border">
+                    <span class="d-block small fw-bold text-secondary mb-1"><i
+                        class="fas fa-history me-1 text-primary"></i> Notas e Auditoria</span>
+                    <div class="row g-2">
+                      <div class="col-12">
+                        <label for="edit-resumo-ia" class="form-label small text-muted mb-0">Análise do Gemini /
+                          Observações</label>
+                        <textarea class="form-control form-control-sm" id="edit-resumo-ia" rows="2"
+                          placeholder="Notas do atendimento..."></textarea>
+                      </div>
+                      <div class="col-12 mt-1">
+                        <label for="edit-atualizado-por" class="form-label small text-muted mb-0">Última
+                          Alteração</label>
+                        <input type="text" class="form-control form-control-sm bg-white text-muted"
+                          id="edit-atualizado-por" disabled readonly>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
+                <button type="button" class="btn btn-light px-4 rounded-pill btn-sm"
+                  data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary px-4 rounded-pill btn-sm" id="btn-save-edit">Guardar
+                  Alterações</button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </main>
 
-  <!-- Scripts -->
+  <!-- Importação obrigatória do Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="..."
+    crossorigin="anonymous"></script>
+
   <script type="module" src="js/modules/sidebar.js"></script>
   <script type="module" src="js/dashboard.js"></script>
   <script type="module" src="js/auth-guard.js"></script>
