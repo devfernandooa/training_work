@@ -142,7 +142,7 @@
         <div class="leads-header">
           <h3>Cursos Cadastrados</h3>
           <div class="d-flex gap-2 align-items-center">
-            <input type="text" id="input-busca-curso" class="form-control form-control-sm"
+            <input type="text" id="busca-curso" class="form-control form-control-sm"
               placeholder="Buscar por nome ou código..." style="width: 220px;">
             <button class="btn btn-primary btn-sm rounded-pill px-3" id="btn-novo-curso">
               <i class="fas fa-plus me-1"></i> Novo Curso
@@ -160,6 +160,7 @@
                 <th>Carga Horária</th>
                 <th>Investimento</th>
                 <th>Modalidade</th>
+                <th>Vagas</th>
                 <th>Status</th>
                 <th style="text-align: center;">Ações</th>
               </tr>
@@ -179,6 +180,186 @@
     </section>
 
   </main>
+
+  <!-- ==========================================================================
+   * MODAL DE CADASTRO / EDIÇÃO DE CURSO (PADRÃO UNIFICADO)
+   * ========================================================================== -->
+  <div class="modal fade" id="novoCursoModal" tabindex="-1" aria-labelledby="novoCursoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+
+        <div class="modal-header border-0 pb-2">
+          <h5 class="modal-title fw-bold" id="novoCursoModalLabel">
+            <i class="fas fa-book-medical me-2 text-primary"></i> Novo Treinamento
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+
+        <div class="modal-body pt-1">
+          <form id="formNovoCurso">
+            <!-- Campo oculto para controlo de ID na edição -->
+            <input type="hidden" id="curso-id-oculto">
+
+            <div class="row g-2">
+
+              <!-- Bloco 1: Informações Principais do Curso -->
+              <div class="col-12">
+                <div class="p-3 bg-light rounded-3 border">
+                  <span class="d-block small fw-bold text-secondary mb-2">
+                    <i class="fas fa-info-circle me-1 text-primary"></i> Informações Principais
+                  </span>
+                  <div class="row g-2">
+                    <div class="col-md-8">
+                      <label for="nomeCurso" class="form-label small text-muted mb-1">Nome do Curso *</label>
+                      <input type="text" class="form-control form-control-sm" id="nomeCurso"
+                        placeholder="Ex: NR10 - Segurança em Eletricidade" required>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="codigoCurso" class="form-label small text-muted mb-1">Código / Identificador *</label>
+                      <input type="text" class="form-control form-control-sm" id="codigoCurso"
+                        placeholder="Ex: nr10-basico" required>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bloco 2: Estrutura, Valores e Operação -->
+              <div class="col-12">
+                <div class="p-3 bg-light rounded-3 border">
+                  <span class="d-block small fw-bold text-secondary mb-2">
+                    <i class="fas fa-sliders-h me-1 text-primary"></i> Estrutura, Valores e Operação
+                  </span>
+                  <div class="row g-2">
+                    <div class="col-md-3">
+                      <label for="cargaCurso" class="form-label small text-muted mb-1">Carga Horária (horas) *</label>
+                      <input type="number" class="form-control form-control-sm" id="cargaCurso" placeholder="40"
+                        required>
+                    </div>
+                    <div class="col-md-3">
+                      <label for="valorCurso" class="form-label small text-muted mb-1">Valor Base (R$) *</label>
+                      <input type="number" step="0.01" class="form-control form-control-sm" id="valorCurso"
+                        placeholder="280.00" required>
+                    </div>
+                    <div class="col-md-3">
+                      <label for="modalidadeCurso" class="form-label small text-muted mb-1">Modalidade</label>
+                      <select class="form-select form-select-sm" id="modalidadeCurso">
+                        <option value="Presencial">Presencial</option>
+                        <option value="Online">Online</option>
+                        <option value="Híbrido">Híbrido</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3">
+                      <label for="statusCurso" class="form-label small text-muted mb-1">Status Operacional</label>
+                      <select class="form-select form-select-sm" id="statusCurso" required>
+                        <option value="Ativo">Ativo</option>
+                        <option value="Turma aberta">Turma aberta</option>
+                        <option value="Em andamento">Em andamento</option>
+                        <option value="Turma lotada">Turma lotada</option>
+                        <option value="Finalizado">Finalizado</option>
+                      </select>
+                    </div>
+
+                    <!-- Novos campos de Vagas -->
+                    <div class="col-md-3 mt-2">
+                      <label for="vagasTotal" class="form-label small text-muted mb-1">Vagas Totais *</label>
+                      <input type="number" class="form-control form-control-sm" id="vagasTotal" placeholder="30"
+                        required>
+                    </div>
+                    <div class="col-md-3 mt-2">
+                      <label for="vagasDisponiveis" class="form-label small text-muted mb-1">Vagas Disponíveis *</label>
+                      <input type="number" class="form-control form-control-sm" id="vagasDisponiveis" placeholder="30"
+                        required>
+                    </div>
+
+                    <div class="col-md-6 mt-2">
+                      <label for="instrutorCurso" class="form-label small text-muted mb-1">Professor / Instrutor
+                        Responsável</label>
+                      <input type="text" class="form-control form-control-sm" id="instrutorCurso"
+                        placeholder="Ex: Eng. Carlos Silva">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bloco 3: Conteúdo Programático -->
+              <div class="col-12">
+                <div class="p-3 bg-light rounded-3 border">
+                  <span class="d-block small fw-bold text-secondary mb-2">
+                    <i class="fas fa-file-alt me-1 text-primary"></i> Conteúdo Programático e Ementa
+                  </span>
+                  <div class="row g-2">
+                    <div class="col-12">
+                      <label for="descricaoCurso" class="form-label small text-muted mb-1">Descrição do Curso *</label>
+                      <textarea class="form-control form-control-sm" id="descricaoCurso" rows="2"
+                        placeholder="Resumo do objetivo técnico do curso..." required></textarea>
+                    </div>
+                    <div class="col-12 mt-2">
+                      <label for="ementaCurso" class="form-label small text-muted mb-1">Ementa / Tópicos (um por
+                        linha)</label>
+                      <textarea class="form-control form-control-sm" id="ementaCurso" rows="2"
+                        placeholder="Módulo 1: Riscos e perigos&#10;Módulo 2: EPI e EPC"></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bloco 4: Auditoria -->
+              <div class="col-12">
+                <div class="p-3 bg-light rounded-3 border">
+                  <span class="d-block small fw-bold text-secondary mb-2">
+                    <i class="fas fa-history me-1 text-primary"></i> Auditoria
+                  </span>
+                  <div class="row g-2">
+                    <div class="col-12">
+                      <label for="curso-atualizado-por" class="form-label small text-muted mb-1">Última
+                        Alteração</label>
+                      <input type="text" class="form-control form-control-sm bg-white text-muted"
+                        id="curso-atualizado-por" disabled readonly placeholder="Sem registo anterior">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
+              <button type="button" class="btn btn-light px-4 rounded-pill btn-sm"
+                data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary px-4 rounded-pill btn-sm" id="btn-salvar-curso">Salvar
+                Curso</button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+   * MODAL PADRONIZADO DE CONFIRMAÇÃO DE EXCLUSÃO DE CURSO (CORRETAMENTE POSICIONADO FORA)
+   * ========================================================================== -->
+  <div class="modal fade" id="modalConfirmarExclusaoCurso" tabindex="-1"
+    aria-labelledby="modalConfirmarExclusaoCursoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold text-danger" id="modalConfirmarExclusaoCursoLabel">
+            <i class="fas fa-exclamation-triangle me-2"></i> Inativar Curso do Catálogo
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body py-4">
+          <p class="text-muted mb-0">Tem a certeza que deseja remover este curso da listagem? O registo será
+            inativado com segurança.</p>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light px-4 rounded-pill btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger px-4 rounded-pill btn-sm" id="btn-confirmar-exclusao-curso">Sim,
+            Inativar</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Scripts do sistema -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
