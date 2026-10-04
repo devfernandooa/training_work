@@ -5,6 +5,7 @@ serviceAccountKey*.json
 serviceAccountKey.json.json
 index copy.html
 anotações.txt
+/admin/js/modules/importar-leads-js
 .env
 .vscode
 seeds.js
