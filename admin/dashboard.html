@@ -12,6 +12,21 @@
   <link rel="stylesheet" href="css/modules/sidebar.css">
   <link rel="stylesheet" href="css/modules/dashboard.css">
   <link rel="stylesheet" href="css/style.css">
+  <script>
+  // Aplica o estado ativo imediatamente antes de renderizar a página
+  (function() {
+    const pagina = window.location.pathname.split("/").pop() || "dashboard.html";
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".sidebar-menu .sidebar-link").forEach(link => {
+        if (link.getAttribute("href") === pagina) {
+          link.classList.add("active");
+        } else {
+          link.classList.remove("active");
+        }
+      });
+    });
+  })();
+</script>
 </head>
 
 <body>
@@ -51,7 +66,7 @@
         </a>
       </li>
       <li>
-        <a href="financeiro.html" class="sidebar-link">
+        <a href="financeiro.html" class="sidebar-link ">
           <i class="fas fa-wallet"></i> <span>Financeiro</span>
         </a>
       </li>
@@ -62,7 +77,7 @@
       </li>
       <li>
         <a href="cursos-em-andamento.html" class="sidebar-link">
-          <i class="fas fa-laptop-code"></i> <span>Em Andamento</span>
+          <i class="fas fa-laptop-code"></i> <span>Cursos Em Andamento</span>
         </a>
       </li>
       <li>

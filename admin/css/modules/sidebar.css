@@ -321,3 +321,14 @@ aside.sidebar .sidebar-link.active {
   }
 }
 
+/* Garante que o fundo azul só ocorre com a classe .active, evitando flashes ao clicar/focar */
+.sidebar-link:focus, 
+.sidebar-link:active {
+    background-color: transparent !important;
+    color: inherit !important;
+}
+
+.sidebar-link.active {
+    background-color: var(--bs-primary, #0d6efd) !important; /* ou a cor azul padrão do seu tema */
+    color: #fff !important;
+}

@@ -16,6 +16,21 @@
   <link rel="stylesheet" href="css/modules/sidebar.css">
   <link rel="stylesheet" href="css/modules/dashboard.css">
   <link rel="stylesheet" href="css/style.css">
+  <script>
+  // Aplica o estado ativo imediatamente antes de renderizar a página
+  (function() {
+    const pagina = window.location.pathname.split("/").pop() || "dashboard.html";
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".sidebar-menu .sidebar-link").forEach(link => {
+        if (link.getAttribute("href") === pagina) {
+          link.classList.add("active");
+        } else {
+          link.classList.remove("active");
+        }
+      });
+    });
+  })();
+</script>
 </head>
 
 <body>
@@ -49,7 +64,7 @@
 
     <ul class="sidebar-menu">
       <li>
-        <a href="dashboard.html" class="sidebar-link">
+        <a href="dashboard.html" class="sidebar-link ">
           <i class="fas fa-chart-pie"></i> <span>Leads & Triagem</span>
         </a>
       </li>
@@ -59,13 +74,13 @@
         </a>
       </li>
       <li>
-        <a href="cursos.html" class="sidebar-link active">
+        <a href="cursos.html" class="sidebar-link">
           <i class="fas fa-book-open"></i> <span>Cursos</span>
         </a>
       </li>
       <li>
-        <a href="cursos-em-andamento.html" class="sidebar-link">
-          <i class="fas fa-laptop-code"></i> <span>Em Andamento</span>
+        <a href="cursos-em-andamento.html" class="sidebar-link ">
+          <i class="fas fa-laptop-code"></i> <span>Cursos Em Andamento</span>
         </a>
       </li>
       <li>
@@ -78,6 +93,7 @@
           <i class="fas fa-id-card-alt"></i> <span>Matrículas</span>
         </a>
       </li>
+
     </ul>
   </aside>
 

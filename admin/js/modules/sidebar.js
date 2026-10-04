@@ -1,16 +1,32 @@
 // ==========================================================================
-// MÓDULO DE CONTROLE DA SIDEBAR (Mobile & Logout)
+// MÓDULO DE CONTROLE DA SIDEBAR (Mobile, Logout & Active State Instantâneo)
 // ==========================================================================
 
 import { logout } from '../auth-guard.js';
 
+// --- 1. AÇÃO IMEDIATA (Executa assim que o script é carregado, antes do DOMContentLoaded) ---
+(function () {
+    const paginaAtual = window.location.pathname.split("/").pop() || "dashboard.html";
+    const links = document.querySelectorAll(".sidebar-menu .sidebar-link");
+    
+    links.forEach(link => {
+        const href = link.getAttribute("href");
+        if (href === paginaAtual) {
+            link.classList.add("active");
+        } else {
+            link.classList.remove("active");
+        }
+    });
+})();
+
+// --- 2. RESTANTE LÓGICA QUANDO O DOM ESTIVER PRONTO ---
 document.addEventListener("DOMContentLoaded", () => {
     const toggleBtn = document.getElementById("btn-toggle-sidebar") || document.getElementById("sidebarToggle");
     const sidebar = document.querySelector(".sidebar");
 
     if (!sidebar) return;
 
-    // Cria dinamicamente o fundo escuro (overlay) para dispositivos móveis
+    // Gestão do overlay e mobile
     let overlay = document.querySelector(".sidebar-overlay");
     if (!overlay) {
         overlay = document.createElement("div");
@@ -18,7 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.appendChild(overlay);
     }
 
-    // Ação de abrir/fechar pelo botão hambúrguer
     if (toggleBtn) {
         toggleBtn.addEventListener("click", (e) => {
             e.stopPropagation();
@@ -27,13 +42,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Fechar ao clicar no overlay escuro
     overlay.addEventListener("click", () => {
         sidebar.classList.remove("show");
         overlay.classList.remove("show");
     });
 
-    // Fechar ao clicar fora da sidebar em ecrãs pequenos (<= 992px)
     document.addEventListener("click", (event) => {
         if (window.innerWidth <= 992) {
             const isClickInside = sidebar.contains(event.target) || (toggleBtn && toggleBtn.contains(event.target));
