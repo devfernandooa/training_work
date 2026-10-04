@@ -1,0 +1,267 @@
+:root {
+  /* Paleta de Cores */
+  --color-primary: #e8710a;
+  --color-primary-hover: #f5891f;
+  --color-blue: #1f4e8c;
+  --color-blue-dark: #163a6b;
+  
+  --color-bg: #090c12;
+  --color-card-bg: rgba(22, 22, 26, 0.95);
+  --color-input-bg: #15181e;
+  
+  --color-text-main: #f5f5f5;
+  --color-text-muted: #9ba1a6;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-focus: #e8710a;
+  
+  --color-social-bg: #1c2029;
+  --color-social-border: rgba(255, 255, 255, 0.08);
+  --color-social-hover: #262b36;
+
+  /* Fontes e Tipografia */
+  --font-base: 'Barlow', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-heading: 'Barlow Condensed', sans-serif;
+
+  /* Transições e Sombras */
+  --transition-fast: 0.2s ease;
+  --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow-card: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.1);
+  --shadow-btn: 0 4px 20px rgba(232, 113, 10, 0.35);
+  --radius-card: 16px;
+  --radius-sm: 8px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-base);
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: radial-gradient(circle at 50% -20%, #163a6b 0%, var(--color-bg) 70%);
+  padding: 20px;
+}
+
+/* Card de Login */
+.login-card {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(10px);
+}
+
+/* Cabeçalho do Card e Cores do Título */
+.login-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.login-card h2 {
+  font-family: var(--font-heading);
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+/* Training em azul do site e Work em laranja */
+.brand-training {
+  color: var(--color-blue);
+  text-shadow: 0 2px 10px rgba(31, 78, 140, 0.3);
+}
+
+.brand-work {
+  color: var(--color-primary);
+}
+
+.brand-subtitle {
+  font-family: var(--font-base);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Caixa de Erro */
+.error-box {
+  display: none;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.error-box.active {
+  display: block;
+}
+
+/* Grupos de Formulário */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  pointer-events: none;
+  transition: var(--transition-fast);
+}
+
+.form-group input {
+  width: 100%;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px 12px 42px;
+  color: var(--color-text-main);
+  font-size: 0.95rem;
+  font-family: var(--font-base);
+  transition: var(--transition-fast);
+}
+
+.form-group input::placeholder {
+  color: rgba(155, 161, 166, 0.4);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px rgba(232, 113, 10, 0.15);
+}
+
+.form-group input:focus + .input-icon,
+.input-wrapper:focus-within .input-icon {
+  color: var(--color-primary);
+}
+
+/* Botão de Submissão */
+#btn-submit {
+  width: 100%;
+  background: linear-gradient(135deg, var(--color-primary), #d56507);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 13px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: var(--font-base);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: var(--shadow-btn);
+  transition: var(--transition-fast);
+  margin-top: 25px;
+}
+
+#btn-submit:hover {
+  background: linear-gradient(135deg, var(--color-primary-hover), #e8710a);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 25px rgba(232, 113, 10, 0.45);
+}
+
+#btn-submit:active {
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   ESPAÇO E ESTILO DA LOGO NO LOGIN
+   ========================================================================== */
+.login-logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.login-logo {
+ 
+  max-width: 120px; /* Ajuste o tamanho conforme a proporção da sua logo */
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+  border-radius: 50%;
+}
+
+/* Fallback caso queira usar um ícone estilizado em vez de imagem */
+.logo-fallback-icon {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--color-blue), var(--color-blue-dark));
+  color: #ffffff;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 8px 20px rgba(31, 78, 140, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ==========================================================================
+   LINK DE RETORNO PARA A HOME
+   ========================================================================== */
+.login-footer-back {
+  margin-top: 24px;
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.back-home-link {
+  font-family: var(--font-base);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: var(--transition-fast);
+}
+
+.back-home-link i {
+  font-size: 0.75rem;
+  transition: transform var(--transition-fast);
+}
+
+.back-home-link:hover {
+  color: var(--color-primary);
+}
+
+.back-home-link:hover i {
+  transform: translateX(-3px);
+}

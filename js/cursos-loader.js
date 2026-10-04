@@ -1,0 +1,117 @@
+// ==========================================================================
+// TRAINING WORK - FIREBASE CURSOS & NORMAS LOADER
+// ==========================================================================
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCmNDeSYpQNzlecPYr14lyw0dOqL3HVSdo",
+  authDomain: "training-work.firebaseapp.com",
+  projectId: "training-work",
+  storageBucket: "training-work.firebasestorage.app",
+  messagingSenderId: "727749084762",
+  appId: "1:727749084762:web:e000dd84decbb7d577fa63",
+  measurementId: "G-1H1VC22G15"
+};
+
+try {
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+ async function carregarCatalogoDinamico() {
+    const grid = document.getElementById("coursesGrid");
+    const normasGrid = document.getElementById("normasGrid") || document.getElementById("nrsGrid");
+    const selectCurso = document.getElementById('curso');
+
+    if (!grid && !normasGrid) return;
+
+    try {
+      const querySnapshot = await getDocs(collection(db, "cursos"));
+      if (querySnapshot.empty) return;
+
+      let coursesHTML = "";
+      let normasHTML = "";
+      let optionsHTML = '<option value="">Selecione um curso...</option>';
+
+      querySnapshot.forEach((docSnap) => {
+        const curso = docSnap.data();
+        if (curso.excluido) return; // Ignora os inativados logicamente
+
+        const nome = curso.nome || "Treinamento";
+        const descricao = curso.descricao || "";
+        const carga = curso.carga || "0";
+        const modalidade = curso.modalidade || "Presencial";
+        const valor = Number(curso.valor || 0).toFixed(2).replace('.', ',');
+        const categoria = curso.categoria || "Geral";
+        const secao = curso.secaoExibicao || "grade"; // Lê a escolha feita no painel
+
+        // Popula o select do formulário de contacto globalmente
+        optionsHTML += `<option value="${nome}">${nome}</option>`;
+
+        if (secao === "normas") {
+          // Renderiza na seção de Normas Regulamentadoras
+          normasHTML += `
+            <div class="col-10 col-md-6 col-lg-4 px-4 mb-5 nr-card">
+              <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden card-hover-effect" style="width: 26rem;">
+                <div class="card-body d-flex flex-column justify-content-between p-3">
+                  <div>
+                    <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill fw-semibold mb-4" style="font-size: 0.70rem;">
+                      ${curso.codigo || 'NR'}
+                    </span>
+                    <h5 class="card-title fw-bold text-dark fs-6">${nome}</h5>
+                    <p class="card-text text-secondary small mb-3" style="font-size: 0.98rem;">${descricao}</p>
+                  </div>
+                  <button class="btn btn-outline-primary rounded fw-semibold" style="width: 160px" onclick="scrollToContact()">Saiba mais</button>
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          // Renderiza na Grade de Treinamentos Principal
+          coursesHTML += `
+            <div class="course-card visible" data-cat="${categoria.toLowerCase()}">
+              <div class="course-card-header">
+                <div class="course-icon">⚡</div>
+                <div class="course-nr">${categoria}</div>
+                <div class="course-title">${nome}</div>
+              </div>
+              <div class="course-card-body">
+                <p class="course-desc">${descricao}</p>
+                <div class="course-meta">
+                  <span class="meta-item">⏱ ${carga}h</span>
+                  <span class="meta-item">📍 ${modalidade}</span>
+                  <span class="meta-item">🎓 Certificado</span>
+                </div>
+              </div>
+              <div class="course-card-footer">
+                <span class="course-price">R$ ${valor}</span>
+                <button class="btn-card" onclick="scrollToContact()">Inscrever-se</button>
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      // Atribuição limpa garantindo que se não houver itens na seção, o container fica vazio (evitando duplicar resíduos antigos)
+      if (grid) grid.innerHTML = coursesHTML || "<p class='text-muted text-center w-100'>Nenhum curso na grade.</p>";
+      if (normasGrid) normasGrid.innerHTML = normasHTML || "<p class='text-muted text-center w-100'>Nenhuma norma cadastrada.</p>";
+      if (selectCurso) selectCurso.innerHTML = optionsHTML;
+
+      // Reexecuta os filtros para garantir que os novos cards gerados dinamicamente respondam aos cliques das abas
+      if (typeof initFilters === 'function') {
+        initFilters();
+      }
+
+    } catch (err) {
+      console.error("Erro ao carregar catálogo dinâmico do Firestore:", err);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    carregarCatalogoDinamico();
+  });
+
+} catch (error) {
+  console.error("Erro ao inicializar o Firebase no loader:", error);
+}

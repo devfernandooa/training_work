@@ -1,0 +1,10 @@
+
+lixeira/
+node_modules/
+serviceAccountKey*.json
+serviceAccountKey.json.json
+index copy.html
+anotações.txt
+.env
+.vscode
+seeds.js

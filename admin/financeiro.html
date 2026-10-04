@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestão Financeira - Training Work</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/modules/global.css">
+  <link rel="stylesheet" href="css/modules/sidebar.css">
+  <link rel="stylesheet" href="css/modules/dashboard.css">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Chart.js para os Gráficos Financeiros -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+  // Aplica o estado ativo imediatamente antes de renderizar a página
+  (function() {
+    const pagina = window.location.pathname.split("/").pop() || "dashboard.html";
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".sidebar-menu .sidebar-link").forEach(link => {
+        if (link.getAttribute("href") === pagina) {
+          link.classList.add("active");
+        } else {
+          link.classList.remove("active");
+        }
+      });
+    });
+  })();
+</script>
+</head>
+
+<body>
+  <!-- SIDEBAR FIXA -->
+  <aside class="sidebar" id="appSidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+      <div class="brand-text">
+        <h5>TrainingWork</h5>
+        <span>Painel Administrativo</span>
+      </div>
+    </div>
+
+    <div class="user-profile-bar loaded">
+      <div class="user-avatar-container">
+        <div class="user-avatar-icon"><i class="fas fa-user"></i></div>
+        <span class="user-status-dot"></span>
+      </div>
+      <div class="user-info-text">
+        <span class="user-name">Carregando...</span>
+        <span class="user-email">...</span>
+        <a href="#editar-perfil" class="user-edit-profile">Editar perfil</a>
+      </div>
+      <button type="button" id="btnLogoutSidebar" class="logout-icon-btn" title="Sair do Sistema">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+
+    <ul class="sidebar-menu">
+      <li>
+        <a href="dashboard.html" class="sidebar-link">
+          <i class="fas fa-chart-pie"></i> <span>Leads & Triagem</span>
+        </a>
+      </li>
+      <li>
+        <a href="financeiro.html" class="sidebar-link">
+          <i class="fas fa-wallet"></i> <span>Financeiro</span>
+        </a>
+      </li>
+      <li>
+        <a href="cursos.html" class="sidebar-link">
+          <i class="fas fa-book-open"></i> <span>Cursos</span>
+        </a>
+      </li>
+      <li>
+        <a href="cursos-em-andamento.html" class="sidebar-link ">
+          <i class="fas fa-laptop-code"></i> <span>Cursos Em Andamento</span>
+        </a>
+      </li>
+      <li>
+        <a href="alunos.html" class="sidebar-link">
+          <i class="fas fa-users"></i> <span>Alunos</span>
+        </a>
+      </li>
+      <li>
+        <a href="matriculas.html" class="sidebar-link">
+          <i class="fas fa-id-card-alt"></i> <span>Matrículas</span>
+        </a>
+      </li>
+
+    </ul>
+  </aside>
+
+  <!-- Conteúdo Principal -->
+  <main class="main-content">
+    <div class="d-lg-none mb-3">
+      <button class="btn btn-dark btn-sm px-3 py-2 rounded-3 shadow-sm" id="sidebarToggle" type="button">
+        <i class="fas fa-bars me-1"></i> Menu
+      </button>
+    </div>
+
+    <div class="dashboard-header-container mb-4">
+      <div class="header-titles">
+        <h1 class="page-title">
+          <i class="fas fa-chart-line text-success"></i> Dashboard Financeiro
+        </h1>
+        <p class="page-subtitle">Controlo de pagamentos recebidos, pendentes, projeções e fluxo de caixa.</p>
+      </div>
+      <div class="header-status-badge">
+        <span class="status-dot"></span>
+        <span>Firestore Conectado</span>
+      </div>
+    </div>
+
+    <!-- Cards de Métricas Financeiras -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3">
+          <div class="metric-icon green"><i class="fas fa-check-circle"></i></div>
+          <div class="metric-info">
+            <span class="label">Recebido (Pago)</span>
+            <h3 id="financeiro-total-recebido" class="mb-0 fw-bold text-success">R$ 0,00</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3">
+          <div class="metric-icon blue"><i class="fas fa-clock"></i></div>
+          <div class="metric-info">
+            <span class="label">Pendente / Aguardando</span>
+            <h3 id="financeiro-total-pendente" class="mb-0 fw-bold text-primary">R$ 0,00</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3">
+          <div class="metric-icon red"><i class="fas fa-chart-bar"></i></div>
+          <div class="metric-info">
+            <span class="label">Projeção Futura (Total)</span>
+            <h3 id="financeiro-total-geral" class="mb-0 fw-bold">R$ 0,00</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seção de Gráficos (Chart.js) -->
+    <div class="row g-3 mb-4">
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4 rounded-4 bg-white h-100">
+          <h5 class="fw-bold mb-3 text-secondary fs-6"><i class="fas fa-chart-area me-1"></i> Fluxo de Caixa por Status
+          </h5>
+          <div style="position: relative; height: 280px; width: 100%;">
+            <canvas id="graficoFluxoCaixa"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm p-4 rounded-4 bg-white h-100">
+          <h5 class="fw-bold mb-3 text-secondary fs-6"><i class="fas fa-pie-chart me-1"></i> Formas de Pagamento</h5>
+          <div style="position: relative; height: 280px; width: 100%;">
+            <canvas id="graficoFormasPagamento"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela de Transações -->
+    <section class="card table-container p-4 border-0 shadow-sm rounded-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold text-dark mb-0">Registo de Transações</h5>
+        <select id="filtroStatusFinanceiro" class="form-select form-select-sm w-auto">
+          <option value="todos">Todos os status</option>
+          <option value="Recebido">Recebido</option>
+          <option value="Pendente">Pendente</option>
+          <option value="Aguardando pagamento">Aguardando pagamento</option>
+        </select>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table align-middle table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Data</th>
+              <th>Aluno</th>
+              <th>Curso</th>
+              <th>Forma de Pagamento</th>
+              <th>Valor</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="financeiro-tbody">
+            <!-- Dados carregados via JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    crossorigin="anonymous"></script>
+  <script type="module" src="js/modules/sidebar.js"></script>
+  <script type="module" src="js/financeiro.js"></script>
+  <script type="module" src="js/auth-guard.js"></script>
+</body>
+
+</html>

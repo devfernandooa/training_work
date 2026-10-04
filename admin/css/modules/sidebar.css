@@ -1,0 +1,334 @@
+/* Configuração global e variáveis do painel */
+:root {
+  --sidebar-width: 260px;
+  --bg-sidebar: #0f172a;
+  --accent-color: #3b82f6;
+  --text-sidebar: #94a3b8;
+  --text-active: #ffffff;
+}
+
+/* Estrutura fixa da barra lateral no desktop */
+aside.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  max-width: var(--sidebar-width);
+  height: 100vh;
+  background-color: var(--bg-sidebar);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  z-index: 1050;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  box-sizing: border-box;
+  margin: 0;
+  flex-shrink: 0;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Logotipo e cabeçalho da sidebar */
+aside.sidebar .sidebar-brand {
+  padding: 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+aside.sidebar .brand-icon {
+  background: var(--accent-color);
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+aside.sidebar .brand-text h5 {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+
+aside.sidebar .brand-text span {
+  color: var(--text-sidebar);
+  font-size: 0.72rem;
+}
+
+/* Bloco de identificação do utilizador logado */
+.user-profile-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+}
+
+.user-profile-bar.loaded {
+  opacity: 1;
+}
+
+.user-avatar-container {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+}
+
+.user-avatar-icon {
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+.user-status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 9px;
+  height: 9px;
+  background-color: #27ae60;
+  border: 2px solid #0f172a;
+  border-radius: 50%;
+}
+
+.user-info-text {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-email {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.user-edit-profile {
+  font-size: 0.68rem;
+  color: #38bdf8;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.user-edit-profile:hover {
+  color: #7dd3fc;
+  text-decoration: underline;
+}
+
+/* Botão de terminar sessão compacto na barra de perfil */
+.logout-icon-btn {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.logout-icon-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+/* Links do menu de navegação lateral */
+aside.sidebar .sidebar-menu {
+  list-style: none;
+  padding: 8px 12px;
+  margin: 0;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+aside.sidebar .sidebar-menu li {
+  list-style: none;
+  width: 100%;
+}
+
+aside.sidebar .sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  color: var(--text-sidebar);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  border-radius: 8px;
+  background: transparent;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background 0.2s, color 0.2s;
+}
+
+aside.sidebar .sidebar-link i {
+  font-size: 0.95rem;
+  width: 20px;
+  text-align: center;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+aside.sidebar .sidebar-link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+aside.sidebar .sidebar-link.active {
+  color: var(--text-active);
+  background: var(--accent-color);
+}
+
+/* Camada de fundo escura para dispositivos móveis */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(3px);
+  z-index: 1040;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.show {
+  display: block;
+  opacity: 1;
+}
+
+/* Botão hambúrguer para abrir o menu no telemóvel */
+.btn-toggle-sidebar {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.btn-toggle-sidebar:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #3b82f6;
+}
+
+/* Espaçamento superior e estrutura da página principal */
+.main-content {
+  padding-top: 2rem !important;
+}
+
+.dashboard-header-container {
+  margin-bottom: 1.2rem !important;
+}
+
+/* Cartões de métricas compactados (tamanho reduzido e proporcional) */
+.metric-card, 
+.card-estatistica {
+  padding: 0.6rem 0.9rem !important;
+  border-radius: 10px !important;
+}
+
+.metric-card h3,
+.metric-card .metric-value {
+  font-size: 1.25rem !important;
+  margin-bottom: 0 !important;
+  line-height: 1.2;
+}
+
+.metric-card span,
+.metric-card .metric-title {
+  font-size: 0.7rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Regras de adaptação responsiva (Desktop e Mobile) */
+@media (min-width: 993px) {
+  body {
+    padding-left: var(--sidebar-width);
+  }
+}
+
+@media (max-width: 992px) {
+  aside.sidebar {
+    transform: translateX(-100%);
+  }
+
+  aside.sidebar.show {
+    transform: translateX(0);
+  }
+
+  body {
+    padding-left: 0;
+  }
+  
+  .d-lg-none {
+    display: inline-flex !important;
+  }
+}
+
+/* Garante que o fundo azul só ocorre com a classe .active, evitando flashes ao clicar/focar */
+.sidebar-link:focus, 
+.sidebar-link:active {
+    background-color: transparent !important;
+    color: inherit !important;
+}
+
+.sidebar-link.active {
+    background-color: var(--bs-primary, #0d6efd) !important; /* ou a cor azul padrão do seu tema */
+    color: #fff !important;
+}

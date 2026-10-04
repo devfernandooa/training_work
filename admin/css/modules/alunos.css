@@ -1,0 +1,71 @@
+/* ==========================================
+   MÓDULO: Alunos (alunos.html)
+   ================================---------- */
+
+/* Tabela de Alunos Responsiva */
+.table-container {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    overflow-x: auto; /* Garante scroll suave em telas pequenas */
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.table-header h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+/* Ajustes visuais da grade de métricas de alunos */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.metric-card {
+    background: #ffffff;
+    padding: 1.25rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Responsividade para telas menores (Mobile) */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 1rem;
+    }
+    
+    .table-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* Ajuste para evitar sobreposição na tabela de alunos */
+.tabela-alunos td, .tabela-leads td {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.tabela-alunos .badge, .tabela-alunos .status-pill {
+  display: inline-block;
+  margin-right: 4px;
+}

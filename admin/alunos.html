@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alunos - Training Work</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
+
+    <!-- Fontes -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet" />
+
+    <!-- Estilos Globais e da Sidebar -->
+    <link rel="stylesheet" href="css/modules/global.css">
+    <link rel="stylesheet" href="css/modules/sidebar.css">
+    <link rel="stylesheet" href="css/modules/dashboard.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        // Aplica o estado ativo imediatamente antes de renderizar a página
+        (function () {
+            const pagina = window.location.pathname.split("/").pop() || "dashboard.html";
+            document.addEventListener("DOMContentLoaded", () => {
+                document.querySelectorAll(".sidebar-menu .sidebar-link").forEach(link => {
+                    if (link.getAttribute("href") === pagina) {
+                        link.classList.add("active");
+                    } else {
+                        link.classList.remove("active");
+                    }
+                });
+            });
+        })();
+    </script>
+</head>
+
+<body>
+    <!-- components/sidebar.html -->
+    <aside class="sidebar" id="appSidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+            <div class="brand-text">
+                <h5>TrainingWork</h5>
+                <span>Painel Administrativo</span>
+            </div>
+        </div>
+
+        <div class="user-profile-bar loaded">
+            <div class="user-avatar-container">
+                <!-- Ícone padrão de utilizador do FontAwesome -->
+                <div class="user-avatar-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <span class="user-status-dot"></span>
+            </div>
+
+            <div class="user-info-text">
+                <span class="user-name">Carregando...</span>
+                <span class="user-email">...</span>
+                <a href="#editar-perfil" class="user-edit-profile">Editar perfil</a>
+            </div>
+
+            <button type="button" onclick="fazerL0gout()" class="logout-icon-btn" title="Sair do Sistema">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li>
+                <a href="dashboard.html" class="sidebar-link">
+                    <i class="fas fa-chart-pie"></i> <span>Leads & Triagem</span>
+                </a>
+            </li>
+            <li>
+                <a href="financeiro.html" class="sidebar-link">
+                    <i class="fas fa-wallet"></i> <span>Financeiro</span>
+                </a>
+            </li>
+            <li>
+                <a href="cursos.html" class="sidebar-link">
+                    <i class="fas fa-book-open"></i> <span>Cursos</span>
+                </a>
+            </li>
+            <li>
+                <a href="cursos-em-andamento.html" class="sidebar-link ">
+                    <i class="fas fa-laptop-code"></i> <span>Cursos Em Andamento</span>
+                </a>
+            </li>
+            <li>
+                <a href="alunos.html" class="sidebar-link">
+                    <i class="fas fa-users"></i> <span>Alunos</span>
+                </a>
+            </li>
+            <li>
+                <a href="matriculas.html" class="sidebar-link">
+                    <i class="fas fa-id-card-alt"></i> <span>Matrículas</span>
+                </a>
+            </li>
+
+        </ul>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="main-content">
+        <div class="d-lg-none mb-3">
+            <button class="btn btn-dark btn-sm px-3 py-2 rounded-3 shadow-sm" id="sidebarToggle" type="button">
+                <i class="fas fa-bars me-1"></i> Menu
+            </button>
+        </div>
+
+        <header class="topbar d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <div>
+                <h1>Base de Alunos</h1>
+                <p style="color: #64748b; font-size: 0.9rem;" class="mb-0">Consulta de cadastros convertidos e
+                    histórico de turmas</p>
+            </div>
+            <button class="btn btn-dark fw-semibold rounded-pill px-4" data-bs-toggle="modal"
+                data-bs-target="#modalNovoAluno"
+                style="background-color: #0f172a; border-color: #0f172a; color: #fff; padding: 0.6rem 1.2rem; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-user-plus"></i> Novo Aluno
+            </button>
+        </header>
+
+        <!-- Cards de Métricas -->
+        <section class="metrics-grid">
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div
+                        class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3">
+                        <div class="rounded-3 p-3 text-primary bg-primary bg-opacity-10" style="font-size: 1.2rem;">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div>
+                            <span class="text-secondary small d-block" style="font-size: 0.8rem;">Total de
+                                Alunos</span>
+                            <h4 class="fw-bold mb-0" id="metric-total-alunos">0</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div
+                        class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3">
+                        <div class="rounded-3 p-3 text-success bg-success bg-opacity-10" style="font-size: 1.2rem;">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div>
+                            <span class="text-secondary small d-block" style="font-size: 0.8rem;">Alunos
+                                Ativos</span>
+                            <h4 class="fw-bold mb-0" id="metric-alunos-ativos">0</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div
+                        class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3">
+                        <div class="rounded-3 p-3 text-warning bg-warning bg-opacity-10" style="font-size: 1.2rem;">
+                            <i class="fas fa-user-slash"></i>
+                        </div>
+                        <div>
+                            <span class="text-secondary small d-block" style="font-size: 0.8rem;">Alunos
+                                Inativos</span>
+                            <h4 class="fw-bold mb-0" id="metric-alunos-inativos">0</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div
+                        class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3">
+                        <div class="rounded-3 p-3 text-danger bg-danger bg-opacity-10" style="font-size: 1.2rem;">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div>
+                            <span class="text-secondary small d-block" style="font-size: 0.8rem;">Em Débito</span>
+                            <h4 class="fw-bold mb-0" id="metric-alunos-debitos">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tabela de Alunos Responsiva -->
+        <section class="card table-container border-0 shadow-sm rounded-4 p-4">
+            <div class="table-header d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+                <h2 class="fs-5 fw-bold m-0 text-dark">Alunos Cadastrados</h2>
+                <div class="filters">
+                    <input type="text" id="busca-aluno" placeholder="Buscar por nome ou e-mail..."
+                        class="form-control form-control-sm" style="min-width: 250px;">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Aluno</th>
+                            <th class="d-none d-lg-table-cell">Telefone</th>
+                            <th class="d-none d-lg-table-cell">Cursos Matriculados</th>
+                            <th class="d-none d-lg-table-cell">Data de Cadastro</th>
+                            <th>Status</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alunos-tbody">
+                        <!-- Estado inicial / Carregamento dinâmico via js/alunos.js -->
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted loading-state">
+                                <i class="fas fa-spinner fa-spin me-2"></i> Carregando base de alunos...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    </div>
+
+    <!-- Modal Novo Aluno -->
+    <div class="modal fade" id="modalNovoAluno" tabindex="-1" aria-labelledby="modalNovoAlunoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header bg-dark text-white rounded-top-4"
+                    style="background-color: #0f172a !important;">
+                    <h5 class="modal-title fw-bold" id="modalNovoAlunoLabel">
+                        <i class="fas fa-user-plus me-2"></i> Cadastro Completo de Novo Aluno
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-4 bg-white">
+                    <form id="formNovoAluno">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nomeAluno" class="form-label fw-semibold small text-secondary">Nome
+                                    Completo</label>
+                                <input type="text" class="form-control" id="nomeAluno" placeholder="Ex: João da Silva"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="emailAluno" class="form-label fw-semibold small text-secondary">E-mail
+                                    Principal</label>
+                                <input type="email" class="form-control" id="emailAluno" placeholder="exemplo@email.com"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="cpfAluno" class="form-label fw-semibold small text-secondary">CPF</label>
+                                <input type="text" class="form-control" id="cpfAluno" placeholder="000.000.000-00">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="telefoneAluno" class="form-label fw-semibold small text-secondary">Telefone
+                                    / WhatsApp</label>
+                                <input type="text" class="form-control" id="telefoneAluno"
+                                    placeholder="(00) 00000-0000">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nascimentoAluno" class="form-label fw-semibold small text-secondary">Data de
+                                    Nascimento</label>
+                                <input type="date" class="form-control" id="nascimentoAluno">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="statusAluno" class="form-label fw-semibold small text-secondary">Status
+                                    Inicial</label>
+                                <select class="form-select" id="statusAluno">
+                                    <option value="ativo">Ativo</option>
+                                    <option value="inativo">Inativo</option>
+                                    <option value="debito">Em Débito</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="border-top pt-3 mt-3 mb-3">
+                            <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-map-marker-alt me-2"></i>Endereço
+                                Residencial</h6>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="cepAluno"
+                                        class="form-label fw-semibold small text-secondary">CEP</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="cepAluno" placeholder="00000-000"
+                                            maxlength="9">
+                                        <span class="input-group-text bg-light text-muted" id="cep-loading"
+                                            style="display:none;"><i class="fas fa-spinner fa-spin"></i></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="enderecoLogradouro"
+                                        class="form-label fw-semibold small text-secondary">Logradouro / Rua</label>
+                                    <input type="text" class="form-control" id="enderecoLogradouro"
+                                        placeholder="Ex: Rua das Flores">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="enderecoNumero"
+                                        class="form-label fw-semibold small text-secondary">Número</label>
+                                    <input type="text" class="form-control" id="enderecoNumero" placeholder="Nº">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-5">
+                                    <label for="enderecoBairro"
+                                        class="form-label fw-semibold small text-secondary">Bairro</label>
+                                    <input type="text" class="form-control" id="enderecoBairro" placeholder="Bairro">
+                                </div>
+                                <div class="col-md-5">
+                                    <label for="enderecoCidade"
+                                        class="form-label fw-semibold small text-secondary">Cidade</label>
+                                    <input type="text" class="form-control" id="enderecoCidade" placeholder="Cidade">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="enderecoEstado"
+                                        class="form-label fw-semibold small text-secondary">Estado (UF)</label>
+                                    <input type="text" class="form-control" id="enderecoEstado" placeholder="UF"
+                                        maxlength="2">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="observacoesAluno"
+                                class="form-label fw-semibold small text-secondary">Observações / Anotações
+                                Internas</label>
+                            <textarea class="form-control" id="observacoesAluno" rows="2"
+                                placeholder="Informações relevantes sobre o aluno..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                            <button type="button" class="btn btn-outline-secondary px-4 py-2"
+                                data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-dark px-4 py-2"
+                                style="background-color: #0f172a; border-color: #0f172a;">Salvar Aluno</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição de Aluno -->
+    <div class="modal fade" id="modalEditarAluno" tabindex="-1" aria-labelledby="modalEditarAlunoLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header bg-dark text-white rounded-top-4"
+                    style="background-color: #0f172a !important;">
+                    <h5 class="modal-title fw-bold" id="modalEditarAlunoLabel">
+                        <i class="fas fa-user-edit me-2"></i> Editar Dados do Aluno
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-4 bg-white">
+                    <form id="formEditarAluno">
+                        <input type="hidden" id="editAlunoId">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editNomeAluno" class="form-label fw-semibold small text-secondary">Nome
+                                    Completo</label>
+                                <input type="text" class="form-control" id="editNomeAluno" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editEmailAluno" class="form-label fw-semibold small text-secondary">E-mail
+                                    Principal</label>
+                                <input type="email" class="form-control" id="editEmailAluno" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editCpfAluno"
+                                    class="form-label fw-semibold small text-secondary">CPF</label>
+                                <input type="text" class="form-control" id="editCpfAluno">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editTelefoneAluno"
+                                    class="form-label fw-semibold small text-secondary">Telefone / WhatsApp</label>
+                                <input type="text" class="form-control" id="editTelefoneAluno">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editNascimentoAluno"
+                                    class="form-label fw-semibold small text-secondary">Data de Nascimento</label>
+                                <input type="date" class="form-control" id="editNascimentoAluno">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editStatusAluno"
+                                    class="form-label fw-semibold small text-secondary">Status</label>
+                                <select class="form-select" id="editStatusAluno">
+                                    <option value="ativo">Ativo</option>
+                                    <option value="inativo">Inativo</option>
+                                    <option value="debito">Em Débito</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="editCursoAluno" class="form-label fw-semibold small text-secondary">Curso
+                                    Matriculado</label>
+                                <select class="form-select" id="editCursoAluno">
+                                    <option value="">Nenhum curso matriculado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editObservacoesAluno"
+                                class="form-label fw-semibold small text-secondary">Observações / Anotações
+                                Internas</label>
+                            <textarea class="form-control" id="editObservacoesAluno" rows="2"></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                            <button type="button" class="btn btn-outline-secondary px-4 py-2"
+                                data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-dark px-4 py-2"
+                                style="background-color: #0f172a; border-color: #0f172a;">Salvar Alterações</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="modalExcluirAluno" tabindex="-1" aria-labelledby="modalExcluirAlunoLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header bg-danger text-white rounded-top-4">
+                    <h5 class="modal-title fw-bold" id="modalExcluirAlunoLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Confirmar Exclusão
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <p class="text-secondary mb-3">Tem certeza de que deseja excluir o aluno <strong
+                            id="nomeAlunoExcluir" class="text-dark"></strong>?</p>
+                    <p class="small text-muted">Esta ação não poderá ser desfeita.</p>
+                    <input type="hidden" id="excluirAlunoId">
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-secondary px-4"
+                            data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" id="btnConfirmarExclusao" class="btn btn-danger px-4">Sim,
+                            Excluir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="js/alunos.js"></script>
+    <script type="module" src="js/modules/sidebar.js"></script>
+    <script type="module" src="js/sidebar.js"></script>
+    <script type="module" src="js/dashboard.js"></script>
+    <script type="module" src="js/auth-guard.js"></script>
+    <script type="module" src="js/auth.js"></script>
+</body>
+
+</html>
