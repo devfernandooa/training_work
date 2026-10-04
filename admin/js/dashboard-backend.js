@@ -96,8 +96,21 @@ export async function processarMatriculaLead(lead, formaPagamento, statusPagamen
     const alunoId = lead.cpf ? lead.cpf.replace(/\D/g, "") : `aluno_${Date.now()}`;
     const dataAtual = new Date().toISOString();
 
-    // 1. Cria ou atualiza o registo na coleção de Alunos
-   await setDoc(doc(db, "alunos", alunoId), {
+    // 1. Captura com segurança os novos valores introduzidos no modal
+    const inputValorEl = document.getElementById("input-valor-curso");
+    const selectParcelasEl = document.getElementById("select-parcelas");
+
+    const valorCurso = inputValorEl ? parseFloat(inputValorEl.value) || 0 : Number(lead.valorCurso || 0);
+    const parcelasStr = selectParcelasEl ? selectParcelasEl.value : "1x";
+
+    // 2. Formata a forma de pagamento detalhada se for Cartão ou Boleto com parcelas
+    let formaPagamentoFinal = formaPagamento || "Pix";
+    if ((formaPagamentoFinal === "Cartão de Crédito" || formaPagamentoFinal === "Boleto Bancário") && parcelasStr && parcelasStr !== "1x") {
+      formaPagamentoFinal = `${formaPagamentoFinal} (${parcelasStr})`;
+    }
+
+    // 3. Cria ou atualiza o registo na coleção de Alunos
+    await setDoc(doc(db, "alunos", alunoId), {
       nome: lead.nome || "Não informado",
       email: lead.email || "",
       telefone: cleanPhone,
@@ -109,35 +122,35 @@ export async function processarMatriculaLead(lead, formaPagamento, statusPagamen
       criado_em: dataAtual
     }, { merge: true });
 
-    // 2. Regista a matrícula na respetiva coleção
+    // 4. Regista a matrícula na respetiva coleção
     await addDoc(collection(db, "matriculas"), {
       aluno_id: alunoId,
       aluno_nome: lead.nome || "Não informado",
       aluno_telefone: cleanPhone,
       aluno_email: lead.email || "",
       curso_nome: lead.curso || "Geral",
-      forma_pagamento: formaPagamento || "Pix",
+      forma_pagamento: formaPagamentoFinal,
       status_pagamento: statusPagamento || "Aguardando pagamento",
       status_matricula: "confirmada",
       data_matricula: dataAtual
     });
 
-    // 3. Regista na coleção financeira (Gestão Financeira & Projeções)
+    // 5. Regista na coleção financeira (Gestão Financeira & Projeções com o valor e parcelas corretos)
     await addDoc(collection(db, "financeiro"), {
       alunoId: alunoId,
       alunoNome: lead.nome || "Não informado",
       curso: lead.curso || "Geral",
-      valor: Number(lead.valorCurso || 0),
-      formaPagamento: formaPagamento || "Pix",
+      valor: valorCurso,
+      formaPagamento: formaPagamentoFinal,
       status: statusPagamento || "Aguardando pagamento",
       criado_em: dataAtual
     });
 
-    // 4. Atualiza o status do lead original e marca como excluído da tabela de leads
+    // 6. Atualiza o status do lead original e marca como excluído da tabela de leads
     await updateDoc(doc(db, "inscricoes", lead.id), { 
       status: "matriculado",
       convertido_aluno: true,
-      excluido: true, // <--- Oculta o lead da tabela principal e migra para Alunos
+      excluido: true, // Oculta o lead da tabela principal e migra para Alunos
       atualizado_em: dataAtual
     });
 
@@ -196,3 +209,19 @@ export async function executarExclusaoLogicaBackend(id) {
     atualizado_em: dataHoraAtual
   });
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const selectPagamento = document.getElementById("select-forma-pagamento");
+  const blocoParcelas = document.getElementById("bloco-parcelas");
+
+  if (selectPagamento) {
+    selectPagamento.addEventListener("change", (e) => {
+      const valor = e.target.value;
+      if (valor === "Cartão de Crédito" || valor === "Boleto Bancário") {
+        blocoParcelas.style.display = "block";
+      } else {
+        blocoParcelas.style.display = "none";
+      }
+    });
+  }
+});
