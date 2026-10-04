@@ -13,20 +13,20 @@
   <link rel="stylesheet" href="css/modules/dashboard.css">
   <link rel="stylesheet" href="css/style.css">
   <script>
-  // Aplica o estado ativo imediatamente antes de renderizar a página
-  (function() {
-    const pagina = window.location.pathname.split("/").pop() || "dashboard.html";
-    document.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll(".sidebar-menu .sidebar-link").forEach(link => {
-        if (link.getAttribute("href") === pagina) {
-          link.classList.add("active");
-        } else {
-          link.classList.remove("active");
-        }
+    // Aplica o estado ativo imediatamente antes de renderizar a página
+    (function () {
+      const pagina = window.location.pathname.split("/").pop() || "dashboard.html";
+      document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".sidebar-menu .sidebar-link").forEach(link => {
+          if (link.getAttribute("href") === pagina) {
+            link.classList.add("active");
+          } else {
+            link.classList.remove("active");
+          }
+        });
       });
-    });
-  })();
-</script>
+    })();
+  </script>
 </head>
 
 <body>
@@ -383,6 +383,16 @@
                       <i class="fas fa-cash-register me-1 text-primary"></i> Fechamento de Matrícula e Pagamento
                     </span>
                     <div class="row g-2">
+
+                      <!-- Novo Campo: Valor do Curso -->
+                      <div class="col-md-6">
+                        <label for="input-valor-curso" class="form-label small text-muted mb-1">Valor do Curso (R$)
+                          *</label>
+                        <input type="number" step="0.01" class="form-control form-control-sm border-primary"
+                          id="input-valor-curso" placeholder="Ex: 450.00" required>
+                      </div>
+
+                      <!-- Forma de Pagamento -->
                       <div class="col-md-6">
                         <label for="select-forma-pagamento" class="form-label small text-muted mb-1">Forma de Pagamento
                           *</label>
@@ -393,6 +403,22 @@
                           <option value="À Vista">💵 À Vista (Dinheiro / Espécie)</option>
                         </select>
                       </div>
+
+                      <!-- Campo Condicional de Parcelas (Aparece se for Cartão ou Boleto) -->
+                      <div class="col-md-6" id="bloco-parcelas" style="display: none;">
+                        <label for="select-parcelas" class="form-label small text-muted mb-1">Número de Parcelas</label>
+                        <select class="form-select form-select-sm" id="select-parcelas">
+                          <option value="1x">1x (À vista)</option>
+                          <option value="2x">2x</option>
+                          <option value="3x">3x</option>
+                          <option value="4x">4x</option>
+                          <option value="5x">5x</option>
+                          <option value="6x">6x</option>
+                          <option value="10x">10x</option>
+                          <option value="12x">12x</option>
+                        </select>
+                      </div>
+
                       <div class="col-md-6">
                         <label for="select-status-pagamento" class="form-label small text-muted mb-1">Status Financeiro
                           *</label>
@@ -402,12 +428,13 @@
                           <option value="Aguardando pagamento" selected>Aguardando pagamento</option>
                         </select>
                       </div>
+
                       <div class="col-12 mt-3">
                         <button type="button" class="btn btn-success btn-sm fw-bold w-100" id="btn-executar-matricula">
                           <i class="fas fa-check-circle me-1"></i> Confirmar Pagamento & Converter Lead em Aluno
                         </button>
                       </div>
-                      <!-- Feedback visual posicionado corretamente dentro do modal -->
+
                       <div class="col-12 mt-2">
                         <div id="feedback-matricula" class="alert d-none py-2 px-3 small mb-0" role="alert"></div>
                       </div>
