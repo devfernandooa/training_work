@@ -15,7 +15,7 @@
 </head>
 
 <body>
-  <!-- SIDEBAR FIXA E DIRETA NO HTML (Evita bloqueio de CORS / file://) -->
+  <!-- SIDEBAR FIXA E DIRETA NO HTML -->
   <aside class="sidebar" id="appSidebar">
     <div class="sidebar-brand">
       <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
@@ -356,6 +356,45 @@
                   </div>
                 </div>
 
+                <!-- Seção de Pagamento e Conversão para Aluno -->
+                <div class="col-12 mt-3">
+                  <div class="p-3 bg-light rounded-3 border">
+                    <span class="d-block small fw-bold text-secondary mb-2">
+                      <i class="fas fa-cash-register me-1 text-primary"></i> Fechamento de Matrícula e Pagamento
+                    </span>
+                    <div class="row g-2">
+                      <div class="col-md-6">
+                        <label for="select-forma-pagamento" class="form-label small text-muted mb-1">Forma de Pagamento
+                          *</label>
+                        <select class="form-select form-select-sm border-primary" id="select-forma-pagamento">
+                          <option value="Pix" selected>⚡ Pix (Principal - Aprovação Instantânea)</option>
+                          <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+                          <option value="Boleto Bancário">📄 Boleto Bancário</option>
+                          <option value="À Vista">💵 À Vista (Dinheiro / Espécie)</option>
+                        </select>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="select-status-pagamento" class="form-label small text-muted mb-1">Status Financeiro
+                          *</label>
+                        <select class="form-select form-select-sm" id="select-status-pagamento">
+                          <option value="Recebido">Recebido (Pago)</option>
+                          <option value="Pendente">Pendente</option>
+                          <option value="Aguardando pagamento" selected>Aguardando pagamento</option>
+                        </select>
+                      </div>
+                      <div class="col-12 mt-3">
+                        <button type="button" class="btn btn-success btn-sm fw-bold w-100" id="btn-executar-matricula">
+                          <i class="fas fa-check-circle me-1"></i> Confirmar Pagamento & Converter Lead em Aluno
+                        </button>
+                      </div>
+                      <!-- Feedback visual posicionado corretamente dentro do modal -->
+                      <div class="col-12 mt-2">
+                        <div id="feedback-matricula" class="alert d-none py-2 px-3 small mb-0" role="alert"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Bloco 6: Observações e Auditoria -->
                 <div class="col-12">
                   <div class="p-2 bg-light rounded-3 border">
@@ -424,7 +463,8 @@
     crossorigin="anonymous"></script>
 
   <script type="module" src="js/modules/sidebar.js"></script>
-  <script type="module" src="js/dashboard.js"></script>
+  <script type="module" src="js/dashboard-ui.js"></script>
+  <script type="module" src="js/dashboard-backend.js"></script>
   <script type="module" src="js/auth-guard.js"></script>
 </body>
 

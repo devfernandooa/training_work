@@ -59,3 +59,13 @@
         align-items: stretch;
     }
 }
+
+/* Ajuste para evitar sobreposição na tabela de alunos */
+.tabela-alunos td, .tabela-leads td {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.tabela-alunos .badge, .tabela-alunos .status-pill {
+  display: inline-block;
+  margin-right: 4px;
+}
