@@ -24,20 +24,20 @@
   <link rel="stylesheet" href="css/modules/dashboard.css">
   <link rel="stylesheet" href="css/style.css">
   <script>
-  // Aplica o estado ativo imediatamente antes de renderizar a página
-  (function() {
-    const pagina = window.location.pathname.split("/").pop() || "dashboard.html";
-    document.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll(".sidebar-menu .sidebar-link").forEach(link => {
-        if (link.getAttribute("href") === pagina) {
-          link.classList.add("active");
-        } else {
-          link.classList.remove("active");
-        }
+    // Aplica o estado ativo imediatamente antes de renderizar a página
+    (function () {
+      const pagina = window.location.pathname.split("/").pop() || "dashboard.html";
+      document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".sidebar-menu .sidebar-link").forEach(link => {
+          if (link.getAttribute("href") === pagina) {
+            link.classList.add("active");
+          } else {
+            link.classList.remove("active");
+          }
+        });
       });
-    });
-  })();
-</script>
+    })();
+  </script>
 </head>
 
 <body id="app-container">
@@ -89,8 +89,8 @@
         </a>
       </li>
       <li>
-        <a href="cursos-em-andamento.html" class="sidebar-link ">
-          <i class="fas fa-laptop-code"></i> <span>Cursos Em Andamento</span>
+        <a href="turmas.html" class="sidebar-link">
+          <i class="fas fa-laptop-code"></i> <span>Turmas & Cursos</span>
         </a>
       </li>
 

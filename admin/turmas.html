@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cursos em Andamento - Training Work</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/modules/global.css">
+    <link rel="stylesheet" href="css/modules/sidebar.css">
+    <link rel="stylesheet" href="css/modules/dashboard.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        // Aplica o estado ativo imediatamente antes de renderizar a página
+        (function () {
+            const pagina = window.location.pathname.split("/").pop() || "dashboard.html";
+            document.addEventListener("DOMContentLoaded", () => {
+                document.querySelectorAll(".sidebar-menu .sidebar-link").forEach(link => {
+                    if (link.getAttribute("href") === pagina) {
+                        link.classList.add("active");
+                    } else {
+                        link.classList.remove("active");
+                    }
+                });
+            });
+        })();
+    </script>
+</head>
+
+<body>
+    <!-- SIDEBAR FIXA -->
+    <aside class="sidebar" id="appSidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+            <div class="brand-text">
+                <h5>TrainingWork</h5>
+                <span>Painel Administrativo</span>
+            </div>
+        </div>
+
+        <div class="user-profile-bar loaded">
+            <div class="user-avatar-container">
+                <div class="user-avatar-icon"><i class="fas fa-user"></i></div>
+                <span class="user-status-dot"></span>
+            </div>
+            <div class="user-info-text">
+                <span class="user-name">Carregando...</span>
+                <span class="user-email">...</span>
+                <a href="#editar-perfil" class="user-edit-profile">Editar perfil</a>
+            </div>
+            <button type="button" id="btnLogoutSidebar" class="logout-icon-btn" title="Sair do Sistema">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="lead_e_triagem.html" class="sidebar-link ">
+                    <i class="fas fa-chart-pie"></i> <span>Leads & Triagem</span>
+                </a>
+            </li>
+            <li>
+                <a href="financeiro.html" class="sidebar-link">
+                    <i class="fas fa-wallet"></i> <span>Financeiro</span>
+                </a>
+            </li>
+            <li>
+                <a href="cursos.html" class="sidebar-link">
+                    <i class="fas fa-book-open"></i> <span>Cursos</span>
+                </a>
+            </li>
+            <li>
+                <a href="turmas.html" class="sidebar-link">
+                    <i class="fas fa-laptop-code"></i> <span>Turmas & Cursos</span>
+                </a>
+            </li>
+            <li>
+                <a href="alunos.html" class="sidebar-link">
+                    <i class="fas fa-users"></i> <span>Alunos</span>
+                </a>
+            </li>
+            <li>
+                <a href="matriculas.html" class="sidebar-link">
+                    <i class="fas fa-id-card-alt"></i> <span>Matrículas</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="main-content">
+        <div class="d-lg-none mb-3">
+            <button class="btn btn-dark btn-sm px-3 py-2 rounded-3 shadow-sm" id="sidebarToggle" type="button">
+                <i class="fas fa-bars me-1"></i> Menu
+            </button>
+        </div>
+
+        <!-- Cabeçalho Padronizado -->
+        <div class="dashboard-header-container mb-4">
+            <div class="header-titles">
+                <h1 class="page-title">
+                    <i class="fas fa-laptop-code text-primary"></i> Turmas & Cursos em Andamento
+                </h1>
+                <p class="page-subtitle">Gerencie turmas ativas, ementas, professores e acompanhe o estado operacional.
+                </p>
+            </div>
+            <div class="header-status-badge">
+                <span class="status-dot"></span>
+                <span>Firestore Conectado</span>
+            </div>
+        </div>
+        <!-- Cards de Indicadores de Resumo no Topo -->
+        <div class="row g-3 mb-4">
+            <!-- Card 1: Total de Turmas Ativas -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-primary bg-opacity-10 text-primary rounded p-3 me-3">
+                            <i class="fas fa-layer-group fa-2x"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small fw-bold text-uppercase">Turmas Ativas</span>
+                            <h3 class="fw-bold text-dark m-0" id="stat-total-turmas">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Total de Vagas Disponíveis -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-success bg-opacity-10 text-success rounded p-3 me-3">
+                            <i class="fas fa-chair fa-2x"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small fw-bold text-uppercase">Vagas Disponíveis</span>
+                            <h3 class="fw-bold text-dark m-0" id="stat-vagas-disponiveis">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Turmas Esgotadas -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-warning bg-opacity-10 text-warning rounded p-3 me-3">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small fw-bold text-uppercase">Turmas Lotadas</span>
+                            <h3 class="fw-bold text-dark m-0" id="stat-turmas-lotadas">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Nav Tabs para Alternar entre as Visões -->
+        <ul class="nav nav-tabs mb-4" id="turmasTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold" id="gestao-tab" data-bs-toggle="tab"
+                    data-bs-target="#gestao-pane" type="button" role="tab">
+                    <i class="fas fa-chalkboard-teacher me-2"></i>Gestão de Turmas
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold" id="vagas-tab" data-bs-toggle="tab" data-bs-target="#vagas-pane"
+                    type="button" role="tab">
+                    <i class="fas fa-user-plus me-2"></i>Vagas em Aberto <span class="badge bg-primary ms-1"
+                        id="badgeVagasCount">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold" id="calendario-tab" data-bs-toggle="tab"
+                    data-bs-target="#calendario-pane" type="button" role="tab">
+                    <i class="fas fa-calendar-alt me-2"></i>Calendário de Aulas
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold" id="frequencia-tab" data-bs-toggle="tab"
+                    data-bs-target="#frequencia-pane" type="button" role="tab">
+                    <i class="fas fa-clipboard-check me-2"></i>Controle de Presença
+                </button>
+            </li>
+        </ul>
+
+        <!-- Conteúdo das Abas -->
+        <div class="tab-content" id="turmasTabContent">
+
+            <!-- ABA 1: GESTÃO DE TURMAS (Tabela Principal) -->
+            <div class="tab-pane fade show active" id="gestao-pane" role="tabpanel">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <h5 class="card-title text-dark fw-bold m-0"><i class="fas fa-list text-primary me-2"></i>Turmas
+                            Ativas e Operacionais</h5>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="input-group input-group-sm" style="width: 250px;">
+                                <span class="input-group-text bg-white border-end-0"><i
+                                        class="fas fa-search text-muted"></i></span>
+                                <input type="text" id="busca-turma" class="form-control border-start-0 ps-0"
+                                    placeholder="Pesquisar turma ou instrutor...">
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary px-3" id="btnVerInativos">Ver
+                                Inativos</button>
+                            <button class="btn btn-sm btn-primary px-3" data-bs-toggle="modal"
+                                data-bs-target="#modalEditarTurma" id="btnNovaTurma">
+                                <i class="fas fa-plus me-1"></i> Nova Turma
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Turmas -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Turma / Curso</th>
+                                        <th>Instrutor</th>
+                                        <th>Horário / Dias</th>
+                                        <th>Lotação (Vagas)</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-turmas-tbody">
+                                    <!-- Renderizado dinamicamente via JS -->
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">A carregar turmas...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 2: VAGAS EM ABERTO -->
+            <div class="tab-pane fade" id="vagas-pane" role="tabpanel">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="text-dark fw-bold mb-3"><i class="fas fa-door-open text-success me-2"></i>Turmas com
+                            Vagas Disponíveis</h5>
+                        <p class="text-muted small">Acompanhe em tempo real a lotação das turmas ativas e o número de
+                            vagas remanescentes para enturmação.</p>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Curso / Turma</th>
+                                        <th>Horário</th>
+                                        <th>Total Vagas</th>
+                                        <th>Matriculados</th>
+                                        <th>Vagas Restantes</th>
+                                        <th class="text-end">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-vagas-tbody">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">A calcular vagas
+                                            disponíveis...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 3: CALENDÁRIO DE AULAS -->
+            <div class="tab-pane fade" id="calendario-pane" role="tabpanel">
+                <div class="card border-0 shadow-sm p-4 text-center">
+                    <h5 class="text-dark fw-bold">Calendário de Aulas por Turma</h5>
+                    <p class="text-muted">Visualização semanal dos horários e aulas programadas.</p>
+                    <div id="calendario-view" class="py-5 text-muted">[Módulo de Calendário em Carregamento...]</div>
+                </div>
+            </div>
+
+            <!-- ABA 4: CONTROLO DE PRESENÇA -->
+            <div class="tab-pane fade" id="frequencia-pane" role="tabpanel">
+                <div class="card border-0 shadow-sm p-4 text-center">
+                    <h5 class="text-dark fw-bold">Registo de Frequência e Chamada</h5>
+                    <p class="text-muted">Selecione uma turma para lançar a presença dos alunos por data de aula.</p>
+                    <div id="frequencia-view" class="py-5 text-muted">[Selecione uma turma na aba Gestão para gerir a
+                        presença]</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Criação / Edição de Turma -->
+        <div class="modal fade" id="modalEditarTurma" tabindex="-1" aria-labelledby="modalEditarTurmaLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title fw-bold" id="modalEditarTurmaLabel">
+                            <i class="fas fa-chalkboard-teacher me-2"></i>Registar / Editar Turma ou Curso
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Fechar"></button>
+                    </div>
+
+                    <form id="formSalvarTurma">
+                        <div class="modal-body p-4">
+                            <input type="hidden" id="turmaId">
+
+                            <div class="row g-3">
+                                <!-- Seção / Categoria de Exibição -->
+                                <div class="col-md-6">
+                                    <label for="turmaCategoria" class="form-label small fw-bold text-muted">Seção /
+                                        Categoria de Exibição</label>
+                                    <select class="form-select" id="turmaCategoria" required>
+                                        <option value="Grade de Treinamentos">Grade de Treinamentos</option>
+                                        <option value="Normas Regulamentadoras">Normas Regulamentadoras (NRs)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Código da Norma / Pill (Ex: NR35-02) -->
+                                <div class="col-md-6">
+                                    <label for="turmaCodigoNr" class="form-label small fw-bold text-muted">Código / Pill
+                                        da Norma (Ex: NR35-02)</label>
+                                    <input type="text" class="form-control" id="turmaCodigoNr"
+                                        placeholder="Ex: NR35-02 (Pill em destaque)">
+                                </div>
+
+                                <!-- Nome da Turma / Curso -->
+                                <div class="col-md-12">
+                                    <label for="turmaNome" class="form-label small fw-bold text-muted">Nome da Turma /
+                                        Curso</label>
+                                    <input type="text" class="form-control" id="turmaNome" required
+                                        placeholder="Ex: Segurança no Trabalho em Altura">
+                                </div>
+
+                                <!-- Descrição / Resumo -->
+                                <div class="col-md-12">
+                                    <label for="turmaDescricao" class="form-label small fw-bold text-muted">Descrição /
+                                        Resumo (Mais objetivo para NRs)</label>
+                                    <textarea class="form-control" id="turmaDescricao" rows="3"
+                                        placeholder="Descreva o conteúdo formativo ou resumo exibido no card..."></textarea>
+                                </div>
+
+                                <!-- Carga Horária -->
+                                <div class="col-md-6">
+                                    <label for="turmaCarga" class="form-label small fw-bold text-muted">Carga
+                                        Horária</label>
+                                    <input type="text" class="form-control" id="turmaCarga" placeholder="Ex: 40h ou 8h">
+                                </div>
+
+                                <!-- Instrutor -->
+                                <div class="col-md-6">
+                                    <label for="turmaInstrutor" class="form-label small fw-bold text-muted">Instrutor
+                                        Responsável</label>
+                                    <input type="text" class="form-control" id="turmaInstrutor"
+                                        placeholder="Ex: Eng. Carlos Eduardo">
+                                </div>
+
+                                <!-- Vagas Máximas -->
+                                <div class="col-md-6">
+                                    <label for="turmaVagas" class="form-label small fw-bold text-muted">Vagas
+                                        Máximas</label>
+                                    <input type="number" class="form-control" id="turmaVagas" value="20" min="1"
+                                        required>
+                                </div>
+
+                                <!-- Horário -->
+                                <div class="col-md-6">
+                                    <label for="turmaHorario" class="form-label small fw-bold text-muted">Horário das
+                                        Aulas</label>
+                                    <input type="text" class="form-control" id="turmaHorario"
+                                        placeholder="Ex: 19:00 - 22:00">
+                                </div>
+
+                                <!-- Dias da Semana -->
+                                <div class="col-md-6">
+                                    <label for="turmaDias" class="form-label small fw-bold text-muted">Dias da
+                                        Semana</label>
+                                    <input type="text" class="form-control" id="turmaDias"
+                                        placeholder="Ex: Segundas e Quartas">
+                                </div>
+
+                                <!-- Modalidade -->
+                                <div class="col-md-6">
+                                    <label for="turmaModalidade"
+                                        class="form-label small fw-bold text-muted">Modalidade</label>
+                                    <select class="form-select" id="turmaModalidade">
+                                        <option value="Presencial">Presencial</option>
+                                        <option value="Online">Online</option>
+                                        <option value="Híbrido">Híbrido</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer bg-light px-4 py-3">
+                            <button type="button" class="btn btn-outline-secondary px-4"
+                                data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-save me-1"></i> Guardar Turma
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
+    <script type="module" src="js/modules/sidebar.js"></script>
+    <!-- Script específico de cursos em andamento -->
+    
+    <script type="module" src="js/backend/lead-service.js"></script>
+    <script type="module" src="js/frontend/turmas-ui.js"></script>
+    <script type="module" src="js/auth-guard.js"></script>
+</body>
+
+</html>
