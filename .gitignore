@@ -5,6 +5,10 @@ serviceAccountKey*.json
 serviceAccountKey.json.json
 index copy.html
 anotações.txt
+
+/admin/js/dashboard-backend.js
+/admin/js/dashboard-ui.js
+/admin/dashboard.html
 /admin/js/modules/leads.js
 /admin/js/modules/sincronizar.js
 .env
