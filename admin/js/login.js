@@ -32,7 +32,7 @@ if (form) {
       }
 
       if (adminSnap.exists() && adminSnap.data().ativo === true) {
-        window.location.href = "dashboard.html";
+        window.location.href = "lead_e_triagem.html";
       } else {
         await auth.signOut();
         throw new Error("Este usuário não possui permissão de administrador ativa.");
