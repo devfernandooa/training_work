@@ -1,4 +1,3 @@
-import * as bootstrap from "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js";
 import {
   iniciarAutenticacaoTurmas,
   configurarLogout,
@@ -21,7 +20,7 @@ function mostrarModalConfirmacao(titulo, mensagem, textoBotao = "Confirmar", cor
   return new Promise((resolve) => {
     const modalEl = document.getElementById("modalConfirmacao");
     if (!modalEl) {
-      resolve(confirm(mensagem)); // Fallback caso o HTML do modal não exista
+      resolve(confirm(mensagem)); 
       return;
     }
 
@@ -34,7 +33,6 @@ function mostrarModalConfirmacao(titulo, mensagem, textoBotao = "Confirmar", cor
 
     const modalInstance = new window.bootstrap.Modal(modalEl);
     
-    // Substitui o botão para limpar event listeners anteriores
     const novoBtnConfirmar = btnConfirmar.cloneNode(true);
     btnConfirmar.parentNode.replaceChild(novoBtnConfirmar, btnConfirmar);
 
@@ -75,7 +73,6 @@ async function carregarPainelTurmas() {
       return exibindoInativos ? !ativo : ativo;
     });
 
-    // Atualiza os cartões de métricas do topo
     const elTotal = document.getElementById("metric-total-turmas");
     const elAtivas = document.getElementById("metric-turmas-ativas");
     const elInativas = document.getElementById("metric-turmas-inativas");
@@ -111,10 +108,11 @@ async function carregarPainelTurmas() {
 
       const modalidadeBadge = `<span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill" style="font-size: 0.70rem;">${curso.modalidade || 'PRESENCIAL'}</span>`;
 
-      // Botão de inativar ou reativar dinâmico
       const botaoAcaoInativar = ativo
         ? `<button class="btn btn-sm btn-outline-secondary rounded-circle p-1 lh-1 btn-inativar-curso" data-id="${cursoId}" title="Inativar Turma" style="width: 32px; height: 32px;"><i class="fas fa-ban"></i></button>`
         : `<button class="btn btn-sm btn-outline-success rounded-circle p-1 lh-1 btn-reativar-curso" data-id="${cursoId}" title="Reativar Turma" style="width: 32px; height: 32px;"><i class="fas fa-check"></i></button>`;
+
+      const nomeInstrutorCard = curso.instrutor || curso.professor || curso.professor_responsavel || curso.docente || 'Instrutor Training Work';
 
       colDiv.innerHTML = `
         <div class="card h-100 shadow-sm border-0 rounded-4 p-3 bg-white card-hover-effect">
@@ -129,7 +127,7 @@ async function carregarPainelTurmas() {
               
               <div class="border-top pt-2 mb-3">
                 <p class="mb-1 text-secondary small"><i class="fas fa-tag me-1"></i> <strong>Categoria:</strong> ${curso.categoria || 'Geral'}</p>
-                <p class="mb-1 text-secondary small"><i class="fas fa-user-tie me-1"></i> <strong>Instrutor:</strong> ${curso.instrutor || 'Instrutor Training Work'}</p>
+                <p class="mb-1 text-secondary small"><i class="fas fa-user-tie me-1"></i> <strong>Instrutor:</strong> ${nomeInstrutorCard}</p>
                 <p class="mb-1 text-secondary small"><i class="fas fa-clock me-1"></i> <strong>Carga:</strong> ${curso.carga_horaria || curso.carga || 0}h</p>
               </div>
             </div>
@@ -167,17 +165,41 @@ async function abrirModalEdicao(cursoId) {
   try {
     const dadosModal = await buscarDadosModalCurso(cursoId);
     
-    document.getElementById("editCursoId").value = cursoId;
-    document.getElementById("editNomeCurso").value = dadosModal.curso.nome || "";
-    document.getElementById("editSiglaCurso").value = dadosModal.curso.sigla || "";
-    document.getElementById("editInstrutorCurso").value = dadosModal.curso.instrutor || "";
-    document.getElementById("editCargaCurso").value = dadosModal.curso.carga_horaria || dadosModal.curso.carga || "";
-    document.getElementById("editStatusCurso").value = dadosModal.curso.ativo !== false ? "true" : "false";
-    document.getElementById("editDescricaoCurso").value = dadosModal.curso.descricao || "";
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val !== undefined && val !== null ? val : "";
+    };
+
+    const curso = dadosModal.curso || {};
+
+    // Extração robusta do instrutor (lida com string, objetos ou campos variados)
+    let nomeInstrutor = "";
+    const rawInstrutor = curso.instrutor || curso.professor || curso.professor_responsavel || curso.docente || curso.nomeInstrutor;
+    if (typeof rawInstrutor === 'string') {
+      nomeInstrutor = rawInstrutor;
+    } else if (rawInstrutor && typeof rawInstrutor === 'object') {
+      nomeInstrutor = rawInstrutor.nome || rawInstrutor.name || "";
+    }
+
+    setVal("editCursoId", cursoId);
+    setVal("editNomeCurso", curso.nome);
+    setVal("editSiglaCurso", curso.sigla || curso.codigo || "");
+    setVal("editInstrutorCurso", nomeInstrutor);
+    setVal("editCargaCurso", curso.carga_horaria || curso.carga || 0);
+    setVal("editStatusCurso", curso.ativo !== false ? "true" : "false");
+
+    // Gestão de Vagas
+    const vagasTotais = Number(curso.vagas || curso.vagasTotais || 20);
+    const totalMatriculados = dadosModal.matriculados ? dadosModal.matriculados.length : 0;
+    const vagasDisponiveisCalc = Math.max(0, vagasTotais - totalMatriculados);
+
+    setVal("editVagasTotais", vagasTotais);
+    setVal("editVagasDisponiveis", curso.vagasDisponiveis !== undefined ? curso.vagasDisponiveis : vagasDisponiveisCalc);
+    setVal("editDescricaoCurso", curso.descricao || "");
 
     // Preenche alunos matriculados
     listaMatriculadosEl.innerHTML = "";
-    if (dadosModal.matriculados.length === 0) {
+    if (!dadosModal.matriculados || dadosModal.matriculados.length === 0) {
       listaMatriculadosEl.innerHTML = '<li class="list-group-item text-muted small border-0">Nenhum aluno matriculado nesta turma.</li>';
     } else {
       dadosModal.matriculados.forEach(mat => {
@@ -194,18 +216,23 @@ async function abrirModalEdicao(cursoId) {
     }
 
     // Preenche select de alunos disponíveis
-    selectDisponiveisEl.innerHTML = '<option value="">Selecione um aluno...</option>';
-    dadosModal.disponiveis.forEach(aluno => {
-      const option = document.createElement("option");
-      option.value = aluno.id;
-      option.textContent = aluno.nome;
-      selectDisponiveisEl.appendChild(option);
-    });
+    selectDisponiveisEl.innerHTML = '<option value="">Selecione um aluno para matricular...</option>';
+    if (dadosModal.disponiveis && Array.isArray(dadosModal.disponiveis)) {
+      dadosModal.disponiveis.forEach(aluno => {
+        const option = document.createElement("option");
+        option.value = aluno.id;
+        option.textContent = aluno.nome;
+        selectDisponiveisEl.appendChild(option);
+      });
+    }
 
     const modalElement = document.getElementById('editarCursoModal');
     if (modalElement && window.bootstrap) {
-      const modal = new window.bootstrap.Modal(modalElement);
-      modal.show();
+      let modalInstance = window.bootstrap.Modal.getInstance(modalElement);
+      if (!modalInstance) {
+        modalInstance = new window.bootstrap.Modal(modalElement);
+      }
+      modalInstance.show();
     }
   } catch (error) {
     console.error("Erro ao abrir modal de edição:", error);
@@ -258,7 +285,6 @@ function configurarEventosCards() {
     });
   });
 
-  // Evento delegado para remoção de matrícula dentro do modal (com modal de confirmação)
   document.addEventListener("click", async (e) => {
     const btnRemover = e.target.closest(".btn-remover-matricula");
     if (btnRemover) {
@@ -320,26 +346,36 @@ document.addEventListener("DOMContentLoaded", () => {
     formEditar.addEventListener("submit", async (e) => {
       e.preventDefault();
       const id = document.getElementById("editCursoId").value;
-      
+      if (!id) return;
+
+      const getVal = (elId) => document.getElementById(elId)?.value || "";
+
       const dadosAtualizados = {
-        nome: document.getElementById("editNomeCurso").value,
-        sigla: document.getElementById("editSiglaCurso").value,
-        instrutor: document.getElementById("editInstrutorCurso").value,
-        carga_horaria: Number(document.getElementById("editCargaCurso").value),
-        ativo: document.getElementById("editStatusCurso").value === "true",
-        descricao: document.getElementById("editDescricaoCurso").value
+        nome: getVal("editNomeCurso"),
+        sigla: getVal("editSiglaCurso"),
+        instrutor: getVal("editInstrutorCurso"),
+        carga_horaria: Number(getVal("editCargaCurso")) || 0,
+        investimento: Number(getVal("editInvestimentoCurso")) || 0,
+        modalidade: getVal("editModalidadeCurso"),
+        vagas: Number(getVal("editVagasTotais")) || 20,
+        vagasDisponiveis: Number(getVal("editVagasDisponiveis")) || 20,
+        ativo: getVal("editStatusCurso") === "true",
+        descricao: getVal("editDescricaoCurso")
       };
 
       try {
         await atualizarCursoBackend(id, dadosAtualizados);
+        
         const modalElement = document.getElementById('editarCursoModal');
         if (modalElement && window.bootstrap) {
-          const modal = window.bootstrap.Modal.getInstance(modalElement);
-          modal.hide();
+          const modalInstance = window.bootstrap.Modal.getInstance(modalElement) || new window.bootstrap.Modal(modalElement);
+          modalInstance.hide();
         }
+
         carregarPainelTurmas();
       } catch (error) {
         console.error("Erro ao atualizar curso:", error);
+        alert("Erro ao atualizar os dados da turma.");
       }
     });
   }
