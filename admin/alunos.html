@@ -139,19 +139,22 @@
     <!-- Tabela de Alunos com Ações e Filtros Padronizados -->
     <section class="card table-container p-4 border-0 shadow-sm rounded-4">
       <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-        <h5 class="fw-bold text-dark mb-0"><i class="fas fa-user-graduate me-2 text-primary"></i> <span id="titulo-secao-alunos">Alunos Ativos</span></h5>
-        
+        <h5 class="fw-bold text-dark mb-0"><i class="fas fa-user-graduate me-2 text-primary"></i> <span
+            id="titulo-secao-alunos">Alunos Ativos</span></h5>
+
         <div class="d-flex flex-wrap align-items-center gap-2">
           <!-- Campo de Pesquisa -->
-          <input type="text" id="inputBuscaAluno" class="form-control form-control-sm w-auto" placeholder="Buscar por nome ou e-mail...">
-          
+          <input type="text" id="inputBuscaAluno" class="form-control form-control-sm w-auto"
+            placeholder="Buscar por nome ou e-mail...">
+
           <!-- Botão Alternar Inativos -->
           <button class="btn btn-outline-secondary btn-sm px-3 rounded-pill" id="btn-alternar-alunos-inativos">
             <i class="fas fa-eye-slash me-1"></i> Ver Inativos
           </button>
 
           <!-- Botão Novo Aluno (Em Azul e Posicionado Abaixo/Na Secção) -->
-          <button class="btn btn-primary btn-sm px-3 rounded-pill" id="btnNovoAluno" data-bs-toggle="modal" data-bs-target="#modalNovoAluno">
+          <button class="btn btn-primary btn-sm px-3 rounded-pill" id="btnNovoAluno" data-bs-toggle="modal"
+            data-bs-target="#modalNovoAluno">
             <i class="fas fa-user-plus me-1"></i> Novo Aluno
           </button>
         </div>
@@ -176,10 +179,134 @@
       </div>
     </section>
   </main>
+  <!-- Modal de Edição Padronizado de Alunos -->
+  <div class="modal fade" id="modalEditarAluno" tabindex="-1" aria-labelledby="modalEditarAlunoLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg rounded-4 p-2 bg-white">
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+        <div class="modal-header border-0 pb-2">
+          <h5 class="modal-title fw-bold text-dark fs-5" id="modalEditarAlunoLabel">
+            <i class="fas fa-user-edit me-2 text-primary"></i> Editar Dados do Aluno e Matrícula
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+
+        <div class="modal-body py-3">
+          <form id="formEditarAluno">
+            <input type="hidden" id="editAlunoId">
+
+            <!-- Bloco 1: Informações Pessoais -->
+            <div class="p-3 bg-light rounded-3 border mb-3">
+              <span class="d-block small fw-bold text-secondary mb-2"><i class="fas fa-id-card me-1 text-primary"></i>
+                Informações Pessoais</span>
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <label for="editNomeAluno" class="form-label small text-muted mb-0">Nome Completo *</label>
+                  <input type="text" class="form-control form-control-sm" id="editNomeAluno" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="editEmailAluno" class="form-label small text-muted mb-0">E-mail *</label>
+                  <input type="email" class="form-control form-control-sm" id="editEmailAluno" required>
+                </div>
+                <div class="col-md-4">
+                  <label for="editCpfAluno" class="form-label small text-muted mb-0">CPF</label>
+                  <input type="text" class="form-control form-control-sm" id="editCpfAluno">
+                </div>
+                <div class="col-md-4">
+                  <label for="editTelefoneAluno" class="form-label small text-muted mb-0">Telefone / WhatsApp</label>
+                  <input type="text" class="form-control form-control-sm" id="editTelefoneAluno">
+                </div>
+                <div class="col-md-4">
+                  <label for="editNascimentoAluno" class="form-label small text-muted mb-0">Data de Nascimento</label>
+                  <input type="date" class="form-control form-control-sm" id="editNascimentoAluno">
+                </div>
+              </div>
+            </div>
+            <!-- Bloco de Informações Financeiras e Pagamento -->
+            <div class="p-3 bg-light rounded-3 border mb-3">
+              <span class="d-block small fw-bold text-secondary mb-2"><i class="fas fa-wallet me-1 text-primary"></i>
+                Informações Financeiras e Pagamento</span>
+              <div class="row g-2">
+                <div class="col-md-4">
+                  <label for="editValorCurso" class="form-label small text-muted mb-0">Valor do Curso (R$)</label>
+                  <input type="text" class="form-control form-control-sm" id="editValorCurso" placeholder="0,00">
+                </div>
+                <div class="col-md-4">
+                  <label for="editStatusPagamento" class="form-label small text-muted mb-0">Status de Pagamento</label>
+                  <select class="form-select form-select-sm" id="editStatusPagamento">
+                    <option value="pendente">Pendente</option>
+                    <option value="pago">Pago / Confirmado</option>
+                    <option value="isento">Isento</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label for="editModalidadePagamento" class="form-label small text-muted mb-0">Modalidade de
+                    Pagamento</label>
+                  <select class="form-select form-select-sm" id="editModalidadePagamento">
+                    <option value="">Não informada</option>
+                    <option value="pix">PIX</option>
+                    <option value="cartao">Cartão de Crédito</option>
+                    <option value="boleto">Boleto Bancário</option>
+                    <option value="dinheiro">Dinheiro / Transferência</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bloco 2: Gestão Académica e Operacional -->
+            <div class="p-3 bg-light rounded-3 border mb-3">
+              <span class="d-block small fw-bold text-secondary mb-2"><i
+                  class="fas fa-graduation-cap me-1 text-primary"></i> Gestão Académica e Operacional</span>
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <label for="editCursoAluno" class="form-label small text-muted mb-0">Curso / Treinamento
+                    Matriculado</label>
+                  <select class="form-select form-select-sm" id="editCursoAluno">
+                    <option value="">Carregando cursos...</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="editStatusAluno" class="form-label small text-muted mb-0">Status Operacional</label>
+                  <select class="form-select form-select-sm" id="editStatusAluno">
+                    <option value="ativo">Ativo</option>
+                    <option value="inativo">Inativo</option>
+                    <option value="debito">Em Débito</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bloco 3: Observações e Anotações -->
+            <div class="p-3 bg-light rounded-3 border mb-3">
+              <span class="d-block small fw-bold text-secondary mb-2"><i
+                  class="fas fa-comment-alt me-1 text-primary"></i> Observações</span>
+              <div class="row g-2">
+                <div class="col-12">
+                  <textarea class="form-control form-control-sm" id="editObservacoesAluno" rows="2"
+                    placeholder="Notas internas ou observações sobre o aluno..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer border-0 pt-0 px-0">
+              <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill"
+                data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill" id="btnSalvarEdicaoAluno">Salvar
+                Alterações</button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    crossorigin="anonymous"></script>
   <script type="module" src="js/modules/sidebar.js"></script>
   <script type="module" src="js/alunos.js"></script>
+  <script type="module" src="js/alunos-backend.js"></script>
   <script type="module" src="js/auth-guard.js"></script>
 </body>
 
