@@ -1,4 +1,4 @@
-import { auth, db } from "./firebase-config.js";
+import { auth, db } from "../firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { 
   collection, 
@@ -20,7 +20,7 @@ import {
 export function iniciarAutenticacaoAlunos(callbackSucesso) {
   onAuthStateChanged(auth, (user) => {
     if (!user) {
-      window.location.replace("/admin/login");
+      window.location.replace("login.html");
       return;
     }
     const userDisplay = document.getElementById("user-display");
@@ -34,7 +34,7 @@ export function configurarLogout() {
   const btnLogout = document.getElementById("btn-logout") || document.getElementById("btnLogoutSidebar");
   if (btnLogout) {
     btnLogout.addEventListener("click", () => {
-      signOut(auth).then(() => window.location.replace("/admin/login"));
+      signOut(auth).then(() => window.location.replace("login.html"));
     });
   }
 }
@@ -63,20 +63,17 @@ export function escutarMatriculas(callback) {
       const alunoId = mat.aluno_id;
       if (!alunoId) return;
 
-      // Mapeia os nomes dos cursos
       if (!matriculasPorAluno[alunoId]) {
         matriculasPorAluno[alunoId] = [];
       }
       matriculasPorAluno[alunoId].push(mat.curso_nome || mat.curso || "Geral");
 
-      // Mapeia os detalhes completos da matrícula (incluindo financeiro e pagamento)
       if (!matriculasDetalhesPorAluno[alunoId]) {
         matriculasDetalhesPorAluno[alunoId] = [];
       }
       matriculasDetalhesPorAluno[alunoId].push(mat);
     });
 
-    // Devolve os dois mapas exigidos pelo alunos.js
     if (callback) callback(matriculasPorAluno, matriculasDetalhesPorAluno);
   });
 }
@@ -88,7 +85,6 @@ export function escutarAlunos(callback) {
       listaAlunos.push({ id: docSnap.id, ...docSnap.data() });
     });
 
-    // Ordena do mais recente para o mais antigo
     listaAlunos.sort((a, b) => new Date(b.criado_em || b.data_cadastro || 0) - new Date(a.criado_em || a.data_cadastro || 0));
     
     if (callback) callback(listaAlunos);
@@ -96,7 +92,7 @@ export function escutarAlunos(callback) {
 }
 
 /* ==========================================================================
- * OPERAÇÕES DE ESCRITA NO FIRESTORE (CRUD)
+ * OPERAÇÕES DE ESCRITA NO FIRESTORE (CRUD E SINCRONIZAÇÃO)
  * ========================================================================== */
 
 export async function alterarStatusAlunoBackend(alunoId, statusAtual) {
@@ -117,19 +113,37 @@ export async function cadastrarAlunoBackend(dadosAluno, enderecoCompleto) {
 }
 
 export async function atualizarAlunoComMatriculaBackend(alunoId, dadosAtualizados, dadosFinanceiros, cursoEscolhido) {
-  // Atualiza dados cadastrais e financeiros no documento do aluno
+  // 1. Normalização rigorosa do Status Financeiro para bater certo com o Dashboard Financeiro
+  let statusBruto = (dadosFinanceiros.status_pagamento || "").toLowerCase();
+  let statusNormalizado = "Aguardando pagamento"; // Valor padrão seguro
+
+  if (statusBruto.includes("recebido") || statusBruto.includes("pago") || statusBruto.includes("confirmado")) {
+    statusNormalizado = "Recebido";
+  } else if (statusBruto.includes("pendente")) {
+    statusNormalizado = "Pendente";
+  } else if (statusBruto.includes("aguardando")) {
+    statusNormalizado = "Aguardando pagamento";
+  }
+
+  const dadosFiltroFinanceiro = {
+    ...dadosFinanceiros,
+    status_pagamento: statusNormalizado
+  };
+
+  // 2. Atualiza dados principais no documento do aluno
   await updateDoc(doc(db, "alunos", alunoId), {
     ...dadosAtualizados,
-    ...dadosFinanceiros
+    ...dadosFiltroFinanceiro,
+    atualizado_em: new Date().toISOString()
   });
 
-  // Atualiza a matrícula correspondente utilizando Batch
+  const batch = writeBatch(db);
+
+  // 3. Atualiza as Matrículas associadas
   const qMatriculas = query(collection(db, "matriculas"), where("aluno_id", "==", alunoId));
   const snapMat = await getDocs(qMatriculas);
-  
-  const batch = writeBatch(db);
-  snapMat.forEach((docMat) => {
-    batch.delete(docMat.ref);
+  snapMat.forEach((docMat) => { 
+    batch.delete(docMat.ref); 
   });
 
   if (cursoEscolhido) {
@@ -139,11 +153,31 @@ export async function atualizarAlunoComMatriculaBackend(alunoId, dadosAtualizado
       aluno_nome: dadosAtualizados.nome || "",
       aluno_email: dadosAtualizados.email || "",
       curso_nome: cursoEscolhido,
-      valor: dadosFinanceiros.valor || "0.00",
-      status_pagamento: dadosFinanceiros.status_pagamento || "pendente",
-      forma_pagamento: dadosFinanceiros.modalidade_pagamento || "",
+      valor: dadosFiltroFinanceiro.valor || "0.00",
+      status_pagamento: statusNormalizado,
+      forma_pagamento: dadosFiltroFinanceiro.modalidade_pagamento || "Pix",
       status_matricula: "confirmada",
-      criado_em: new Date().toISOString()
+      atualizado_em: new Date().toISOString()
+    });
+  }
+
+  // 4. Atualiza/Sincroniza a coleção "financeiro" (forçando o recálculo automático nos cartões e projeção)
+  const qFinanceiro = query(collection(db, "financeiro"), where("alunoId", "==", alunoId));
+  const snapFin = await getDocs(qFinanceiro);
+  snapFin.forEach((docFin) => { 
+    batch.delete(docFin.ref); 
+  });
+
+  if (cursoEscolhido) {
+    const novoFinanceiroRef = doc(collection(db, "financeiro"));
+    batch.set(novoFinanceiroRef, {
+      alunoId: alunoId,
+      alunoNome: dadosAtualizados.nome || "",
+      curso: cursoEscolhido,
+      valor: parseFloat(dadosFiltroFinanceiro.valor) || 0,
+      formaPagamento: dadosFiltroFinanceiro.modalidade_pagamento || "Pix",
+      status: statusNormalizado, // Chave exata que alimenta os totais do financeiro
+      atualizado_em: new Date().toISOString()
     });
   }
 
