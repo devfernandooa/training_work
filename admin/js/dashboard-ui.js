@@ -219,6 +219,11 @@ export function preencherModalEdicao(id, data) {
   setFieldValue("edit-threads", data.threads || "");
   setFieldValue("edit-x", data.x || data.twitter || "");
 
+  // Campos de pagamento no modal
+  setFieldValue("input-valor-curso", data.valorCurso || "");
+  setFieldValue("select-forma-pagamento", data.formaPagamento || "Pix");
+  setFieldValue("select-status-pagamento", "Aguardando pagamento");
+
   if (data.atualizado_por && data.atualizado_em) {
     const dataFormatada = new Date(data.atualizado_em).toLocaleString("pt-BR");
     setFieldValue("edit-atualizado-por", `${data.atualizado_por} em ${dataFormatada}`);
@@ -230,7 +235,6 @@ export function preencherModalEdicao(id, data) {
   setCheckboxValue("edit-zap-ligacao", !!data.aceita_ligacao_zap);
   setCheckboxValue("edit-email-validado", !!data.email_validado);
 
-  // Limpa feedbacks anteriores do modal de matrícula ao abrir
   const feedbackEl = document.getElementById("feedback-matricula");
   if (feedbackEl) feedbackEl.className = "alert d-none";
 
@@ -279,7 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Ação de conversão e pagamento (Matrícula) - Mantém o modal aberto para novas edições
+  // Ação de conversão e pagamento (Matrícula)
   const btnExecutarMatricula = document.getElementById("btn-executar-matricula");
   const feedbackEl = document.getElementById("feedback-matricula");
 
@@ -291,44 +295,51 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btnExecutarMatricula) {
     btnExecutarMatricula.addEventListener("click", async () => {
-      if (feedbackEl) feedbackEl.className = "alert d-none";
-      
-      const leadId = document.getElementById("edit-lead-id")?.value;
+      const leadId = document.getElementById("edit-lead-id").value;
       if (!leadId) {
         mostrarFeedback("Nenhum lead selecionado.", "erro");
         return;
       }
 
-      const formaPagamento = document.getElementById("select-forma-pagamento")?.value || "Pix";
-      const statusPagamento = document.getElementById("select-status-pagamento")?.value || "Aguardando pagamento";
+      const formaPagamento = document.getElementById("select-forma-pagamento").value;
+      const statusPagamento = document.getElementById("select-status-pagamento").value;
 
-      const leadObj = {
+      // Validação do status financeiro obrigatório
+      const statusNorm = (statusPagamento || "").trim().toLowerCase();
+      if (statusNorm !== "recebido" && statusNorm !== "pago") {
+        mostrarFeedback("Para converter em aluno, o Status Financeiro deve estar como 'Recebido'.", "erro");
+        return;
+      }
+
+      const leadAtual = {
         id: leadId,
-        nome: document.getElementById("edit-nome")?.value,
-        email: document.getElementById("edit-email")?.value,
-        telefone: document.getElementById("edit-telefone")?.value,
-        curso: document.getElementById("edit-curso")?.value,
-        cpf: document.getElementById("edit-cpf")?.value,
-        empresa: document.getElementById("edit-empresa")?.value,
-        valorCurso: 0 
+        nome: document.getElementById("edit-nome").value,
+        email: document.getElementById("edit-email").value,
+        telefone: document.getElementById("edit-telefone").value,
+        curso: document.getElementById("edit-curso").value,
+        cpf: document.getElementById("edit-cpf").value,
+        empresa: document.getElementById("edit-empresa").value,
+        valorCurso: document.getElementById("input-valor-curso").value
       };
 
-      btnExecutarMatricula.disabled = true;
-      btnExecutarMatricula.textContent = "Processando matrícula...";
-
       try {
-        await processarMatriculaLead(leadObj, formaPagamento, statusPagamento);
-        // Informa o sucesso visualmente sem fechar o modal, permitindo continuar a editar
-        mostrarFeedback("Pagamento confirmado! Lead convertido em aluno com sucesso. Pode continuar a editar se necessário.", "sucesso");
-      } catch (err) {
-        let mensagemErro = err.message;
-        if (mensagemErro.includes("Missing or insufficient permissions")) {
-          mensagemErro = "Erro de permissão no Firebase. Verifique as regras do Firestore.";
-        }
-        mostrarFeedback("Erro ao converter lead: " + mensagemErro, "erro");
-      } finally {
+        btnExecutarMatricula.disabled = true;
+        btnExecutarMatricula.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> A processar...`;
+
+        await processarMatriculaLead(leadAtual, formaPagamento, statusPagamento);
+
+        mostrarFeedback("Matrícula confirmada, aluno gerado e financeiro atualizado!", "sucesso");
+        
+        setTimeout(() => {
+          if (editModalInstance) editModalInstance.hide();
+          location.reload();
+        }, 1200);
+
+      } catch (error) {
+        console.error("Erro na conversão:", error);
+        mostrarFeedback("Erro na conversão: " + error.message, "erro");
         btnExecutarMatricula.disabled = false;
-        btnExecutarMatricula.textContent = "Confirmar Pagamento & Converter Lead em Aluno";
+        btnExecutarMatricula.innerHTML = `<i class="fas fa-check-circle me-1"></i> Confirmar Pagamento & Converter Lead em Aluno`;
       }
     });
   }
