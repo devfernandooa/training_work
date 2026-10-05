@@ -283,7 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Ação de conversão e pagamento (Matrícula)
+  // Ação de conversão e pagamento (Matrícula) - Processa mas NÃO fecha o modal automaticamente
   const btnExecutarMatricula = document.getElementById("btn-executar-matricula");
   const feedbackEl = document.getElementById("feedback-matricula");
 
@@ -328,23 +328,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
         await processarMatriculaLead(leadAtual, formaPagamento, statusPagamento);
 
-        mostrarFeedback("Matrícula confirmada, aluno gerado e financeiro atualizado!", "sucesso");
-        
-        setTimeout(() => {
-          if (editModalInstance) editModalInstance.hide();
-          location.reload();
-        }, 1200);
+        // Atualiza visualmente o select de status no modal para refletir que foi matriculado
+        const statusSelect = document.getElementById("edit-status");
+        if (statusSelect) statusSelect.value = "Matriculado";
+
+        mostrarFeedback("Pagamento confirmado, aluno gerado e financeiro atualizado! Clique em 'Salvar' para concluir.", "sucesso");
 
       } catch (error) {
         console.error("Erro na conversão:", error);
         mostrarFeedback("Erro na conversão: " + error.message, "erro");
+      } finally {
         btnExecutarMatricula.disabled = false;
         btnExecutarMatricula.innerHTML = `<i class="fas fa-check-circle me-1"></i> Confirmar Pagamento & Converter Lead em Aluno`;
       }
     });
   }
 
-  // Submissão do formulário de edição
+  // Submissão do formulário de edição (Botão "Salvar único") - Consolida e fecha o modal
   const editForm = document.getElementById("edit-lead-form");
   if (editForm) {
     editForm.addEventListener("submit", async (e) => {
@@ -353,7 +353,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const btnSave = document.getElementById("btn-save-edit");
       if (btnSave) {
         btnSave.disabled = true;
-        btnSave.textContent = "A guardar...";
+        btnSave.textContent = "A salvar...";
       }
 
       const getInputValue = (elementId) => document.getElementById(elementId)?.value || "";
@@ -390,12 +390,13 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         await salvarEdicaoLead(id, dadosFormulario);
         if (editModalInstance) editModalInstance.hide();
+        location.reload(); // Atualiza a página para refletir as alterações
       } catch (error) {
         console.error("Erro ao atualizar:", error);
       } finally {
         if (btnSave) {
           btnSave.disabled = false;
-          btnSave.textContent = "Guardar Alterações";
+          btnSave.textContent = "Salvar";
         }
       }
     });
