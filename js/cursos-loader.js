@@ -50,19 +50,35 @@ try {
         optionsHTML += `<option value="${nome}">${nome}</option>`;
 
         if (secao === "normas") {
-          // Renderiza na seção de Normas Regulamentadoras
+          // Renderiza na seção de Normas Regulamentadoras com layout aprimorado
           normasHTML += `
             <div class="col-10 col-md-6 col-lg-4 px-4 mb-5 nr-card">
               <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden card-hover-effect" style="width: 26rem;">
-                <div class="card-body d-flex flex-column justify-content-between p-3">
-                  <div>
-                    <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill fw-semibold mb-4" style="font-size: 0.70rem;">
-                      ${curso.codigo || 'NR'}
+                <div class="card-body p-4 d-flex flex-column">
+                  
+                  <!-- Pill da NR em destaque e maior -->
+                  <div class="mb-4">
+                    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold border border-primary border-opacity-25" style="font-size: 0.9rem; letter-spacing: 0.5px;">
+                      ${curso.codigo_nr || curso.codigo || 'NR00-00'}
                     </span>
-                    <h5 class="card-title fw-bold text-dark fs-6">${nome}</h5>
-                    <p class="card-text text-secondary small mb-3" style="font-size: 0.98rem;">${descricao}</p>
                   </div>
-                  <button class="btn btn-outline-primary rounded fw-semibold" style="width: 160px" onclick="scrollToContact()">Saiba mais</button>
+                  
+                  <!-- Título e Descrição -->
+                  <h5 class="card-title fw-bold text-dark mb-3" style="font-size: 1.15rem;">${nome}</h5>
+                  <p class="card-text text-secondary mb-4" style="font-size: 0.95rem; line-height: 1.6;">${descricao}</p>
+                  
+                  <!-- Rodapé com Preço e Botão alinhados -->
+                  <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-light">
+                    
+                    <div class="text-start">
+                      <small class="d-block text-muted fw-bold" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Investimento</small>
+                      <span class="fw-bold text-secondary" style="font-size: 1.15rem;">R$ ${valor}</span>
+                    </div>
+                    
+                    <button class="btn btn-outline-primary px-4 py-2 fw-semibold rounded-3" onclick="scrollToContact()">Saiba mais</button>
+                    
+                  </div>
+                  
                 </div>
               </div>
             </div>
