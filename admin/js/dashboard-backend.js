@@ -5,9 +5,13 @@ import {
   onSnapshot,
   doc,
   getDoc,
+  getDocs,
   updateDoc,
   setDoc,
-  addDoc
+  addDoc,
+  query,
+  where,
+  increment
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { renderizarTabela, preencherModalEdicao } from "./dashboard-ui.js";
 
@@ -87,34 +91,54 @@ export async function atualizarStatusLead(id, novoStatus) {
 
 
 /* ==========================================================================
- * FLUXO DE CONVERSÃO DE LEAD EM ALUNO E GESTÃO FINANCEIRA
+ * FLUXO DE CONVERSÃO DE LEAD EM ALUNO COM VALIDAÇÃO E GESTÃO DE VAGAS
  * ========================================================================== */
 
 export async function processarMatriculaLead(lead, formaPagamento, statusPagamento) {
   try {
+    // 1. REGRA DE PROTEÇÃO: Validação flexível do status de pagamento
+    const statusNormalizado = (statusPagamento || "").trim().toLowerCase();
+    if (statusNormalizado !== "recebido" && statusNormalizado !== "pago") {
+      throw new Error("A conversão em aluno e geração de matrícula só é permitida após a confirmação e recebimento do pagamento!");
+    }
+
     const cleanPhone = (lead.telefone || "").replace(/\D/g, "");
     const alunoId = lead.cpf ? lead.cpf.replace(/\D/g, "") : `aluno_${Date.now()}`;
     const dataAtual = new Date().toISOString();
 
-    // 1. Captura com segurança os novos valores introduzidos no modal
+    // Captura segura dos valores de input do modal
     const inputValorEl = document.getElementById("input-valor-curso");
     const selectParcelasEl = document.getElementById("select-parcelas");
 
     const valorCurso = inputValorEl ? parseFloat(inputValorEl.value) || 0 : Number(lead.valorCurso || 0);
     const parcelasStr = selectParcelasEl ? selectParcelasEl.value : "1x";
 
-    // 2. Formata a forma de pagamento detalhada se for Cartão ou Boleto com parcelas
     let formaPagamentoFinal = formaPagamento || "Pix";
-    if ((formaPagamentoFinal === "Cartão de Crédito" || formaPagamentoFinal === "Boleto Bancário") && parcelasStr && parcelasStr !== "1x") {
+    if ((formaPagamentoFinal.includes("Cartão") || formaPagamentoFinal.includes("Boleto")) && parcelasStr && parcelasStr !== "1x") {
       formaPagamentoFinal = `${formaPagamentoFinal} (${parcelasStr})`;
     }
+
+    const nomeCursoDesejado = (lead.curso || "Geral").trim();
+
+    // 2. Localiza o curso correspondente na coleção de cursos para atualizar as vagas (com fallback seguro)
+    const cursosRef = collection(db, "cursos");
+    const cursoSnapshot = await getDocs(cursosRef);
+
+    let cursoDocId = null;
+    cursoSnapshot.forEach((cursoDoc) => {
+      const data = cursoDoc.data();
+      // Compara ignorando maiúsculas/minúsculas ou correspondência parcial
+      if (data.nome && data.nome.trim().toLowerCase() === nomeCursoDesejado.toLowerCase()) {
+        cursoDocId = cursoDoc.id;
+      }
+    });
 
     // 3. Cria ou atualiza o registo na coleção de Alunos
     await setDoc(doc(db, "alunos", alunoId), {
       nome: lead.nome || "Não informado",
       email: lead.email || "",
       telefone: cleanPhone,
-      curso: lead.curso || "Geral",
+      curso: nomeCursoDesejado,
       cpf: lead.cpf || "",
       empresa: lead.empresa || "",
       status: "ativo",
@@ -122,45 +146,51 @@ export async function processarMatriculaLead(lead, formaPagamento, statusPagamen
       criado_em: dataAtual
     }, { merge: true });
 
-    // 4. Regista a matrícula na respetiva coleção
+    // 4. Regista a matrícula formal para gerar a ficha de presença
     await addDoc(collection(db, "matriculas"), {
       aluno_id: alunoId,
       aluno_nome: lead.nome || "Não informado",
       aluno_telefone: cleanPhone,
       aluno_email: lead.email || "",
-      curso_nome: lead.curso || "Geral",
+      curso_nome: nomeCursoDesejado,
       forma_pagamento: formaPagamentoFinal,
-      status_pagamento: statusPagamento || "Aguardando pagamento",
+      status_pagamento: "Recebido",
       status_matricula: "confirmada",
       data_matricula: dataAtual
     });
 
-    // 5. Regista na coleção financeira (Gestão Financeira & Projeções com o valor e parcelas corretos)
+    // 5. Regista a transação na coleção financeira
     await addDoc(collection(db, "financeiro"), {
       alunoId: alunoId,
       alunoNome: lead.nome || "Não informado",
-      curso: lead.curso || "Geral",
+      curso: nomeCursoDesejado,
       valor: valorCurso,
       formaPagamento: formaPagamentoFinal,
-      status: statusPagamento || "Aguardando pagamento",
+      status: "Recebido",
       criado_em: dataAtual
     });
 
-    // 6. Atualiza o status do lead original e marca como excluído da tabela de leads
+    // 6. Atualiza as vagas do curso no Firestore (decrementa 1 vaga se encontrado)
+    if (cursoDocId) {
+      await updateDoc(doc(db, "cursos", cursoDocId), {
+        vagasDisponiveis: increment(-1)
+      });
+    }
+
+    // 7. Atualiza o status do lead original e oculta da listagem principal
     await updateDoc(doc(db, "inscricoes", lead.id), { 
       status: "matriculado",
       convertido_aluno: true,
-      excluido: true, // Oculta o lead da tabela principal e migra para Alunos
+      excluido: true, 
       atualizado_em: dataAtual
     });
 
     return true;
   } catch (err) {
-    console.error("Erro ao converter matrícula:", err);
+    console.error("Erro ao processar matrícula e conversão:", err);
     throw err;
   }
 }
-
 
 /* ==========================================================================
  * BUSCA E ATUALIZAÇÃO DE DADOS CADASTRADA (MODAL DE EDIÇÃO)
