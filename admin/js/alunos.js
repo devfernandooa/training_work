@@ -1,86 +1,63 @@
-import { auth, db } from "./firebase-config.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, getDocs, query, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import {
+  iniciarAutenticacaoAlunos,
+  configurarLogout,
+  escutarCursosDisponiveis,
+  escutarMatriculas,
+  escutarAlunos,
+  alterarStatusAlunoBackend,
+  excluirAlunoBackend,
+  cadastrarAlunoBackend,
+  atualizarAlunoComMatriculaBackend
+} from "./alunos-backend.js";
 
-// 1. Autenticação e Controle de Sessão
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    window.location.replace("/admin/login");
-    return;
-  }
-  const userDisplay = document.getElementById("user-display");
-  if (userDisplay) userDisplay.innerHTML = `<i class="fas fa-user-circle"></i> ${user.email}`;
-
-  carregarDadosAlunos();
-  carregarCursosDisponiveis();
-});
-
-// Logout
-document.getElementById("btn-logout")?.addEventListener("click", () => {
-  signOut(auth).then(() => window.location.replace("/admin/login"));
-});
-
-// 2. Escuta em Tempo Real de Alunos, Matrículas e Cursos
 let listaAlunos = [];
 let matriculasPorAluno = {};
+let matriculasDetalhesPorAluno = {};
 let listaCursosDisponiveis = [];
 
-function carregarCursosDisponiveis() {
-  onSnapshot(collection(db, "cursos"), (snapshot) => {
-    listaCursosDisponiveis = [];
-    snapshot.forEach((docSnap) => {
-      listaCursosDisponiveis.push({ id: docSnap.id, ...docSnap.data() });
-    });
+// 1. Inicialização de Sessão
+iniciarAutenticacaoAlunos(() => {
+  configurarLogout();
+  inicializarOuvintesDados();
+});
+
+// 2. Inicia Escutas de Dados em Tempo Real (Escopo Global)
+function inicializarOuvintesDados() {
+  escutarCursosDisponiveis((cursos) => {
+    listaCursosDisponiveis = cursos;
+  });
+
+  // Atualiza mapas de matrículas e detalhes globalmente
+  escutarMatriculas((matriculasMap, detalhesMap) => {
+    matriculasPorAluno = matriculasMap;
+    matriculasDetalhesPorAluno = detalhesMap;
+    renderizarTabelaAlunos(listaAlunos);
+  });
+
+  escutarAlunos((alunos) => {
+    listaAlunos = alunos;
+    renderizarTabelaAlunos(listaAlunos);
   });
 }
 
 function atualizarSelectCursos(cursoSelecionado = "") {
   const select = document.getElementById("editCursoAluno");
   if (!select) return;
-  
+
   select.innerHTML = `<option value="">Nenhum curso matriculado</option>`;
   listaCursosDisponiveis.forEach(curso => {
     const nomeCurso = curso.nome || curso.titulo || "Curso sem nome";
-    const selected = nomeCurso === cursoSelecionado ? "selected" : "";
+    const selected = nomeCurso.trim().toLowerCase() === (cursoSelecionado || "").trim().toLowerCase() ? "selected" : "";
     select.innerHTML += `<option value="${nomeCurso}" ${selected}>${nomeCurso}</option>`;
   });
 }
 
-function carregarDadosAlunos() {
-  // Listener de Matrículas (agrupa cursos por aluno_id)
-  onSnapshot(collection(db, "matriculas"), (snapMatriculas) => {
-    matriculasPorAluno = {};
-    snapMatriculas.forEach((docSnap) => {
-      const mat = docSnap.data();
-      const alunoId = mat.aluno_id;
-      if (!matriculasPorAluno[alunoId]) {
-        matriculasPorAluno[alunoId] = [];
-      }
-      matriculasPorAluno[alunoId].push(mat.curso_nome || "Geral");
-    });
-    renderizarTabelaAlunos(listaAlunos);
-  });
-
-  // Listener da Coleção Alunos
-  onSnapshot(collection(db, "alunos"), (snapAlunos) => {
-    listaAlunos = [];
-    snapAlunos.forEach((docSnap) => {
-      listaAlunos.push({ id: docSnap.id, ...docSnap.data() });
-    });
-
-    // Ordena do mais recente para o mais antigo
-    listaAlunos.sort((a, b) => new Date(b.criado_em || b.data_cadastro || 0) - new Date(a.criado_em || a.data_cadastro || 0));
-
-    renderizarTabelaAlunos(listaAlunos);
-  });
-}
-
-// Função Única e Global de Renderização da Tabela de Alunos
+// 3. Renderização da Tabela e Métricas
 function renderizarTabelaAlunos(alunos) {
   const tbody = document.getElementById("alunos-tbody");
   if (!tbody) return;
 
-  const termo = (document.getElementById("busca-aluno")?.value || "").toLowerCase();
+  const termo = (document.getElementById("busca-aluno")?.value || document.getElementById("inputBuscaAluno")?.value || "").toLowerCase();
 
   tbody.innerHTML = "";
   const filtrados = alunos.filter(a =>
@@ -102,7 +79,7 @@ function renderizarTabelaAlunos(alunos) {
     }
   });
 
-  // Atualiza os cards de métricas
+  // Atualiza cards de métricas
   const metricTotal = document.getElementById("metric-total-alunos");
   const metricAtivos = document.getElementById("metric-alunos-ativos");
   const metricInativos = document.getElementById("metric-alunos-inativos");
@@ -184,109 +161,127 @@ function renderizarTabelaAlunos(alunos) {
   });
 }
 
-// Filtro de busca por input em tempo real
-document.getElementById("busca-aluno")?.addEventListener("input", () => {
-  renderizarTabelaAlunos(listaAlunos);
-});
-
-// 4. Lógica de Interação da Tabela (Editar, Ativar/Inativar e Excluir)
-document.addEventListener("click", async (e) => {
-  const target = e.target.closest("button");
-  if (!target) return;
-
-  const id = target.getAttribute("data-id");
-  if (!id) return;
-
-  // Ação: Ativar / Inativar Status rapidamente
-  if (target.classList.contains("btn-status")) {
-    const aluno = listaAlunos.find(a => a.id === id);
-    if (!aluno) return;
-
-    const novoStatus = (aluno.status || "ativo") === "ativo" ? "inativo" : "ativo";
-    try {
-      await updateDoc(doc(db, "alunos", id), { status: novoStatus });
-    } catch (error) {
-      console.error("Erro ao alterar status:", error);
-      alert("Erro ao alterar o status do aluno.");
-    }
-  }
-
-  // Ação: Abrir Modal de Edição
-  if (target.classList.contains("btn-editar")) {
-    const aluno = listaAlunos.find(a => a.id === id);
-    if (!aluno) return;
-
-    document.getElementById("editAlunoId").value = aluno.id;
-    document.getElementById("editNomeAluno").value = aluno.nome || "";
-    document.getElementById("editEmailAluno").value = aluno.email || "";
-    document.getElementById("editCpfAluno").value = aluno.cpf || "";
-    document.getElementById("editTelefoneAluno").value = aluno.telefone || "";
-    document.getElementById("editNascimentoAluno").value = aluno.nascimento || "";
-    document.getElementById("editStatusAluno").value = aluno.status || "ativo";
-    document.getElementById("editObservacoesAluno").value = aluno.observacoes || "";
-
-    // Popula o select de cursos e seleciona o atual do aluno
-    const cursosAluno = matriculasPorAluno[aluno.id] || [];
-    atualizarSelectCursos(cursosAluno[0] || "");
-
-    const modalEdit = new window.bootstrap.Modal(document.getElementById("modalEditarAluno"));
-    modalEdit.show();
-  }
-
-  // Ação: Abrir Modal de Confirmação de Exclusão
-  if (target.classList.contains("btn-excluir")) {
-    const aluno = listaAlunos.find(a => a.id === id);
-    if (!aluno) return;
-
-    document.getElementById("excluirAlunoId").value = aluno.id;
-    document.getElementById("nomeAlunoExcluir").textContent = aluno.nome || "este aluno";
-
-    const modalDel = new window.bootstrap.Modal(document.getElementById("modalExcluirAluno"));
-    modalDel.show();
-  }
-});
-
-// 3. Cadastros, Submissões e Eventos do DOM
+// 4. Eventos e Interações da Interface (DOM Carregado)
 document.addEventListener("DOMContentLoaded", () => {
+  // Filtro de busca
+  const inputBusca = document.getElementById("busca-aluno") || document.getElementById("inputBuscaAluno");
+  inputBusca?.addEventListener("input", () => {
+    renderizarTabelaAlunos(listaAlunos);
+  });
+
+  // Ações de clique na tabela (Editar, Status, Excluir) - Listener Único Global
+  document.addEventListener("click", async (e) => {
+    const target = e.target.closest("button");
+    if (!target) return;
+
+    const id = target.getAttribute("data-id");
+    if (!id) return;
+
+    // Ação: Alterar Status
+    if (target.classList.contains("btn-status")) {
+      const aluno = listaAlunos.find(a => a.id === id);
+      if (!aluno) return;
+      try {
+        await alterarStatusAlunoBackend(id, aluno.status || "ativo");
+      } catch (error) {
+        console.error("Erro ao alterar status:", error);
+        alert("Erro ao alterar o status do aluno.");
+      }
+    }
+
+   // Ação: Abrir Modal de Edição (Versão Blindada com Busca Direta)
+    if (target.classList.contains("btn-editar")) {
+      const aluno = listaAlunos.find(a => a.id === id);
+      if (!aluno) return;
+
+      // 1. Informações Pessoais básicas do Aluno
+      document.getElementById("editAlunoId").value = aluno.id;
+      document.getElementById("editNomeAluno").value = aluno.nome || "";
+      document.getElementById("editEmailAluno").value = aluno.email || "";
+      document.getElementById("editCpfAluno").value = aluno.cpf || aluno.id || "";
+      document.getElementById("editTelefoneAluno").value = aluno.telefone || "";
+      document.getElementById("editNascimentoAluno").value = aluno.nascimento || aluno.data_nascimento || "";
+      document.getElementById("editStatusAluno").value = aluno.status || "ativo";
+      document.getElementById("editObservacoesAluno").value = aluno.observacoes || "";
+
+      // 2. Busca segura e cruzada na lista de matrículas em memória (ou fallback direto)
+      let primeiraMatricula = {};
+      if (typeof matriculasDetalhesPorAluno !== "undefined") {
+        const listaMat = matriculasDetalhesPorAluno[aluno.id] || matriculasDetalhesPorAluno[aluno.cpf] || [];
+        if (listaMat.length > 0) primeiraMatricula = listaMat[0];
+      }
+
+      // Extração robusta dos valores financeiros
+      const valorCurso = primeiraMatricula.valor || aluno.valor || aluno.valor_curso || "0.00";
+      const statusPgto = primeiraMatricula.status_pagamento || aluno.status_pagamento || "Recebido";
+      const modalidadePgto = primeiraMatricula.forma_pagamento || primeiraMatricula.modalidade_pagamento || "Pix";
+
+      // Preenchimento seguro dos campos com verificação de IDs
+      const elValor = document.getElementById("editValorCurso") || document.getElementById("input-valor-curso");
+      if (elValor) elValor.value = valorCurso;
+
+      const elStatusPgto = document.getElementById("editStatusPagamento") || document.getElementById("select-status-pagamento");
+      if (elStatusPgto) elStatusPgto.value = statusPgto;
+
+      const elModalidade = document.getElementById("editModalidadePagamento") || document.getElementById("select-forma-pagamento");
+      if (elModalidade) elModalidade.value = modalidadePgto;
+
+      // 3. Curso matriculado
+      const cursoDoAluno = primeiraMatricula.curso_nome || primeiraMatricula.curso || aluno.curso || "";
+      atualizarSelectCursos(cursoDoAluno);
+
+      // 4. Exibe o modal do Bootstrap
+      const modalElement = document.getElementById("modalEditarAluno");
+      if (modalElement) {
+        const modalEdit = window.bootstrap.Modal.getInstance(modalElement) || new window.bootstrap.Modal(modalElement);
+        modalEdit.show();
+      }
+    }
+
+    // Ação: Excluir Aluno
+    if (target.classList.contains("btn-excluir")) {
+      const aluno = listaAlunos.find(a => a.id === id);
+      if (!aluno) return;
+
+      document.getElementById("excluirAlunoId").value = aluno.id;
+      const elNome = document.getElementById("nomeAlunoExcluir");
+      if (elNome) elNome.textContent = aluno.nome || "este aluno";
+
+      const modalDel = new window.bootstrap.Modal(document.getElementById("modalExcluirAluno"));
+      modalDel.show();
+    }
+  });
+
+  // Submissão do Formulário de Novo Aluno
   const formNovoAluno = document.getElementById("formNovoAluno");
   if (formNovoAluno) {
     formNovoAluno.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const nome = document.getElementById("nomeAluno").value;
-      const email = document.getElementById("emailAluno").value;
-      const cpf = document.getElementById("cpfAluno").value;
-      const telefone = document.getElementById("telefoneAluno").value;
-      const nascimento = document.getElementById("nascimentoAluno").value;
-      const status = document.getElementById("statusAluno").value;
-      
-      const cep = document.getElementById("cepAluno").value;
-      const logradouro = document.getElementById("enderecoLogradouro").value;
-      const numero = document.getElementById("enderecoNumero").value;
-      const bairro = document.getElementById("enderecoBairro").value;
-      const cidade = document.getElementById("enderecoCidade").value;
-      const estado = document.getElementById("enderecoEstado").value;
-      const observacoes = document.getElementById("observacoesAluno").value;
+      const dados = {
+        nome: document.getElementById("nomeAluno").value,
+        email: document.getElementById("emailAluno").value,
+        cpf: document.getElementById("cpfAluno").value,
+        telefone: document.getElementById("telefoneAluno").value,
+        nascimento: document.getElementById("nascimentoAluno").value,
+        status: document.getElementById("statusAluno").value,
+        observacoes: document.getElementById("observacoesAluno").value
+      };
 
-      const enderecoCompleto = { cep, logradouro, numero, bairro, cidade, estado };
+      const endereco = {
+        cep: document.getElementById("cepAluno").value,
+        logradouro: document.getElementById("enderecoLogradouro").value,
+        numero: document.getElementById("enderecoNumero").value,
+        bairro: document.getElementById("enderecoBairro").value,
+        cidade: document.getElementById("enderecoCidade").value,
+        estado: document.getElementById("enderecoEstado").value
+      };
 
       try {
-        await addDoc(collection(db, "alunos"), {
-          nome,
-          email,
-          cpf,
-          telefone,
-          nascimento,
-          status,
-          endereco: enderecoCompleto,
-          observacoes,
-          criado_em: new Date().toISOString()
-        });
-
+        await cadastrarAlunoBackend(dados, endereco);
         const modalElement = document.getElementById('modalNovoAluno');
         const modalInstance = window.bootstrap.Modal.getInstance(modalElement) || new window.bootstrap.Modal(modalElement);
         modalInstance.hide();
-
         formNovoAluno.reset();
       } catch (error) {
         console.error("Erro ao cadastrar novo aluno:", error);
@@ -295,7 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Submissão do Formulário de Edição (com atualização do Curso/Matrícula)
+  // Submissão do Formulário de Edição
   const formEditarAluno = document.getElementById("formEditarAluno");
   if (formEditarAluno) {
     formEditarAluno.addEventListener("submit", async (e) => {
@@ -312,35 +307,19 @@ document.addEventListener("DOMContentLoaded", () => {
         observacoes: document.getElementById("editObservacoesAluno").value
       };
 
+      const dadosFinanceiros = {
+        valor: document.getElementById("editValorCurso").value,
+        status_pagamento: document.getElementById("editStatusPagamento").value,
+        modalidade_pagamento: document.getElementById("editModalidadePagamento").value
+      };
+
       const cursoEscolhido = document.getElementById("editCursoAluno").value;
 
       try {
-        // Atualiza os dados cadastrais do aluno
-        await updateDoc(doc(db, "alunos", alunoId), dadosAtualizados);
-
-        // Atualiza ou cria a matrícula correspondente no Firestore
-        const qMatriculas = query(collection(db, "matriculas"), where("aluno_id", "==", alunoId));
-        const snapMat = await getDocs(qMatriculas);
-        
-        const batch = writeBatch(db);
-        snapMat.forEach((docMat) => {
-          batch.delete(docMat.ref);
-        });
-
-        if (cursoEscolhido) {
-          const novaMatriculaRef = doc(collection(db, "matriculas"));
-          batch.set(novaMatriculaRef, {
-            aluno_id: alunoId,
-            curso_nome: cursoEscolhido,
-            criado_em: new Date().toISOString()
-          });
-        }
-
-        await batch.commit();
-
+       await atualizarAlunoComMatriculaBackend(alunoId, dadosAtualizados, dadosFinanceiros, cursoEscolhido);
         const modalElement = document.getElementById("modalEditarAluno");
         const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
-        modalInstance.hide();
+        if (modalInstance) modalInstance.hide();
       } catch (error) {
         console.error("Erro ao atualizar aluno e matrícula:", error);
         alert("Erro ao salvar as alterações.");
@@ -348,7 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Confirmação de Exclusão no Firestore
+  // Confirmação de Exclusão
   const btnConfirmarExclusao = document.getElementById("btnConfirmarExclusao");
   if (btnConfirmarExclusao) {
     btnConfirmarExclusao.addEventListener("click", async () => {
@@ -356,8 +335,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!id) return;
 
       try {
-        await deleteDoc(doc(db, "alunos", id));
-
+        await excluirAlunoBackend(id);
         const modalElement = document.getElementById("modalExcluirAluno");
         const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
         modalInstance.hide();
@@ -368,7 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Busca automática de endereço via ViaCEP
+  // Busca ViaCEP
   const cepInput = document.getElementById("cepAluno");
   if (cepInput) {
     cepInput.addEventListener("blur", function () {
