@@ -1,0 +1,8 @@
+/* 1. Importação das regras globais de layout e tipografia */
+@import url('modules/global.css');
+
+/* 2. Importação dos módulos específicos por tela */
+@import url('modules/alunos.css');
+@import url('modules/cursos.css');
+@import url('modules/matriculas.css');
+

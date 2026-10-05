@@ -1,0 +1,153 @@
+:root {
+  /* Paleta de cores principal */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f1f3f5;
+  --text-primary: #121212;
+  --text-secondary: #495057;
+  --text-muted: #868e96;
+  --border-color: #e9ecef;
+  --border-light: #f8f9fa;
+  --card-bg: rgba(255, 255, 255, 0.98);
+
+  --orange: #ff7b00;
+  --orange-light: #ff922b;
+  --orange-dark: #e85d04;
+  --orange-glow: rgba(255, 123, 0, 0.15);
+
+  --blue: #1c7ed6;
+  --blue-deep: #1864ab;
+  --blue-light: #339af0;
+  --blue-glow: rgba(28, 126, 214, 0.1);
+
+  --gray-dark: #343a40;
+  --gray-mid: #dee2e6;
+  --gray-light: #868e96;
+  --white: #ffffff;
+  --border: rgba(255, 123, 0, 0.15);
+
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.12);
+
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+  --border-radius-sm: 6px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 20px;
+  --border-radius-xl: 24px;
+
+  --sidebar-width: 260px;
+}
+
+/* Reset seguro que nunca afeta os ícones */
+*,
+::after,
+::before {
+    box-sizing: border-box;
+}
+
+/* Tipografia aplicada apenas em textos e elementos de formulário */
+body,
+input,
+button,
+select,
+textarea,
+.modal,
+.card,
+table,
+p,
+span,
+a,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+.main-content {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+/* .main-content {
+    margin-left: 260px !important;
+    flex: 1;
+    padding: 2rem;
+    background-color: #f8fafc;
+    width: calc(100% - 260px) !important;
+} */
+
+/* Comportamento responsivo para mobile e tablets */
+@media (max-width: 992px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.sidebar-show {
+        transform: translateX(0);
+        box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 1rem;
+    }
+}
+
+/* Responsividade para Tablets e Celulares (Abaixo de 992px) */
+@media (max-width: 992px) {
+    .sidebar {
+        transform: translateX(-100%);
+        /* Esconde a sidebar por padrão em mobile */
+    }
+
+    .sidebar.sidebar-show {
+        transform: translateX(0);
+        /* Mostra a sidebar quando acionada */
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 1rem;
+    }
+}
+
+/* ==========================================
+   BLINDAGEM RESPONSIVA DE TABELAS
+   ========================================== */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem;
+}
+
+table.table {
+    width: 100%;
+    margin-bottom: 0;
+    white-space: nowrap;
+    /* Impede que textos curtos quebrem feio em várias linhas */
+}
+
+table.table th,
+table.table td {
+    vertical-align: middle;
+    padding: 0.85rem 1rem;
+}
+
+/* Permitir que colunas de nomes ou e-mails tenham um respiro se necessário */
+table.table td.cell-wrap {
+    white-space: normal;
+    min-width: 200px;
+}
