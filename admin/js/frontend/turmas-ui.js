@@ -1,7 +1,7 @@
-import {
-    escutarTurmas,
-    salvarTurmaBackend,
-    alternarStatusTurmaBackend
+import { 
+    escutarTurmas, 
+    salvarTurmaBackend, 
+    alternarStatusTurmaBackend 
 } from "../backend/turmas-service.js";
 
 let listaTurmasGlobal = [];
@@ -10,7 +10,7 @@ let mostrandoInativos = false;
 // 1. Inicialização ao carregar a página
 document.addEventListener("DOMContentLoaded", () => {
     configurarEventosUI();
-
+    
     // Inicia a escuta em tempo real das turmas
     escutarTurmas((turmas) => {
         listaTurmasGlobal = turmas;
@@ -32,7 +32,7 @@ function atualizarInterfaceTurmas(turmas) {
     const filtradas = turmas.filter(t => {
         const statusTurma = (t.status || "Ativo").trim().toLowerCase();
         const statusMatch = mostrandoInativos ? statusTurma === "inativo" : (statusTurma === "ativo" || statusTurma === "");
-
+        
         const nomeTurma = (t.nome_turma || t.nome || t.titulo || "").toLowerCase();
         const nomeInstrutor = (t.instrutor || "").toLowerCase();
         const buscaMatch = nomeTurma.includes(termoBusca) || nomeInstrutor.includes(termoBusca);
@@ -85,13 +85,13 @@ function renderizarTabelaGestao(turmas) {
     let html = "";
     turmas.forEach(t => {
         const status = t.status || "Ativo";
-        const badgeStatus = status === "Ativo"
+        const badgeStatus = status === "Ativo" 
             ? '<span class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-1 fw-normal border border-success border-opacity-25">Ativo</span>'
             : '<span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary px-3 py-1 fw-normal border border-secondary border-opacity-25">Inativo</span>';
 
         const categoria = t.categoria || "Grade de Treinamentos";
         // Distinção visual entre Normas Regulamentadoras (Laranja/Amarelo) e Grade de Treinamentos (Azul)
-        const badgeCategoria = categoria.includes("Normas")
+        const badgeCategoria = categoria.includes("Normas") 
             ? '<span class="badge bg-warning text-dark me-1"><i class="fas fa-shield-alt me-1"></i>Normas Regulamentadoras</span>'
             : '<span class="badge bg-info text-dark me-1"><i class="fas fa-bolt me-1"></i>Grade de Treinamentos</span>';
 
@@ -269,19 +269,10 @@ function configurarEventosUI() {
             if (turma) {
                 document.getElementById("turmaId").value = turma.id;
                 document.getElementById("turmaNome").value = turma.nome_turma || turma.nome || "";
-
-                // CORREÇÃO: Preenche os novos campos ao editar
-                const inputCodigoNr = document.getElementById("turmaCodigoNr");
-                if (inputCodigoNr) inputCodigoNr.value = turma.codigo_nr || "";
-
-                const inputDescricao = document.getElementById("turmaDescricao");
-                if (inputDescricao) inputDescricao.value = turma.descricao || "";
-
-                const inputPreco = document.getElementById("turmaPreco");
-                if (inputPreco) inputPreco.value = turma.valor || turma.preco || 0.00;
-
+                document.getElementById("turmaDescricao").value = turma.descricao || turma.resumo || "";
                 document.getElementById("turmaCategoria").value = turma.categoria || "Grade de Treinamentos";
-                document.getElementById("turmaCarga").value = turma.carga_horaria || "";
+                document.getElementById("turmaPreco").value = turma.valor || turma.preco || 0.00;
+                document.getElementById("turmaCarga").value = turma.carga_horaria || turma.carga || "";
                 document.getElementById("turmaInstrutor").value = turma.instrutor || "";
                 document.getElementById("turmaVagas").value = turma.vagas_maximas || 20;
                 document.getElementById("turmaHorario").value = turma.horario || "";
@@ -305,14 +296,11 @@ function configurarEventosUI() {
             e.preventDefault();
 
             const turmaId = document.getElementById("turmaId").value;
-
-            // CORREÇÃO: Captura correta de todos os campos do modal atualizado
             const dados = {
                 nome_turma: document.getElementById("turmaNome").value,
-                codigo_nr: document.getElementById("turmaCodigoNr")?.value || "",
-                descricao: document.getElementById("turmaDescricao")?.value || "",
+                descricao: document.getElementById("turmaDescricao").value,
                 categoria: document.getElementById("turmaCategoria").value,
-                valor: Number(document.getElementById("turmaPreco")?.value || 0),
+                valor: Number(document.getElementById("turmaPreco").value) || 0,
                 carga_horaria: document.getElementById("turmaCarga").value,
                 instrutor: document.getElementById("turmaInstrutor").value,
                 vagas_maximas: Number(document.getElementById("turmaVagas").value) || 20,
