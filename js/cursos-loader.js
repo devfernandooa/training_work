@@ -19,7 +19,7 @@ try {
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
- async function carregarCatalogoDinamico() {
+  async function carregarCatalogoDinamico() {
     const grid = document.getElementById("coursesGrid");
     const normasGrid = document.getElementById("normasGrid") || document.getElementById("nrsGrid");
     const selectCurso = document.getElementById('curso');
@@ -36,7 +36,21 @@ try {
 
       querySnapshot.forEach((docSnap) => {
         const curso = docSnap.data();
-        if (curso.excluido) return; // Ignora os inativados logicamente
+
+        // 1. Ignora cursos inativados logicamente
+        if (curso.excluido) return;
+
+        // 2. Ignora cursos configurados para "Não exibir no site (Apenas Gestão Interna)"
+        const secao = String(curso.secaoExibicao || "grade").toLowerCase().trim();
+        if (secao === "oculto" || secao === "rascunho" || secao === "nao_exibir") {
+          return;
+        }
+
+        // 3. Opcional: Ignora se o status do curso for diferente de Ativo/Em Andamento/Turma Aberta
+        const statusLower = String(curso.status || "ativo").toLowerCase().trim();
+        if (statusLower === "inativo") {
+          return;
+        }
 
         const nome = curso.nome || "Treinamento";
         const descricao = curso.descricao || "";
@@ -44,19 +58,18 @@ try {
         const modalidade = curso.modalidade || "Presencial";
         const valor = Number(curso.valor || 0).toFixed(2).replace('.', ',');
         const categoria = curso.categoria || "Geral";
-        const secao = curso.secaoExibicao || "grade"; // Lê a escolha feita no painel
 
-        // Popula o select do formulário de contacto globalmente
+        // Popula o select do formulário de contato globalmente
         optionsHTML += `<option value="${nome}">${nome}</option>`;
 
-        if (secao === "normas") {
-          // Renderiza na seção de Normas Regulamentadoras com layout aprimorado
+        if (secao === "normas" || secao === "nr") {
+          // Renderiza na seção de Normas Regulamentadoras
           normasHTML += `
             <div class="col-10 col-md-6 col-lg-4 px-4 mb-5 nr-card">
               <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden card-hover-effect" style="width: 26rem;">
                 <div class="card-body p-4 d-flex flex-column">
                   
-                  <!-- Pill da NR em destaque e maior -->
+                  <!-- Pill da NR -->
                   <div class="mb-4">
                     <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold border border-primary border-opacity-25" style="font-size: 0.9rem; letter-spacing: 0.5px;">
                       ${curso.codigo_nr || curso.codigo || 'NR00-00'}
@@ -67,16 +80,13 @@ try {
                   <h5 class="card-title fw-bold text-dark mb-3" style="font-size: 1.15rem;">${nome}</h5>
                   <p class="card-text text-secondary mb-4" style="font-size: 0.95rem; line-height: 1.6;">${descricao}</p>
                   
-                  <!-- Rodapé com Preço e Botão alinhados -->
+                  <!-- Rodapé com Preço e Botão -->
                   <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-light">
-                    
                     <div class="text-start">
                       <small class="d-block text-muted fw-bold" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Investimento</small>
                       <span class="fw-bold text-secondary" style="font-size: 1.15rem;">R$ ${valor}</span>
                     </div>
-                    
                     <button class="btn btn-outline-primary px-4 py-2 fw-semibold rounded-3" onclick="scrollToContact()">Saiba mais</button>
-                    
                   </div>
                   
                 </div>
@@ -109,12 +119,10 @@ try {
         }
       });
 
-      // Atribuição limpa garantindo que se não houver itens na seção, o container fica vazio (evitando duplicar resíduos antigos)
       if (grid) grid.innerHTML = coursesHTML || "<p class='text-muted text-center w-100'>Nenhum curso na grade.</p>";
       if (normasGrid) normasGrid.innerHTML = normasHTML || "<p class='text-muted text-center w-100'>Nenhuma norma cadastrada.</p>";
       if (selectCurso) selectCurso.innerHTML = optionsHTML;
 
-      // Reexecuta os filtros para garantir que os novos cards gerados dinamicamente respondam aos cliques das abas
       if (typeof initFilters === 'function') {
         initFilters();
       }
