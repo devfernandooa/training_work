@@ -6,36 +6,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cursos - Training Work</title>
 
-  <!-- Estilos Externos (Bootstrap e FontAwesome) -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Folhas de Estilo do Módulo Administrativo -->
   <link rel="stylesheet" href="css/modules/global.css">
   <link rel="stylesheet" href="css/modules/sidebar.css">
   <link rel="stylesheet" href="css/modules/dashboard.css">
   <link rel="stylesheet" href="css/style.css">
   <script>
-  // Aplica o estado ativo imediatamente antes de renderizar a página
-  (function() {
-    const pagina = window.location.pathname.split("/").pop() || "dashboard.html";
-    document.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll(".sidebar-menu .sidebar-link").forEach(link => {
-        if (link.getAttribute("href") === pagina) {
-          link.classList.add("active");
-        } else {
-          link.classList.remove("active");
-        }
+    (function () {
+      const pagina = window.location.pathname.split("/").pop() || "dashboard.html";
+      document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".sidebar-menu .sidebar-link").forEach(link => {
+          if (link.getAttribute("href") === pagina) {
+            link.classList.add("active");
+          } else {
+            link.classList.remove("active");
+          }
+        });
       });
-    });
-  })();
-</script>
+    })();
+  </script>
 </head>
 
 <body>
 
-  <!-- Barra lateral de navegação fixa -->
+  <!-- Barra lateral de navegação -->
   <aside class="sidebar" id="appSidebar">
     <div class="sidebar-brand">
       <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
@@ -64,7 +60,7 @@
 
     <ul class="sidebar-menu">
       <li>
-        <a href="lead_e_triagem.html" class="sidebar-link ">
+        <a href="lead_e_triagem.html" class="sidebar-link">
           <i class="fas fa-chart-pie"></i> <span>Leads & Triagem</span>
         </a>
       </li>
@@ -93,21 +89,18 @@
           <i class="fas fa-id-card-alt"></i> <span>Matrículas</span>
         </a>
       </li>
-
     </ul>
   </aside>
 
-  <!-- Conteúdo principal do painel -->
+  <!-- Conteúdo principal -->
   <main class="main-content">
 
-    <!-- Botão de menu hambúrguer padronizado para telemóveis -->
     <div class="d-lg-none mb-3">
       <button class="btn btn-dark btn-sm px-3 py-2 rounded-3 shadow-sm" id="sidebarToggle" type="button">
         <i class="fas fa-bars me-1"></i> Menu
       </button>
     </div>
 
-    <!-- Cabeçalho da página e status de ligação -->
     <div class="dashboard-header-container mb-4">
       <div class="header-titles">
         <h1 class="page-title">
@@ -122,11 +115,9 @@
       </div>
     </div>
 
-    <!-- Indicadores estatísticos compactos -->
     <div class="row g-3 mb-4">
       <div class="col-md-4">
-        <div
-          class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card">
+        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card">
           <div class="metric-icon blue"><i class="fas fa-book"></i></div>
           <div class="metric-info">
             <span class="label">Total de Cursos</span>
@@ -135,8 +126,7 @@
         </div>
       </div>
       <div class="col-md-4">
-        <div
-          class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card">
+        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card">
           <div class="metric-icon green"><i class="fas fa-door-open"></i></div>
           <div class="metric-info">
             <span class="label">Turmas Abertas</span>
@@ -145,8 +135,7 @@
         </div>
       </div>
       <div class="col-md-4">
-        <div
-          class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card">
+        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card">
           <div class="metric-icon blue"><i class="fas fa-check-circle"></i></div>
           <div class="metric-info">
             <span class="label">Cursos Ativos</span>
@@ -156,22 +145,20 @@
       </div>
     </div>
 
-    <!-- Secção da Tabela / Listagem de Cursos -->
+    <!-- Tabela / Listagem de Cursos -->
     <section class="card table-container">
       <div class="card-leads-container">
 
         <div class="leads-header">
           <h3>Cursos Cadastrados</h3>
           <div class="d-flex gap-2 align-items-center">
-            <input type="text" id="busca-curso" class="form-control form-control-sm"
-              placeholder="Buscar por nome ou código..." style="width: 220px;">
+            <input type="text" id="busca-curso" class="form-control form-control-sm" placeholder="Buscar por nome ou código..." style="width: 220px;">
             <button class="btn btn-primary btn-sm rounded-pill px-3" id="btn-novo-curso">
               <i class="fas fa-plus me-1"></i> Novo Curso
             </button>
           </div>
         </div>
 
-        <!-- Visualização em tabela para ecrãs grandes -->
         <div class="view-desktop">
           <table class="tabela-leads">
             <thead>
@@ -187,14 +174,11 @@
               </tr>
             </thead>
             <tbody id="cursos-tbody">
-              <!-- Preenchido via JavaScript -->
             </tbody>
           </table>
         </div>
 
-        <!-- Visualização em cartões empilhados para dispositivos móveis -->
         <div class="view-mobile" id="cursos-mobile-container">
-          <!-- Preenchido via JavaScript -->
         </div>
 
       </div>
@@ -202,9 +186,7 @@
 
   </main>
 
-  <!-- ==========================================================================
-   * MODAL DE CADASTRO / EDIÇÃO DE CURSO (PADRÃO UNIFICADO)
-   * ========================================================================== -->
+  <!-- Modal Cadastro/Edição de Curso -->
   <div class="modal fade" id="novoCursoModal" tabindex="-1" aria-labelledby="novoCursoModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content border-0 shadow-lg rounded-4">
@@ -218,144 +200,158 @@
 
         <div class="modal-body pt-1">
           <form id="formNovoCurso">
-            <!-- Campo oculto para controlo de ID na edição -->
             <input type="hidden" id="curso-id-oculto">
 
-            <div class="row g-2">
+            <!-- SEÇÃO 1: Informações Principais -->
+            <div class="card border shadow-sm p-3 mb-4 rounded-3 bg-light bg-opacity-10">
+              <h6 class="fw-bold text-primary mb-3">
+                <i class="fas fa-info-circle me-2"></i>Informações Principais
+              </h6>
+              <div class="row g-3">
+                <div class="col-md-8">
+                  <label for="nomeCurso" class="form-label small fw-semibold text-muted mb-1">
+                    Nome do Curso <span class="text-danger">*</span>
+                  </label>
+                  <input type="text" class="form-control form-control-sm" id="nomeCurso" placeholder="Ex: Arquitetura e Configuração de Redes GPON e EPON" required>
+                </div>
+                <div class="col-md-4">
+                  <label for="codigoCurso" class="form-label small fw-semibold text-muted mb-1">
+                    Código do Curso (Ementa) <span class="text-danger">*</span>
+                  </label>
+                  <input type="text" class="form-control form-control-sm text-uppercase" id="codigoCurso" placeholder="Ex: GPN-03" required>
+                  <div class="form-text" style="font-size: 0.72rem;">Código base da matriz curricular.</div>
+                </div>
+                <div class="col-md-6">
+                  <label for="codigoTurma" class="form-label small fw-semibold text-muted mb-1">
+                    Código da Turma <span class="text-danger">*</span>
+                  </label>
+                  <input type="text" class="form-control form-control-sm text-uppercase" id="codigoTurma" placeholder="Ex: TR-GPN03-2026/001" required>
+                  <div class="form-text" style="font-size: 0.72rem;">Formato: TR-GPN03-2026/001 (Gerado automaticamente se vazio).</div>
+                </div>
+              </div>
+            </div>
 
-              <!-- Bloco 1: Informações Principais do Curso -->
-              <div class="col-12">
-                <div class="p-3 bg-light rounded-3 border">
-                  <span class="d-block small fw-bold text-secondary mb-2">
-                    <i class="fas fa-info-circle me-1 text-primary"></i> Informações Principais
-                  </span>
-                  <div class="row g-2">
-                    <div class="col-md-8">
-                      <label for="nomeCurso" class="form-label small text-muted mb-1">Nome do Curso *</label>
-                      <input type="text" class="form-control form-control-sm" id="nomeCurso"
-                        placeholder="Ex: NR10 - Segurança em Eletricidade" required>
-                    </div>
-                    <div class="col-md-4">
-                      <label for="codigoCurso" class="form-label small text-muted mb-1">Código / Identificador *</label>
-                      <input type="text" class="form-control form-control-sm" id="codigoCurso"
-                        placeholder="Ex: nr10-basico" required>
-                    </div>
+            <!-- SEÇÃO 2: Estrutura, Valores e Operação -->
+            <div class="card border shadow-sm p-3 mb-4 rounded-3 bg-light bg-opacity-10">
+              <h6 class="fw-bold text-primary mb-3">
+                <i class="fas fa-sliders-h me-2"></i>Estrutura, Valores e Operação
+              </h6>
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label for="cargaCurso" class="form-label small fw-semibold text-muted mb-1">
+                    Carga Horária (horas) <span class="text-danger">*</span>
+                  </label>
+                  <input type="number" class="form-control form-control-sm" id="cargaCurso" placeholder="48" required>
+                </div>
+                <div class="col-md-3">
+                  <label for="valorCurso" class="form-label small fw-semibold text-muted mb-1">
+                    Valor Base (R$) <span class="text-danger">*</span>
+                  </label>
+                  <input type="number" step="0.01" class="form-control form-control-sm" id="valorCurso" placeholder="480" required>
+                </div>
+                <div class="col-md-3">
+                  <label for="modalidadeCurso" class="form-label small fw-semibold text-muted mb-1">
+                    Modalidade <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select form-select-sm" id="modalidadeCurso" required>
+                    <option value="Presencial">Presencial</option>
+                    <option value="EAD / Online">EAD / Online</option>
+                    <option value="Híbrido">Híbrido</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label for="statusCurso" class="form-label small fw-semibold text-muted mb-1">
+                    Status Operacional <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select form-select-sm" id="statusCurso" required>
+                    <option value="Ativo">Ativo</option>
+                    <option value="Turma Aberta">Turma Aberta</option>
+                    <option value="Em Andamento">Em Andamento</option>
+                    <option value="Inativo">Inativo</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label for="vagasTotal" class="form-label small fw-semibold text-muted mb-1">
+                    Vagas Totais <span class="text-danger">*</span>
+                  </label>
+                  <input type="number" class="form-control form-control-sm" id="vagasTotal" placeholder="20" required>
+                </div>
+                <div class="col-md-3">
+                  <label for="vagasDisponiveis" class="form-label small fw-semibold text-muted mb-1">
+                    Vagas Disponíveis <span class="text-danger">*</span>
+                  </label>
+                  <input type="number" class="form-control form-control-sm" id="vagasDisponiveis" placeholder="20" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="instrutorCurso" class="form-label small fw-semibold text-muted mb-1">
+                    Professor / Instrutor Responsável
+                  </label>
+                  <input type="text" class="form-control form-control-sm" id="instrutorCurso" placeholder="Ex: Eng. Carlos Eduardo Silva">
+                </div>
+              </div>
+            </div>
+
+            <!-- SEÇÃO 3: Conteúdo Programático e Ementa -->
+            <div class="card border shadow-sm p-3 mb-4 rounded-3 bg-light bg-opacity-10">
+              <h6 class="fw-bold text-primary mb-3">
+                <i class="fas fa-file-alt me-2"></i>Conteúdo Programático e Ementa
+              </h6>
+              <div class="row g-3">
+                <div class="col-12">
+                  <label for="descricaoCurso" class="form-label small fw-semibold text-muted mb-1">
+                    Descrição do Curso <span class="text-danger">*</span>
+                  </label>
+                  <textarea class="form-control form-control-sm" id="descricaoCurso" rows="2" placeholder="Resumo do curso..." required></textarea>
+                </div>
+                <div class="col-12">
+                  <label for="ementaCurso" class="form-label small fw-semibold text-muted mb-1">
+                    Ementa / Tópicos (um por linha)
+                  </label>
+                  <textarea class="form-control form-control-sm" id="ementaCurso" rows="3" placeholder="Tópicos da ementa..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- SEÇÃO 4: Exibição no Site Público -->
+            <div class="card border shadow-sm p-3 mb-4 rounded-3 bg-light bg-opacity-10">
+              <h6 class="fw-bold text-primary mb-3">
+                <i class="fas fa-globe me-2"></i>Exibição no Site Público
+              </h6>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="secaoExibicao" class="form-label small fw-semibold text-muted mb-1">
+                    Local de Exibição <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select form-select-sm" id="secaoExibicao" required>
+                    <option value="grade">Grade de Treinamentos</option>
+                    <option value="nr">Normas Regulamentadoras (NRs)</option>
+                    <option value="oculto">🔒 Não exibir no site (Apenas Gestão Interna)</option>
+                  </select>
+                  <div class="form-text" style="font-size: 0.72rem;">
+                    Escolha "Não exibir no site" para manter o curso ativo apenas no painel administrativo sem criar cards no catálogo público.
                   </div>
                 </div>
               </div>
+            </div>
 
-              <!-- Bloco 2: Estrutura, Valores e Operação -->
-              <div class="col-12">
-                <div class="p-3 bg-light rounded-3 border">
-                  <span class="d-block small fw-bold text-secondary mb-2">
-                    <i class="fas fa-sliders-h me-1 text-primary"></i> Estrutura, Valores e Operação
-                  </span>
-                  <div class="row g-2">
-                    <div class="col-md-3">
-                      <label for="cargaCurso" class="form-label small text-muted mb-1">Carga Horária (horas) *</label>
-                      <input type="number" class="form-control form-control-sm" id="cargaCurso" placeholder="40"
-                        required>
-                    </div>
-                    <div class="col-md-3">
-                      <label for="valorCurso" class="form-label small text-muted mb-1">Valor Base (R$) *</label>
-                      <input type="number" step="0.01" class="form-control form-control-sm" id="valorCurso"
-                        placeholder="280.00" required>
-                    </div>
-                    <div class="col-md-3">
-                      <label for="modalidadeCurso" class="form-label small text-muted mb-1">Modalidade</label>
-                      <select class="form-select form-select-sm" id="modalidadeCurso">
-                        <option value="Presencial">Presencial</option>
-                        <option value="Online">Online</option>
-                        <option value="Híbrido">Híbrido</option>
-                      </select>
-                    </div>
-                    <div class="col-md-3">
-                      <label for="statusCurso" class="form-label small text-muted mb-1">Status Operacional</label>
-                      <select class="form-select form-select-sm" id="statusCurso" required>
-                        <option value="Ativo">Ativo</option>
-                        <option value="Turma aberta">Turma aberta</option>
-                        <option value="Em andamento">Em andamento</option>
-                        <option value="Turma lotada">Turma lotada</option>
-                        <option value="Finalizado">Finalizado</option>
-                      </select>
-                    </div>
-
-                    <!-- Novos campos de Vagas -->
-                    <div class="col-md-3 mt-2">
-                      <label for="vagasTotal" class="form-label small text-muted mb-1">Vagas Totais *</label>
-                      <input type="number" class="form-control form-control-sm" id="vagasTotal" placeholder="30"
-                        required>
-                    </div>
-                    <div class="col-md-3 mt-2">
-                      <label for="vagasDisponiveis" class="form-label small text-muted mb-1">Vagas Disponíveis *</label>
-                      <input type="number" class="form-control form-control-sm" id="vagasDisponiveis" placeholder="30"
-                        required>
-                    </div>
-
-                    <div class="col-md-6 mt-2">
-                      <label for="instrutorCurso" class="form-label small text-muted mb-1">Professor / Instrutor
-                        Responsável</label>
-                      <input type="text" class="form-control form-control-sm" id="instrutorCurso"
-                        placeholder="Ex: Eng. Carlos Silva">
-                    </div>
-                  </div>
+            <!-- SEÇÃO 5: Auditoria e Histórico -->
+            <div class="card border shadow-sm p-3 mb-3 rounded-3 bg-light bg-opacity-10">
+              <h6 class="fw-bold text-primary mb-3">
+                <i class="fas fa-history me-2"></i>Auditoria
+              </h6>
+              <div class="row g-3">
+                <div class="col-12">
+                  <label for="curso-atualizado-por" class="form-label small fw-semibold text-muted mb-1">
+                    Última Alteração
+                  </label>
+                  <input type="text" class="form-control form-control-sm bg-white" id="curso-atualizado-por" readonly value="Sem registo anterior">
                 </div>
               </div>
-
-              <!-- Bloco 3: Conteúdo Programático -->
-              <div class="col-12">
-                <div class="p-3 bg-light rounded-3 border">
-                  <span class="d-block small fw-bold text-secondary mb-2">
-                    <i class="fas fa-file-alt me-1 text-primary"></i> Conteúdo Programático e Ementa
-                  </span>
-                  <div class="row g-2">
-                    <div class="col-12">
-                      <label for="descricaoCurso" class="form-label small text-muted mb-1">Descrição do Curso *</label>
-                      <textarea class="form-control form-control-sm" id="descricaoCurso" rows="2"
-                        placeholder="Resumo do objetivo técnico do curso..." required></textarea>
-                    </div>
-                    <div class="col-12 mt-2">
-                      <label for="ementaCurso" class="form-label small text-muted mb-1">Ementa / Tópicos (um por
-                        linha)</label>
-                      <textarea class="form-control form-control-sm" id="ementaCurso" rows="2"
-                        placeholder="Módulo 1: Riscos e perigos&#10;Módulo 2: EPI e EPC"></textarea>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-md-4">
-                <label for="secaoExibicao" class="form-label small text-muted mb-1">Exibir no Site em *</label>
-                <select class="form-select form-select-sm" id="secaoExibicao" required>
-                  <option value="grade">Grade de Treinamentos</option>
-                  <option value="normas">Normas Regulamentadoras (NRs)</option>
-                </select>
-              </div>
-
-              <!-- Bloco 4: Auditoria -->
-              <div class="col-12">
-                <div class="p-3 bg-light rounded-3 border">
-                  <span class="d-block small fw-bold text-secondary mb-2">
-                    <i class="fas fa-history me-1 text-primary"></i> Auditoria
-                  </span>
-                  <div class="row g-2">
-                    <div class="col-12">
-                      <label for="curso-atualizado-por" class="form-label small text-muted mb-1">Última
-                        Alteração</label>
-                      <input type="text" class="form-control form-control-sm bg-white text-muted"
-                        id="curso-atualizado-por" disabled readonly placeholder="Sem registo anterior">
-                    </div>
-                  </div>
-                </div>
-              </div>
-
             </div>
 
             <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
-              <button type="button" class="btn btn-light px-4 rounded-pill btn-sm"
-                data-bs-dismiss="modal">Cancelar</button>
-              <button type="submit" class="btn btn-primary px-4 rounded-pill btn-sm" id="btn-salvar-curso">Salvar
-                Curso</button>
+              <button type="button" class="btn btn-light px-4 rounded-pill btn-sm" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary px-4 rounded-pill btn-sm" id="btn-salvar-curso">Salvar Curso</button>
             </div>
           </form>
         </div>
@@ -364,11 +360,8 @@
     </div>
   </div>
 
-  <!-- ==========================================================================
-   * MODAL PADRONIZADO DE CONFIRMAÇÃO DE EXCLUSÃO DE CURSO (CORRETAMENTE POSICIONADO FORA)
-   * ========================================================================== -->
-  <div class="modal fade" id="modalConfirmarExclusaoCurso" tabindex="-1"
-    aria-labelledby="modalConfirmarExclusaoCursoLabel" aria-hidden="true">
+  <!-- Modal Confirmação de Exclusão -->
+  <div class="modal fade" id="modalConfirmarExclusaoCurso" tabindex="-1" aria-labelledby="modalConfirmarExclusaoCursoLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg rounded-4">
         <div class="modal-header border-0 pb-0">
@@ -378,23 +371,20 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
         <div class="modal-body py-4">
-          <p class="text-muted mb-0">Tem a certeza que deseja remover este curso da listagem? O registo será
-            inativado com segurança.</p>
+          <p class="text-muted mb-0">Tem a certeza que deseja remover este curso da listagem? O registo será inativado com segurança.</p>
         </div>
         <div class="modal-footer border-0 pt-0">
           <button type="button" class="btn btn-light px-4 rounded-pill btn-sm" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-danger px-4 rounded-pill btn-sm" id="btn-confirmar-exclusao-curso">Sim,
-            Inativar</button>
+          <button type="button" class="btn btn-danger px-4 rounded-pill btn-sm" id="btn-confirmar-exclusao-curso">Sim, Inativar</button>
         </div>
       </div>
     </div>
   </div>
 
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="js/modules/sidebar.js"></script>
-  <script type="module" src="js/cursos.js"></script>
   <script type="module" src="js/auth-guard.js"></script>
+  <script type="module" src="js/frontend/cursos-ui.js"></script>
 </body>
 
 </html>
