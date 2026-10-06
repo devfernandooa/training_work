@@ -112,44 +112,48 @@
         </div>
 
         <!-- Cards de Indicadores de Resumo no Topo -->
+        <!-- Exemplo de estrutura dos cards no topo de turmas.html -->
         <div class="row g-3 mb-4">
+            <!-- Card 1: Turmas Ativas -->
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm p-3">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0 bg-primary bg-opacity-10 text-primary rounded p-3 me-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 bg-primary bg-opacity-10 rounded-3 text-primary">
                             <i class="fas fa-layer-group fa-2x"></i>
                         </div>
                         <div>
-                            <span class="text-muted small fw-bold text-uppercase">Turmas Ativas</span>
-                            <h3 class="fw-bold text-dark m-0" id="stat-total-turmas">0</h3>
+                            <span class="text-muted small fw-semibold text-uppercase">Turmas Ativas</span>
+                            <h3 class="fw-bold m-0 text-dark" id="kpi-turmas-ativas">14</h3>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Card 2: Vagas Disponíveis (ID ADICIONADO) -->
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm p-3">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0 bg-success bg-opacity-10 text-success rounded p-3 me-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 bg-success bg-opacity-10 rounded-3 text-success">
                             <i class="fas fa-chair fa-2x"></i>
                         </div>
                         <div>
-                            <span class="text-muted small fw-bold text-uppercase">Vagas Disponíveis</span>
-                            <h3 class="fw-bold text-dark m-0" id="stat-vagas-disponiveis">0</h3>
+                            <span class="text-muted small fw-semibold text-uppercase">Vagas Disponíveis</span>
+                            <h3 class="fw-bold m-0 text-dark" id="kpi-vagas-disponiveis">280</h3>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Card 3: Turmas Lotadas -->
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm p-3">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0 bg-warning bg-opacity-10 text-warning rounded p-3 me-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 bg-warning bg-opacity-10 rounded-3 text-warning">
                             <i class="fas fa-exclamation-triangle fa-2x"></i>
                         </div>
                         <div>
-                            <span class="text-muted small fw-bold text-uppercase">Turmas Lotadas</span>
-                            <h3 class="fw-bold text-dark m-0" id="stat-turmas-lotadas">0</h3>
+                            <span class="text-muted small fw-semibold text-uppercase">Turmas Lotadas</span>
+                            <h3 class="fw-bold m-0 text-dark" id="kpi-turmas-lotadas">0</h3>
                         </div>
                     </div>
                 </div>
@@ -412,14 +416,93 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal Listar Alunos da Turma -->
+        <div class="modal fade" id="modalAlunosTurma" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-white border-bottom px-4 py-3">
+                        <h5 class="modal-title fw-bold text-dark m-0" id="modalAlunosTurmaTitle">
+                            <i class="fas fa-users text-primary me-2"></i>Alunos Matriculados
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body p-4" id="modalAlunosTurmaBody">
+                        <!-- Conteúdo dinâmico renderizado pelo vagas-ui.js -->
+                    </div>
+                    <div class="modal-footer bg-light px-4 py-3 border-top">
+                        <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill"
+                            data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Detalhes da Turma -->
+        <div class="modal fade" id="modalDetalhesTurma" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-white border-bottom px-4 py-3">
+                        <h5 class="modal-title fw-bold text-dark m-0">
+                            <i class="fas fa-info-circle text-primary me-2"></i>Detalhes da Turma
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+
+                    <div class="modal-body p-4">
+                        <h6 class="fw-bold text-dark mb-3" id="detalheNomeTurma">-</h6>
+
+                        <div class="p-3 bg-light rounded-3 border mb-3">
+                            <div class="row g-2 text-sm">
+                                <div class="col-6">
+                                    <span class="text-muted d-block small">Instrutor:</span>
+                                    <strong class="text-dark" id="detalheInstrutor">-</strong>
+                                </div>
+                                <div class="col-6">
+                                    <span class="text-muted d-block small">Horário:</span>
+                                    <strong class="text-dark" id="detalheHorario">-</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-2 text-center">
+                            <div class="col-4">
+                                <div class="p-2 border rounded bg-white">
+                                    <small class="text-muted d-block">Capacidade</small>
+                                    <span class="fw-bold text-dark h6 m-0 d-block" id="detalheTotalVagas">0</span>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-2 border rounded bg-white">
+                                    <small class="text-muted d-block">Matriculados</small>
+                                    <span class="fw-bold text-primary h6 m-0 d-block" id="detalheMatriculados">0</span>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-2 border rounded bg-white">
+                                    <small class="text-muted d-block">Vagas Livres</small>
+                                    <span class="fw-bold text-success h6 m-0 d-block"
+                                        id="detalheVagasRestantes">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light px-4 py-3 border-top">
+                        <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill"
+                            data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         crossorigin="anonymous"></script>
     <script type="module" src="js/modules/sidebar.js"></script>
-    <script type="module" src="js/cursos-em-andamento.js"></script>
-    <script type="module" src="js/cursos-em-andamento-backend.js"></script>
+    <!-- Ficheiro de UI -->
     <script type="module" src="js/frontend/turmas-ui.js"></script>
+    <script type="module" src="js/frontend/vagas-ui.js"></script>
     <script type="module" src="js/auth-guard.js"></script>
 </body>
 
