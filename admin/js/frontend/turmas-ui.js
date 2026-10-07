@@ -9,14 +9,56 @@ import {
 import { escutarCursosService } from "../backend/cursos-service.js";
 import { escutarAlunos, escutarMatriculas } from "../backend/alunos-service.js";
 
-// Variáveis Globais de Estado
+// =========================================================================
+// VARIÁVEIS GLOBAIS DE ESTADO
+// =========================================================================
 let listaTurmasGlobal = [];
 let listaCursosGlobal = [];
 let listaAlunosSistemaGlobal = [];
 let mapaMatriculasGerais = {};
 let turmaAtualGestao = null;
-let exibirApenasInativos = false; // Estado para alternar entre ativas e inativas
+let exibirApenasInativos = false;
 
+// =========================================================================
+// HELPERS
+// =========================================================================
+
+/**
+ * Normaliza o número de vagas com segurança.
+ * Evita NaN, valores negativos ou zero inesperado.
+ */
+function normalizarVagas(t) {
+    const bruto = t?.vagas_maximas !== undefined ? t.vagas_maximas : (t?.vagas !== undefined ? t.vagas : 20);
+    const v = Number(bruto);
+    return Number.isFinite(v) && v > 0 ? v : 20;
+}
+
+/**
+ * Extrai os inscritos com fallback consistente.
+ */
+function obterInscritos(t) {
+    const arr = t?.alunos_matriculados || t?.alunos_inscritos || [];
+    return Array.isArray(arr) ? arr : [];
+}
+
+/**
+ * Calcula o código da turma de forma padronizada.
+ */
+function calcularCodigoTurma(t, index = 0) {
+    const codEmenta = t.codigo_nr || t.codigo_curso || t.codigo || 'S/C';
+    const codLimpo = String(codEmenta).replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    const anoAtual = new Date().getFullYear();
+
+    let codTurma = t.codigo_turma || "";
+    if (!codTurma || codTurma === t.nome || codTurma === t.nome_turma || codTurma.length > 25) {
+        codTurma = `TR-${codLimpo}-${anoAtual}/${String(index + 1).padStart(3, '0')}`;
+    }
+    return { codTurma, codEmenta };
+}
+
+// =========================================================================
+// INICIALIZAÇÃO
+// =========================================================================
 document.addEventListener("DOMContentLoaded", () => {
     configurarEventosUI();
 
@@ -40,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (turmaAtualGestao) {
                     popularSelectAlunosModal(listaAlunosSistemaGlobal);
                 }
+                atualizarKPIsTopo();
             });
         }
     } catch (err) {
@@ -54,13 +97,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (turmaAtualGestao) {
                     popularSelectAlunosModal(listaAlunosSistemaGlobal);
                 }
+                atualizarKPIsTopo();
             });
         }
     } catch (err) {
         console.warn("Aviso ao escutar alunos do sistema:", err);
     }
 
-    // 4. Escuta Coleção de Turmas em Tempo Real
+    // Escuta Coleção de Turmas em Tempo Real
     try {
         if (typeof escutarTurmas === "function") {
             escutarTurmas((turmas) => {
@@ -82,18 +126,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// =========================================================================
+// POPULAR SELECT DE CURSOS
+// =========================================================================
 function popularSelectCursos(cursos) {
     const select = document.getElementById("selectCursoBase");
     if (!select) return;
 
     let html = '<option value="">Selecione um curso do catálogo...</option>';
     cursos.forEach(c => {
-        html += `<option value="${c.id}" data-codigo="${c.codigo_curso || c.codigo || ''}" data-carga="${c.carga || ''}" data-valor="${c.valor || 0}" data-desc="${c.descricao || ''}" data-vagas="${c.vagasTotal || 20}">${c.nome || c.nome_curso} (${c.codigo_curso || c.codigo || 'S/C'})</option>`;
+        const idCurso = c.id || c.codigo_curso || c.codigo;
+        html += `<option value="${idCurso}" data-id-real="${c.id || ''}" data-codigo="${c.codigo_curso || c.codigo || ''}" data-carga="${c.carga || c.carga_horaria || ''}" data-valor="${c.valor || c.preco || 0}" data-desc="${c.descricao || ''}" data-vagas="${c.vagasTotal || c.vagas_maximas || 20}">${c.nome || c.nome_curso} (${c.codigo_curso || c.codigo || 'S/C'})</option>`;
     });
 
     select.innerHTML = html;
 }
 
+// =========================================================================
+// POPULAR SELECT DE ALUNOS NO MODAL
+// =========================================================================
 function popularSelectAlunosModal(alunos) {
     const select = document.getElementById("selectAlunoParaMatricular");
     if (!select) return;
@@ -109,13 +160,14 @@ function popularSelectAlunosModal(alunos) {
     }
 
     const idsAlunosMatriculadosEmQualquerTurma = new Set();
+    const turmaAtualId = turmaAtualGestao.id;
 
     listaTurmasGlobal.forEach(t => {
         const st = String(t.status || "Ativo").toLowerCase();
         if (st === "inativo") return;
+        if (t.id === turmaAtualId) return;
 
-        const inscritos = t.alunos_matriculados || t.alunos_inscritos || [];
-        inscritos.forEach(a => {
+        obterInscritos(t).forEach(a => {
             const id = a.aluno_id || a.id;
             if (id) idsAlunosMatriculadosEmQualquerTurma.add(id);
         });
@@ -159,7 +211,9 @@ function popularSelectAlunosModal(alunos) {
     select.innerHTML = html;
 }
 
-// FILTRA TURMAS ATIVAS E INATIVAS COM BASE NO BOTÃO 'VER INATIVOS'
+// =========================================================================
+// ATUALIZA INTERFACE (TABELA + KPIs)
+// =========================================================================
 function atualizarInterfaceTurmas(turmas) {
     const termoBusca = (document.getElementById("busca-turma")?.value || "").toLowerCase().trim();
 
@@ -167,7 +221,6 @@ function atualizarInterfaceTurmas(turmas) {
         const statusBruto = String(t.status || "Ativo").toLowerCase();
         const ehInativo = statusBruto === "inativo";
 
-        // Filtra pelo estado da alternância (Ativas vs Inativas)
         if (exibirApenasInativos && !ehInativo) return false;
         if (!exibirApenasInativos && ehInativo) return false;
 
@@ -179,31 +232,73 @@ function atualizarInterfaceTurmas(turmas) {
     });
 
     renderizarTabelaGestao(filtradas);
-    atualizarContadorAtivasTopo();
+    atualizarKPIsTopo();
 }
 
-function atualizarContadorAtivasTopo() {
+// =========================================================================
+// ✅ FUNÇÃO CORRIGIDA E FIXA DE KPIs (EXIBE TURMAS INATIVAS NO CARD 4)
+// =========================================================================
+function atualizarKPIsTopo() {
     try {
-        let totalTurmasAtivas = 0;
+        let totalTurmasAtivasGlobal = 0;
+        let totalTurmasInativasGlobal = 0;
+        let totalAlunosMatriculados = 0;
+        let capacidadeTotalVagas = 0;
+
+        if (!Array.isArray(listaTurmasGlobal)) return;
+
         listaTurmasGlobal.forEach(t => {
-            const statusBruto = (t.status || "Ativo").toLowerCase();
-            if (statusBruto !== "inativo") totalTurmasAtivas++;
+            const statusBruto = String(t.status || "Ativo").toLowerCase();
+            const ehInativo = statusBruto === "inativo";
+
+            if (ehInativo) {
+                // Contagem total de turmas inativas no sistema (CARD 4)
+                totalTurmasInativasGlobal++;
+            } else {
+                // Operação Ativa no Sistema (CARDS 1, 2 e 3)
+                totalTurmasAtivasGlobal++;
+
+                const inscritos = obterInscritos(t).length;
+                const vagasMax = normalizarVagas(t);
+
+                totalAlunosMatriculados += inscritos;
+
+                if (vagasMax > 0) {
+                    capacidadeTotalVagas += vagasMax;
+                }
+            }
         });
 
+        const taxaOcupacao = capacidadeTotalVagas > 0
+            ? Math.round((totalAlunosMatriculados / capacidadeTotalVagas) * 100)
+            : 0;
+
+        // Atualização direta e independente dos elementos do DOM
         const elTurmas = document.getElementById("kpi-turmas-ativas") || document.getElementById("stat-total-turmas");
-        if (elTurmas) elTurmas.textContent = totalTurmasAtivas;
+        const elAlunos = document.getElementById("kpi-total-alunos-matriculados");
+        const elOcupacao = document.getElementById("kpi-taxa-ocupacao");
+        const elInativas = document.getElementById("kpi-turmas-lotadas"); // Slot do 4º card
+
+        if (elTurmas) elTurmas.textContent = totalTurmasAtivasGlobal;
+        if (elAlunos) elAlunos.textContent = totalAlunosMatriculados;
+        if (elOcupacao) elOcupacao.textContent = `${taxaOcupacao}%`;
+        if (elInativas) elInativas.textContent = totalTurmasInativasGlobal;
+
     } catch (err) {
-        console.warn("Aviso ao atualizar turmas ativas:", err);
+        console.warn("Aviso ao atualizar KPIs do topo:", err);
     }
 }
 
+// =========================================================================
+// RENDERIZAÇÃO DA TABELA PRINCIPAL
+// =========================================================================
 function renderizarTabelaGestao(turmas) {
     const tbody = document.getElementById("tabela-turmas-tbody");
     if (!tbody) return;
 
     if (!turmas || turmas.length === 0) {
-        const mensagem = exibirApenasInativos 
-            ? "Nenhuma turma inativa encontrada." 
+        const mensagem = exibirApenasInativos
+            ? "Nenhuma turma inativa encontrada."
             : "Nenhuma turma ativa encontrada.";
         tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 2rem;">${mensagem}</td></tr>`;
         return;
@@ -224,17 +319,10 @@ function renderizarTabelaGestao(turmas) {
             ? '<span class="badge bg-warning text-dark me-1" style="font-size: 0.72rem;">⚡ Normas Regulamentadoras</span>'
             : '<span class="badge bg-info text-dark me-1" style="font-size: 0.72rem;">⚡ Grade de Treinamentos</span>';
 
-        const codEmenta = t.codigo_nr || t.codigo_curso || t.codigo || 'S/C';
-        const codLimpo = codEmenta.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-        const anoAtual = new Date().getFullYear();
+        const { codTurma, codEmenta } = calcularCodigoTurma(t, index);
 
-        let codTurma = t.codigo_turma || "";
-        if (!codTurma || codTurma === t.nome || codTurma.length > 25) {
-            codTurma = `TR-${codLimpo}-${anoAtual}/${String(index + 1).padStart(3, '0')}`;
-        }
-
-        const inscritosCount = (t.alunos_matriculados || t.alunos_inscritos || []).length;
-        const vagasMax = Number(t.vagas_maximas || 20);
+        const inscritosCount = obterInscritos(t).length;
+        const vagasMax = normalizarVagas(t);
         const vagasRestantes = Math.max(0, vagasMax - inscritosCount);
 
         const acoesBotoes = `
@@ -285,6 +373,9 @@ function renderizarTabelaGestao(turmas) {
     tbody.innerHTML = html;
 }
 
+// =========================================================================
+// CONFIGURAÇÃO DOS EVENTOS UI
+// =========================================================================
 function configurarEventosUI() {
     const inputBusca = document.getElementById("busca-turma");
     if (inputBusca) {
@@ -293,8 +384,50 @@ function configurarEventosUI() {
         });
     }
 
-    // BOTÃO DE ALTERNÂNCIA "VER INATIVOS" / "VER ATIVOS"
-    const btnVerInativos = document.getElementById("btn-ver-inativos") || document.querySelector("button.btn:has(i.fa-eye)") || Array.from(document.querySelectorAll("button")).find(b => b.textContent.includes("Inativos"));
+    const btnDesbloquear = document.getElementById("btnDesbloquearCodigoTurma");
+    if (btnDesbloquear) {
+        btnDesbloquear.addEventListener("click", () => {
+            const inputCodigo = document.getElementById("turmaNome");
+            if (!inputCodigo) return;
+
+            if (inputCodigo.disabled) {
+                const confirmacao = confirm(
+                    "⚠️ ATENÇÃO E AVISO DE SEGURANÇA:\n\n" +
+                    "A alteração do Código/Identificador da Turma pode causar inconsistências e divergências no histórico de alunos matriculados e certificados emitidos.\n\n" +
+                    "Deseja realmente desbloquear este campo para edição?"
+                );
+
+                if (confirmacao) {
+                    inputCodigo.disabled = false;
+                    inputCodigo.classList.remove("bg-light");
+                    inputCodigo.focus();
+
+                    const icone = document.getElementById("iconeCadeadoCodigoTurma");
+                    if (icone) {
+                        icone.classList.remove("fa-lock");
+                        icone.classList.add("fa-unlock");
+                    }
+                    btnDesbloquear.classList.remove("btn-outline-warning");
+                    btnDesbloquear.classList.add("btn-warning");
+                }
+            } else {
+                inputCodigo.disabled = true;
+                inputCodigo.classList.add("bg-light");
+                const icone = document.getElementById("iconeCadeadoCodigoTurma");
+                if (icone) {
+                    icone.classList.remove("fa-unlock");
+                    icone.classList.add("fa-lock");
+                }
+                btnDesbloquear.classList.remove("btn-warning");
+                btnDesbloquear.classList.add("btn-outline-warning");
+            }
+        });
+    }
+
+    const btnVerInativos = document.getElementById("btn-ver-inativos")
+        || Array.from(document.querySelectorAll("button")).find(b =>
+            b.textContent.includes("Inativos") || b.textContent.includes("Ver Ativos")
+        );
     if (btnVerInativos) {
         btnVerInativos.addEventListener("click", () => {
             exibirApenasInativos = !exibirApenasInativos;
@@ -335,8 +468,12 @@ function configurarEventosUI() {
             const elVagas = document.getElementById("turmaVagas");
             const elDesc = document.getElementById("turmaDescricao");
 
+            const turmaId = document.getElementById("turmaId")?.value;
+            if (!turmaId && elNome) {
+                elNome.value = `TR-${codLimpo}-${anoAtual}/001`;
+            }
+
             if (elNr) elNr.value = codEmenta;
-            if (elNome) elNome.value = `TR-${codLimpo}-${anoAtual}/001`;
             if (elCarga) elCarga.value = carga;
             if (elPreco) elPreco.value = Number(valor).toFixed(2);
             if (elVagas) elVagas.value = vagas;
@@ -344,7 +481,31 @@ function configurarEventosUI() {
         });
     }
 
-    // CLIQUES DE AÇÃO (ABRIR MODAL, REMOVER ALUNO, SALVAR, EDITAR, INATIVAR)
+    const btnNovaTurma = document.getElementById("btnNovaTurma")
+        || Array.from(document.querySelectorAll("button")).find(b => b.textContent.includes("Nova Turma"));
+    if (btnNovaTurma) {
+        btnNovaTurma.addEventListener("click", () => {
+            const formSalvarTurma = document.getElementById("formSalvarTurma");
+            if (formSalvarTurma) formSalvarTurma.reset();
+
+            const elId = document.getElementById("turmaId");
+            if (elId) elId.value = "";
+
+            const elNome = document.getElementById("turmaNome");
+            if (elNome) {
+                elNome.disabled = false;
+                elNome.classList.remove("bg-light");
+            }
+
+            if (listaCursosGlobal && listaCursosGlobal.length > 0) {
+                const selectCursoBase = document.getElementById("selectCursoBase");
+                if (selectCursoBase && selectCursoBase.options.length <= 1) {
+                    popularSelectCursos(listaCursosGlobal);
+                }
+            }
+        });
+    }
+
     document.addEventListener("click", async (e) => {
 
         // 1. ABRIR MODAL DE ALUNOS
@@ -356,14 +517,7 @@ function configurarEventosUI() {
 
             if (!turmaAtualGestao) return;
 
-            const codEmenta = turmaAtualGestao.codigo_nr || turmaAtualGestao.codigo_curso || turmaAtualGestao.codigo || 'S/C';
-            const codLimpo = codEmenta.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-            const anoAtual = new Date().getFullYear();
-
-            let codTurmaCalculado = turmaAtualGestao.codigo_turma || "";
-            if (!codTurmaCalculado || codTurmaCalculado === turmaAtualGestao.nome || codTurmaCalculado.length > 25) {
-                codTurmaCalculado = `TR-${codLimpo}-${anoAtual}/${String(index + 1).padStart(3, '0')}`;
-            }
+            const { codTurma: codTurmaCalculado, codEmenta } = calcularCodigoTurma(turmaAtualGestao, index);
 
             const modalTitle = document.getElementById("modalAlunosTurmaTitle");
             const elCodTurma = document.getElementById("modalBadgeCodTurma");
@@ -398,6 +552,8 @@ function configurarEventosUI() {
             const alunoId = btnRemoverAluno.getAttribute("data-aluno-id");
             const alunoNome = btnRemoverAluno.getAttribute("data-aluno-nome");
 
+            if (!turmaAtualGestao) return;
+
             if (confirm(`Tem a certeza de que deseja remover o aluno "${alunoNome}" desta turma?`)) {
                 let matriculados = turmaAtualGestao.alunos_matriculados || turmaAtualGestao.alunos_inscritos || [];
                 matriculados = matriculados.filter(a => (a.aluno_id || a.id) !== alunoId);
@@ -413,37 +569,40 @@ function configurarEventosUI() {
                 turmaAtualGestao.alunos_matriculados = matriculados;
                 turmaAtualGestao.logs_auditoria = logsAtuais;
 
-                await salvarTurmaBackend({
-                    alunos_matriculados: turmaAtualGestao.alunos_matriculados,
-                    logs_auditoria: turmaAtualGestao.logs_auditoria
-                }, turmaAtualGestao.id);
+                try {
+                    await salvarTurmaBackend({
+                        alunos_matriculados: turmaAtualGestao.alunos_matriculados,
+                        logs_auditoria: turmaAtualGestao.logs_auditoria
+                    }, turmaAtualGestao.id);
 
-                renderizarTabelaModalAlunos(turmaAtualGestao);
-                popularSelectAlunosModal(listaAlunosSistemaGlobal);
-                renderizarTabelaGestao(listaTurmasGlobal);
+                    renderizarTabelaModalAlunos(turmaAtualGestao);
+                    popularSelectAlunosModal(listaAlunosSistemaGlobal);
+                    atualizarInterfaceTurmas(listaTurmasGlobal);
+                } catch (err) {
+                    console.error("Erro ao remover aluno:", err);
+                    alert("Erro ao remover o aluno no Firestore.");
+                }
             }
             return;
         }
 
         // 3. SALVAR MODAL DE ALUNOS
-        const btnSalvarModal = e.target.closest("#btnSalvarModalAlunosTurma") ||
-                               e.target.closest("#modalAlunosTurma .modal-footer .btn-primary") ||
-                               e.target.closest(".btn-salvar-modal-alunos");
+        const btnSalvarModal = e.target.closest("#btnSalvarModalAlunosTurma")
+            || e.target.closest(".btn-salvar-modal-alunos")
+            || e.target.closest("#modalAlunosTurma .modal-footer .btn-primary");
         if (btnSalvarModal) {
             if (!turmaAtualGestao) return;
 
+            const textoOriginal = btnSalvarModal.innerHTML;
+
             try {
                 btnSalvarModal.disabled = true;
-                const textoOriginal = btnSalvarModal.innerHTML;
                 btnSalvarModal.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> A guardar...`;
 
                 await salvarTurmaBackend({
                     alunos_matriculados: turmaAtualGestao.alunos_matriculados || [],
                     logs_auditoria: turmaAtualGestao.logs_auditoria || []
                 }, turmaAtualGestao.id);
-
-                btnSalvarModal.disabled = false;
-                btnSalvarModal.innerHTML = textoOriginal;
 
                 const modalEl = document.getElementById("modalAlunosTurma");
                 if (modalEl && window.bootstrap) {
@@ -453,8 +612,9 @@ function configurarEventosUI() {
             } catch (err) {
                 console.error("Erro ao guardar alterações:", err);
                 alert("Erro ao guardar as alterações no Firestore.");
+            } finally {
                 btnSalvarModal.disabled = false;
-                btnSalvarModal.innerHTML = `<i class="fas fa-save me-1"></i> Salvar`;
+                btnSalvarModal.innerHTML = textoOriginal;
             }
             return;
         }
@@ -472,18 +632,45 @@ function configurarEventosUI() {
                 };
 
                 setVal("turmaId", turma.id);
-                setVal("turmaNome", turma.codigo_turma || turma.nome_turma || turma.nome);
+
+                const selectCursoBase = document.getElementById("selectCursoBase");
+                if (selectCursoBase) {
+                    const targetCursoId = turma.curso_id || turma.codigo_nr || turma.codigo_curso;
+                    const opt = Array.from(selectCursoBase.options).find(o =>
+                        o.value === targetCursoId || o.getAttribute("data-id-real") === targetCursoId
+                    );
+                    selectCursoBase.value = opt ? opt.value : "";
+                }
+
+                const inputCodigo = document.getElementById("turmaNome");
+                if (inputCodigo) {
+                    inputCodigo.value = turma.codigo_turma || turma.nome_turma || turma.nome || "";
+                    inputCodigo.disabled = true;
+                    inputCodigo.classList.add("bg-light");
+                }
+
+                const btnDesbloquear = document.getElementById("btnDesbloquearCodigoTurma");
+                if (btnDesbloquear) {
+                    btnDesbloquear.classList.remove("btn-warning");
+                    btnDesbloquear.classList.add("btn-outline-warning");
+                }
+                const iconeCadeado = document.getElementById("iconeCadeadoCodigoTurma");
+                if (iconeCadeado) {
+                    iconeCadeado.classList.remove("fa-unlock");
+                    iconeCadeado.classList.add("fa-lock");
+                }
+
                 setVal("turmaCodigoNr", turma.codigo_nr || turma.codigo_curso);
-                setVal("turmaDescricao", turma.descricao);
+                setVal("turmaDescricao", turma.descricao || turma.observacoes || "");
                 setVal("turmaPreco", Number(turma.valor || turma.preco || 0).toFixed(2));
                 setVal("turmaCarga", turma.carga_horaria);
                 setVal("turmaInstrutor", turma.instrutor);
-                setVal("turmaVagas", turma.vagas_maximas || 20);
+                setVal("turmaVagas", normalizarVagas(turma));
                 setVal("turmaHorario", turma.horario);
                 setVal("turmaDias", turma.dias_semana);
                 setVal("turmaModalidade", turma.modalidade || "Presencial");
 
-                const modalEl = document.getElementById("modalEditarTurma");
+                const modalEl = document.getElementById("modalEditarTurma") || document.getElementById("modalSalvarTurma");
                 if (modalEl && window.bootstrap) {
                     const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
                     modal.show();
@@ -520,116 +707,79 @@ function configurarEventosUI() {
         }
     });
 
-    // MATRICULAR NOVO ALUNO (SUBMIT DO FORMULÁRIO)
-    const formMatricular = document.getElementById("formMatricularAlunoTurma");
-    if (formMatricular) {
-        formMatricular.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            if (!turmaAtualGestao) return;
-
-            const select = document.getElementById("selectAlunoParaMatricular");
-            const option = select?.selectedOptions[0];
-            if (!option || !option.value) {
-                alert("Por favor, selecione um aluno válido.");
-                return;
-            }
-
-            const alunoId = option.value;
-            const alunoNome = option.getAttribute("data-nome");
-            const alunoEmail = option.getAttribute("data-email");
-
-            let matriculados = turmaAtualGestao.alunos_matriculados || [];
-
-            if (matriculados.some(a => (a.aluno_id || a.id) === alunoId)) {
-                alert("Este aluno já está matriculado nesta turma!");
-                return;
-            }
-
-            matriculados.push({
-                id: alunoId,
-                aluno_id: alunoId,
-                nome: alunoNome,
-                nome_aluno: alunoNome,
-                email: alunoEmail,
-                data_matricula: new Date().toISOString()
-            });
-
-            const novoLog = {
-                data_hora: new Date().toISOString(),
-                usuario: localStorage.getItem("usuario_nome") || "Administrador",
-                acao: `Matriculou o aluno "${alunoNome}" na turma.`
-            };
-            const logsAtuais = turmaAtualGestao.logs_auditoria || [];
-            logsAtuais.unshift(novoLog);
-
-            turmaAtualGestao.alunos_matriculados = matriculados;
-            turmaAtualGestao.logs_auditoria = logsAtuais;
-
-            await salvarTurmaBackend({
-                alunos_matriculados: turmaAtualGestao.alunos_matriculados,
-                logs_auditoria: turmaAtualGestao.logs_auditoria
-            }, turmaAtualGestao.id);
-
-            renderizarTabelaModalAlunos(turmaAtualGestao);
-            popularSelectAlunosModal(listaAlunosSistemaGlobal);
-            renderizarTabelaGestao(listaTurmasGlobal);
-
-            select.value = "";
-        });
-    }
-
-    // FORMULÁRIO DE REGISTRAR / EDITAR TURMA
     const formSalvarTurma = document.getElementById("formSalvarTurma");
     if (formSalvarTurma) {
         formSalvarTurma.addEventListener("submit", async (e) => {
             e.preventDefault();
+
+            const submitBtn = formSalvarTurma.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
 
             const getVal = (elementId) => {
                 const el = document.getElementById(elementId);
                 return el ? el.value : "";
             };
 
-            const turmaId = getVal("turmaId");
-
-            const dados = {
-                nome_turma: getVal("turmaNome"),
-                codigo_turma: getVal("turmaNome"),
-                codigo_nr: getVal("turmaCodigoNr"),
-                codigo_curso: getVal("turmaCodigoNr"),
-                descricao: getVal("turmaDescricao"),
-                valor: Number(getVal("turmaPreco") || 0),
-                carga_horaria: getVal("turmaCarga"),
-                instrutor: getVal("turmaInstrutor"),
-                vagas_maximas: Number(getVal("turmaVagas")) || 20,
-                horario: getVal("turmaHorario"),
-                dias_semana: getVal("turmaDias"),
-                modalidade: getVal("turmaModalidade")
-            };
-
             try {
+                const turmaId = getVal("turmaId");
+                const selectCurso = document.getElementById("selectCursoBase");
+                const optionCurso = selectCurso?.selectedOptions[0];
+                const nomeCursoTexto = optionCurso ? optionCurso.textContent.split('(')[0].trim() : "";
+
+                const cursoIdReal = optionCurso?.getAttribute("data-id-real") || getVal("selectCursoBase");
+
+                const inputCodigo = document.getElementById("turmaNome");
+                const valorCodigoTurma = inputCodigo ? inputCodigo.value : getVal("turmaNome");
+
+                const dados = {
+                    curso_id: cursoIdReal,
+                    nome_turma: nomeCursoTexto || valorCodigoTurma,
+                    codigo_turma: valorCodigoTurma,
+                    codigo_nr: getVal("turmaCodigoNr"),
+                    codigo_curso: getVal("turmaCodigoNr"),
+                    descricao: getVal("turmaDescricao"),
+                    valor: Number(getVal("turmaPreco") || 0),
+                    carga_horaria: getVal("turmaCarga"),
+                    instrutor: getVal("turmaInstrutor"),
+                    vagas_maximas: Number(getVal("turmaVagas")) || 20,
+                    horario: getVal("turmaHorario"),
+                    dias_semana: getVal("turmaDias"),
+                    modalidade: getVal("turmaModalidade")
+                };
+
                 await salvarTurmaBackend(dados, turmaId ? turmaId : null);
 
-                const modalEl = document.getElementById("modalEditarTurma");
+                const modalEl = document.getElementById("modalEditarTurma") || document.getElementById("modalSalvarTurma");
                 if (modalEl && window.bootstrap) {
                     const modal = bootstrap.Modal.getInstance(modalEl);
                     if (modal) modal.hide();
                 }
+
+                formSalvarTurma.reset();
+                const elId = document.getElementById("turmaId");
+                if (elId) elId.value = "";
+
             } catch (error) {
                 console.error("Erro ao salvar turma:", error);
                 alert("Erro ao guardar os dados da turma.");
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
             }
         });
     }
 }
 
+// =========================================================================
+// RENDERIZAÇÃO DA TABELA DO MODAL DE ALUNOS
+// =========================================================================
 function renderizarTabelaModalAlunos(turma) {
     const tbody = document.getElementById("modalTabelaAlunosTbody");
     const countEl = document.getElementById("totalAlunosInscritosCount");
     const elVagas = document.getElementById("modalInfoVagas");
     const containerLogs = document.getElementById("modalLogsAuditoriaTurma");
 
-    const inscritos = turma.alunos_matriculados || [];
-    const vagasMax = Number(turma.vagas_maximas || 20);
+    const inscritos = turma.alunos_matriculados || turma.alunos_inscritos || [];
+    const vagasMax = normalizarVagas(turma);
 
     if (countEl) countEl.textContent = inscritos.length;
     if (elVagas) elVagas.textContent = `${inscritos.length} / ${vagasMax} (${Math.max(0, vagasMax - inscritos.length)} livres)`;
