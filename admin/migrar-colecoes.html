@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migrar Coleções - Training Work</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            background: #f8fafc;
+            color: #0f172a;
+        }
+        h1 { color: #0284c7; }
+        h2 { color: #334155; font-size: 1.1rem; margin-top: 2rem; }
+        .box {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08);
+            margin-bottom: 1.5rem;
+        }
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .success {
+            background: #dcfce7;
+            border-left: 4px solid #16a34a;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .btn-primary { background: #0284c7; color: white; }
+        .btn-primary:hover { background: #0369a1; }
+        .btn-secondary { background: #64748b; color: white; }
+        .btn-secondary:hover { background: #475569; }
+        button:disabled { opacity: .5; cursor: not-allowed; }
+        pre {
+            background: #0f172a;
+            color: #94e2d5;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        code { background: #e2e8f0; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <h1>🔀 Migrar Coleções</h1>
+
+    <div class="warning">
+        <strong>⚠️ Operação de migração:</strong><br>
+        1. <code>/inscricoes/{id}</code> → <code>/leads/{id}</code><br>
+        2. <code>/turmas/{id}/inscricoes/{alunoId}</code> → <code>/turmas/{id}/matriculas/{alunoId}</code><br>
+        <br>
+        Os dados serão <strong>copiados</strong> e depois os antigos serão <strong>apagados</strong>.
+        Rode primeiro em ambiente de teste se puder.
+    </div>
+
+    <div class="box">
+        <h2>Diagnóstico</h2>
+        <button class="btn-secondary" id="btnDiagnostico">🔍 Rodar diagnóstico</button>
+        <pre id="outDiagnostico">Clique para ver o estado atual.</pre>
+    </div>
+
+    <div class="box">
+        <h2>Migração</h2>
+        <button class="btn-primary" id="btnMigrar" disabled>🚀 Executar migração</button>
+        <pre id="outMigracao">Aguardando diagnóstico.</pre>
+    </div>
+
+    <script type="module">
+        import { db } from "./js/firebase-config.js";
+        import {
+            collection,
+            collectionGroup,
+            doc,
+            getDocs,
+            setDoc,
+            deleteDoc,
+            writeBatch
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const outDiag = document.getElementById("outDiagnostico");
+        const outMig = document.getElementById("outMigracao");
+        const btnDiag = document.getElementById("btnDiagnostico");
+        const btnMigrar = document.getElementById("btnMigrar");
+
+        let diagnostico = null;
+
+        function logDiag(m) {
+            outDiag.textContent += "\n" + m;
+            outDiag.scrollTop = outDiag.scrollHeight;
+            console.log(m);
+        }
+        function logMig(m) {
+            outMig.textContent += "\n" + m;
+            outMig.scrollTop = outMig.scrollHeight;
+            console.log(m);
+        }
+
+        // =============================================================
+        // DIAGNÓSTICO
+        // =============================================================
+        btnDiag.addEventListener("click", async () => {
+            outDiag.textContent = "";
+            btnDiag.disabled = true;
+            btnMigrar.disabled = true;
+
+            try {
+                logDiag("🔍 Analisando coleções...\n");
+
+                // 1. Leads na raiz
+                const snapLeads = await getDocs(collection(db, "inscricoes"));
+                logDiag(`📥 /inscricoes (raiz, leads): ${snapLeads.size} docs`);
+
+                // 2. Já existe /leads?
+                const snapLeadsNew = await getDocs(collection(db, "leads"));
+                logDiag(`📥 /leads (novo): ${snapLeadsNew.size} docs`);
+
+                // 3. Subcoleções de matrículas
+                const snapSubs = await getDocs(collectionGroup(db, "inscricoes"));
+                let subsTurmas = 0;
+                let subsLeads = 0;
+                snapSubs.forEach((d) => {
+                    if (d.ref.parent?.parent) subsTurmas++;
+                    else subsLeads++;
+                });
+                logDiag(`📝 /turmas/*/inscricoes (subcoleções): ${subsTurmas} docs`);
+                logDiag(`   (dos quais ${subsLeads} são leads na raiz)`);
+
+                // 4. Já existe /turmas/*/matriculas?
+                const snapMatNew = await getDocs(collectionGroup(db, "matriculas"));
+                logDiag(`📝 /turmas/*/matriculas (novo): ${snapMatNew.size} docs`);
+
+                diagnostico = {
+                    leadsRaiz: snapLeads.size,
+                    leadsNovo: snapLeadsNew.size,
+                    subsTurmas,
+                    subsLeads,
+                    matriculasNovo: snapMatNew.size
+                };
+
+                logDiag("");
+                logDiag("═══════════════════════════════════════");
+                if (snapLeads.size === 0 && subsTurmas === 0) {
+                    logDiag("✅ Nada para migrar. Coleções já estão limpas.");
+                } else if (snapLeadsNew.size > 0 || snapMatNew.size > 0) {
+                    logDiag("⚠️ ATENÇÃO: destino já tem dados.");
+                    logDiag("   Migrar pode duplicar documentos.");
+                } else {
+                    logDiag("🎯 Tudo pronto para migrar.");
+                }
+                logDiag("═══════════════════════════════════════");
+
+                btnMigrar.disabled = false;
+            } catch (e) {
+                logDiag(`❌ ERRO: ${e.code} | ${e.message}`);
+            } finally {
+                btnDiag.disabled = false;
+            }
+        });
+
+        // =============================================================
+        // MIGRAÇÃO
+        // =============================================================
+        btnMigrar.addEventListener("click", async () => {
+            if (!confirm("Confirmar migração?\n\nEsta operação vai COPIAR e depois APAGAR os documentos antigos.")) return;
+
+            outMig.textContent = "";
+            btnMigrar.disabled = true;
+            btnDiag.disabled = true;
+
+            let leadsCopiados = 0;
+            let matriculasCopiadas = 0;
+
+            try {
+                logMig("🚀 Iniciando migração...\n");
+
+                // ---------------------------------------------------------
+                // 1. Migrar /inscricoes (raiz) → /leads
+                // ---------------------------------------------------------
+                logMig("📥 Copiando /inscricoes → /leads...");
+                const snapLeads = await getDocs(collection(db, "inscricoes"));
+                logMig(`   Encontrados: ${snapLeads.size}`);
+
+                for (const d of snapLeads.docs) {
+                    // Só copia os que estão na raiz (sem avô)
+                    if (d.ref.parent?.parent) continue;
+
+                    await setDoc(doc(db, "leads", d.id), d.data());
+                    leadsCopiados++;
+                }
+                logMig(`   ✅ ${leadsCopiados} leads copiados`);
+
+                // ---------------------------------------------------------
+                // 2. Migrar /turmas/{id}/inscricoes → /turmas/{id}/matriculas
+                // ---------------------------------------------------------
+                logMig("\n📝 Copiando /turmas/*/inscricoes → /turmas/*/matriculas...");
+                const snapSubs = await getDocs(collectionGroup(db, "inscricoes"));
+
+                for (const d of snapSubs.docs) {
+                    // Só copia se for subcoleção de turma (tem avô)
+                    if (!d.ref.parent?.parent) continue;
+
+                    const turmaId = d.ref.parent.parent.id;
+                    const alunoId = d.id;
+                    await setDoc(doc(db, "turmas", turmaId, "matriculas", alunoId), d.data());
+                    matriculasCopiadas++;
+                }
+                logMig(`   ✅ ${matriculasCopiadas} matrículas copiadas`);
+
+                // ---------------------------------------------------------
+                // 3. Apagar /inscricoes (raiz) antigos
+                // ---------------------------------------------------------
+                logMig("\n🗑️ Removendo /inscricoes (raiz)...");
+                let leadsRemovidos = 0;
+                for (const d of snapLeads.docs) {
+                    if (d.ref.parent?.parent) continue;
+                    await deleteDoc(d.ref);
+                    leadsRemovidos++;
+                }
+                logMig(`   🗑️ ${leadsRemovidos} leads removidos de /inscricoes`);
+
+                // ---------------------------------------------------------
+                // 4. Apagar /turmas/{id}/inscricoes antigos
+                // ---------------------------------------------------------
+                logMig("\n🗑️ Removendo /turmas/*/inscricoes...");
+                let matriculasRemovidas = 0;
+                for (const d of snapSubs.docs) {
+                    if (!d.ref.parent?.parent) continue;
+                    await deleteDoc(d.ref);
+                    matriculasRemovidas++;
+                }
+                logMig(`   🗑️ ${matriculasRemovidas} subcoleções removidas`);
+
+                // ---------------------------------------------------------
+                // 5. Verificação final
+                // ---------------------------------------------------------
+                logMig("\n🔍 Verificação final...");
+                const snapLeadsNew = await getDocs(collection(db, "leads"));
+                const snapMatNew = await getDocs(collectionGroup(db, "matriculas"));
+                const snapInscNew = await getDocs(collection(db, "inscricoes"));
+                const snapInscGroupNew = await getDocs(collectionGroup(db, "inscricoes"));
+
+                logMig(`   /leads: ${snapLeadsNew.size} docs`);
+                logMig(`   /turmas/*/matriculas: ${snapMatNew.size} docs`);
+                logMig(`   /inscricoes (deveria ser 0): ${snapInscNew.size} docs`);
+                logMig(`   /turmas/*/inscricoes (deveria ser 0): ${snapInscGroupNew.size} docs`);
+
+                logMig("");
+                logMig("═══════════════════════════════════════");
+                logMig("🎉 MIGRAÇÃO COMPLETA!");
+                logMig(`   Leads copiados: ${leadsCopiados}`);
+                logMig(`   Matrículas copiadas: ${matriculasCopiadas}`);
+                logMig("═══════════════════════════════════════");
+
+                alert("Migração concluída com sucesso!");
+            } catch (e) {
+                logMig(`\n❌ ERRO: ${e.code} | ${e.message}`);
+                console.error(e);
+                alert("Erro durante migração. Veja o log.");
+            } finally {
+                btnMigrar.disabled = false;
+                btnDiag.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

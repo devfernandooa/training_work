@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seed - Training Work</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            background: #f8fafc;
+            color: #0f172a;
+        }
+        h1 { color: #0284c7; }
+        .box {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08);
+            margin-bottom: 1.5rem;
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .btn-primary { background: #0284c7; color: white; }
+        .btn-primary:hover { background: #0369a1; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-danger:hover { background: #b91c1c; }
+        button:disabled { opacity: .5; cursor: not-allowed; }
+        pre {
+            background: #0f172a;
+            color: #94e2d5;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌱 Seed - Training Work</h1>
+
+    <div class="warning">
+        <strong>⚠️ Atenção:</strong> Este script <strong>sobrescreve</strong> os dados existentes nas
+        coleções <code>administradores</code>, <code>empresas</code>, <code>cursos</code>,
+        <code>turmas</code>, <code>alunos</code>, <code>inscricoes</code> e <code>financeiro</code>.
+        <br>Faça backup antes de rodar em produção.
+    </div>
+
+    <div class="box">
+        <h3>Opções</h3>
+        <label style="display:block; margin-bottom:1rem;">
+            <input type="checkbox" id="chkLimpar" checked>
+            Apagar coleções antes de popular (recomendado)
+        </label>
+
+        <button class="btn-primary" id="btnSeed">
+            🚀 Rodar Seed
+        </button>
+        <button class="btn-danger" id="btnLimpar" disabled>
+            🧹 Só Limpar
+        </button>
+    </div>
+
+    <div class="box">
+        <h3>Log de execução</h3>
+        <pre id="log">Pronto para rodar. Clique em "Rodar Seed".</pre>
+    </div>
+
+    <script type="module">
+        import { rodarSeedCompleto } from "./js/backend/seedss.js";
+
+        const logEl = document.getElementById("log");
+        const btnSeed = document.getElementById("btnSeed");
+        const btnLimpar = document.getElementById("btnLimpar");
+        const chkLimpar = document.getElementById("chkLimpar");
+
+        function escrever(msg) {
+            logEl.textContent += "\n" + msg;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        btnSeed.addEventListener("click", async () => {
+            if (!confirm("Isso sobrescreve dados existentes. Continuar?")) return;
+
+            logEl.textContent = "";
+            btnSeed.disabled = true;
+            btnLimpar.disabled = true;
+
+            try {
+                escrever("🚀 Iniciando seed...");
+                escrever("");
+
+                const resultado = await rodarSeedCompleto({
+                    limparAntes: chkLimpar.checked
+                });
+
+                escrever("");
+                escrever("═══════════════════════════════════════");
+                escrever("✅ SUCESSO!");
+                escrever(JSON.stringify(resultado.contadores, null, 2));
+                escrever("═══════════════════════════════════════");
+
+                alert("Seed concluído com sucesso!");
+            } catch (err) {
+                escrever("");
+                escrever("❌ ERRO: " + err.message);
+                console.error(err);
+                alert("Erro ao rodar seed. Veja o log.");
+            } finally {
+                btnSeed.disabled = false;
+                btnLimpar.disabled = false;
+            }
+        });
+
+        btnLimpar.addEventListener("click", async () => {
+            if (!confirm("Isso APAGA as coleções SEM repopular. Continuar?")) return;
+            alert("Função de limpeza isolada — implemente se precisar.");
+        });
+    </script>
+    <script type="module" src="js/backend/s"></script>
+</body>
+</html>

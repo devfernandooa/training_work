@@ -1,12 +1,12 @@
 // admin/js/frontend/calendario-aulas-ui.js
 
-import { escutarTurmas } from "../backend/turmas-service.js";
+import { escutarTurmas, nomeExibicaoTurma } from "../backend/turmas-service.js";  // ← ADICIONADO nomeExibicaoTurma
 import { escutarCursosService } from "../backend/cursos-service.js";
-import { 
+import {
     verificarConflitoProfessorMemoria,
-    salvarAulaBackend, 
+    salvarAulaBackend,
     atualizarAulaBackend,
-    removerAulaBackend 
+    removerAulaBackend
 } from "../backend/calendario-aulas-service.js";
 
 // Variáveis de Estado Local
@@ -45,26 +45,37 @@ function inicializarCarregamentoDados() {
     }
 }
 
+/* ==========================================================================
+ * ✅ CORRIGIDO: usa nomeExibicaoTurma() para mostrar "GPON (TRW-GPN01-2026/001)"
+ * ========================================================================== */
 function atualizarDropdownTurmas() {
     const select = document.getElementById("selectCursoCronograma");
     if (!select) return;
 
-    const fonteDados = (listaTurmasGlobal && listaTurmasGlobal.length > 0) 
-        ? listaTurmasGlobal 
-        : listaCursosGlobal;
+    // 🔒 Só usa turmas — nunca mais cai em cursos
+    const fonteDados = listaTurmasGlobal.length > 0 ? listaTurmasGlobal : [];
 
     let html = '<option value="">Todas as Turmas (Visão Geral)</option>';
-    
+
     fonteDados.forEach(t => {
         if (!t.id) return;
 
-        const nomeTurma = t.nome_turma || t.nome || t.titulo || "Turma sem nome";
         const codTurma = t.codigo_turma || t.codigo_nr || t.codigo_curso || t.codigo || "S/C";
-        const codEmenta = t.codigo_nr || t.codigo_curso || t.codigo || "";
+        const codEmenta = t.curso_codigo || t.codigo_nr || t.codigo_curso || t.codigo || "";
         const instrutor = t.instrutor || t.professor || "";
         const horario = t.horario || "";
 
-        html += `<option value="${t.id}" data-instrutor="${instrutor}" data-horario="${horario}" data-codigo="${codTurma}" data-ementa="${codEmenta}">${nomeTurma} (${codTurma})</option>`;
+        // ✅ Usa o helper para gerar o nome de exibição
+        const nomeExibicao = nomeExibicaoTurma(t);
+
+        html += `<option
+            value="${t.id}"
+            data-instrutor="${instrutor}"
+            data-horario="${horario}"
+            data-codigo="${codTurma}"
+            data-ementa="${codEmenta}">
+            ${nomeExibicao}
+        </option>`;
     });
 
     select.innerHTML = html;
@@ -89,7 +100,7 @@ function configurarEventosUI() {
 
             if (cursoSelecionadoId && optionSelecionada) {
                 if (badgeCurso) {
-                    badgeCurso.textContent = optionSelecionada.textContent;
+                    badgeCurso.textContent = optionSelecionada.textContent.trim();
                 }
 
                 const instrutorCadastrado = optionSelecionada.getAttribute("data-instrutor") || "";
@@ -144,9 +155,9 @@ function configurarEventosUI() {
                 return;
             }
 
-            const fonteDados = (listaTurmasGlobal && listaTurmasGlobal.length > 0) ? listaTurmasGlobal : listaCursosGlobal;
+            const fonteDados = listaTurmasGlobal.length > 0 ? listaTurmasGlobal : listaCursosGlobal;
             const conflito = verificarConflitoProfessorMemoria(fonteDados, professor, data, horaInicio, horaFim, cursoSelecionadoId);
-            
+
             if (conflito) {
                 exibirAlertaConflito(`🚫 <strong>Agendamento Bloqueado:</strong> O professor <strong>${professor}</strong> já possui aula marcada das <strong>${conflito.horario}</strong> no curso/turma <strong>${conflito.cursoNome}</strong>.`);
                 return;
@@ -160,12 +171,12 @@ function configurarEventosUI() {
                     btnSubmit.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> A guardar...`;
                 }
 
-                await salvarAulaBackend(cursoSelecionadoId, { 
-                    instrutor: professor, 
-                    data, 
-                    hora_inicio: horaInicio, 
-                    hora_fim: horaFim, 
-                    sala 
+                await salvarAulaBackend(cursoSelecionadoId, {
+                    instrutor: professor,
+                    data,
+                    hora_inicio: horaInicio,
+                    hora_fim: horaFim,
+                    sala
                 });
 
                 document.getElementById("aulaDataInput").value = "";
@@ -198,9 +209,9 @@ function configurarEventosUI() {
             const sala = document.getElementById("editAulaSala").value.trim();
             const notificar = document.getElementById("checkNotificarAlunos").checked;
 
-            const fonteDados = (listaTurmasGlobal && listaTurmasGlobal.length > 0) ? listaTurmasGlobal : listaCursosGlobal;
+            const fonteDados = listaTurmasGlobal.length > 0 ? listaTurmasGlobal : listaCursosGlobal;
             const conflito = verificarConflitoProfessorMemoria(fonteDados, prof, data, hInicio, hFim, cId, aulaParaEditar.id);
-            
+
             if (conflito) {
                 alert(`Conflito de horário! O professor ${prof} já possui aula das ${conflito.horario} em ${conflito.cursoNome}.`);
                 return;
@@ -234,7 +245,7 @@ function configurarEventosUI() {
             const cId = btnVer.getAttribute("data-curso-id");
             const aId = btnVer.getAttribute("data-aula-id");
 
-            const fonteDados = (listaTurmasGlobal && listaTurmasGlobal.length > 0) ? listaTurmasGlobal : listaCursosGlobal;
+            const fonteDados = listaTurmasGlobal.length > 0 ? listaTurmasGlobal : listaCursosGlobal;
             const elementoObj = fonteDados.find(c => c.id === cId);
             if (!elementoObj) return;
 
@@ -253,9 +264,10 @@ function configurarEventosUI() {
                 }
             }
 
-            document.getElementById("detalheAulaCursoNome").textContent = elementoObj.nome_turma || elementoObj.nome || elementoObj.nome_curso || "Curso sem nome";
+            // ✅ Usa nomeExibicaoTurma() também aqui
+            document.getElementById("detalheAulaCursoNome").textContent = nomeExibicaoTurma(elementoObj);
             document.getElementById("detalheAulaCodTurma").textContent = elementoObj.codigo_turma || "S/C";
-            document.getElementById("detalheAulaCodEmenta").textContent = elementoObj.codigo_nr || elementoObj.codigo_curso || elementoObj.codigo || "S/C";
+            document.getElementById("detalheAulaCodEmenta").textContent = elementoObj.curso_codigo || elementoObj.codigo_nr || elementoObj.codigo_curso || elementoObj.codigo || "S/C";
             document.getElementById("detalheAulaData").textContent = dataFmt;
             document.getElementById("detalheAulaDiaSemana").textContent = diaSemanaFmt;
             document.getElementById("detalheAulaHorario").textContent = `${aula.hora_inicio || ''} às ${aula.hora_fim || ''}`;
@@ -276,7 +288,7 @@ function configurarEventosUI() {
             const cId = btnEdit.getAttribute("data-curso-id");
             const aId = btnEdit.getAttribute("data-aula-id");
 
-            const fonteDados = (listaTurmasGlobal && listaTurmasGlobal.length > 0) ? listaTurmasGlobal : listaCursosGlobal;
+            const fonteDados = listaTurmasGlobal.length > 0 ? listaTurmasGlobal : listaCursosGlobal;
             const elementoObj = fonteDados.find(c => c.id === cId);
             if (!elementoObj) return;
 
@@ -305,7 +317,7 @@ function configurarEventosUI() {
             const cId = btnRem.getAttribute("data-curso-id");
             const aId = btnRem.getAttribute("data-aula-id");
 
-            const fonteDados = (listaTurmasGlobal && listaTurmasGlobal.length > 0) ? listaTurmasGlobal : listaCursosGlobal;
+            const fonteDados = listaTurmasGlobal.length > 0 ? listaTurmasGlobal : listaCursosGlobal;
             const elementoObj = fonteDados.find(c => c.id === cId);
             if (!elementoObj) return;
 
@@ -322,14 +334,14 @@ function configurarEventosUI() {
 function renderizarTabelaGeralCronograma() {
     const tbody = document.getElementById("tabelaCronogramaAulasTbody");
     const containerMobile = document.getElementById("cardsCronogramaMobile");
-    
+
     if (!tbody) return;
 
     const selectCursoVal = document.getElementById("selectCursoCronograma")?.value || "";
     const filtroProfVal = (document.getElementById("filtroProfessorCronograma")?.value || "").toLowerCase().trim();
     const filtroDataVal = document.getElementById("filtroDataCronograma")?.value || "";
 
-    const fonteDados = (listaTurmasGlobal && listaTurmasGlobal.length > 0) ? listaTurmasGlobal : listaCursosGlobal;
+    const fonteDados = listaTurmasGlobal.length > 0 ? listaTurmasGlobal : listaCursosGlobal;
     let todasAulas = [];
 
     fonteDados.forEach(item => {
@@ -337,9 +349,10 @@ function renderizarTabelaGeralCronograma() {
 
         const cronograma = item.cronograma || [];
         cronograma.forEach(aula => {
-            const nomeExibicao = item.nome_turma || item.nome || item.nome_curso || item.titulo || "Curso sem nome";
-            const codTurma = item.codigo_turma || item.turmaCodigoNr || item.turmaNome || item.codigo_nr || item.codigo_curso || "";
-            const codEmenta = item.codigo_nr || item.codigo_curso || item.codigo || "";
+            // ✅ Usa nomeExibicaoTurma() no lugar do nome bruto
+            const nomeExibicao = nomeExibicaoTurma(item);
+            const codTurma = item.codigo_turma || "";
+            const codEmenta = item.curso_codigo || item.codigo_nr || item.codigo_curso || item.codigo || "";
 
             todasAulas.push({
                 ...aula,
@@ -384,7 +397,7 @@ function renderizarTabelaGeralCronograma() {
         }
 
         const horarioFmt = (a.hora_inicio && a.hora_fim) ? `${a.hora_inicio} às ${a.hora_fim}` : "A definir";
-        
+
         let badgeTurmaHtml = a.codigoTurma && a.codigoTurma !== a.cursoNome
             ? `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace" style="font-size: 0.72rem;">${a.codigoTurma}</span>`
             : '';
@@ -442,7 +455,7 @@ function renderizarTabelaGeralCronograma() {
             </tr>
         `;
 
-        // 📱 2. HTML PARA MOBILE (Cards Elegantes)
+        // 📱 2. HTML PARA MOBILE (Cards)
         htmlMobile += `
             <div class="card border shadow-sm mb-3 rounded-3 bg-white p-3">
                 <div class="d-flex justify-content-between align-items-start mb-2 border-bottom pb-2">
