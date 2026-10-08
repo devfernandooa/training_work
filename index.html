@@ -58,12 +58,11 @@
   <div class="progress-bar" id="progressBar"></div>
 
   <!-- MODAL DE VÍDEOS -->
-  <div class="modal" id="videoModal" aria-hidden="true">
+  <div class="modal" id="videoModal" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Vídeo do curso">
     <div class="modal-content">
       <button class="modal-close" aria-label="Fechar modal">&times;</button>
       <div class="modal-body">
         <video id="modalVideo" controls>
-          <source src="" type="video/mp4">
           Seu navegador não suporta vídeo.
         </video>
       </div>
@@ -91,7 +90,7 @@
       <li><a href="#depoimentos">Depoimentos</a></li>
       <li><a href="#contato" class="nav-cta">Matricule-se</a></li>
     </ul>
-    <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
+    <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="mobileNav">
       <span></span><span></span><span></span>
     </button>
   </nav>
@@ -290,9 +289,8 @@
       <p class="section-desc-corporate">Capacitações profissionais obrigatórias em total conformidade com as diretrizes
         e exigências vigentes do Ministério do Trabalho e Emprego.</p>
     </div>
-    <div class="row g-2 justify-content-center mx-auto" id="normasGrid" style="max-width: 1600px; ">
+    <div class="row g-2 justify-content-center mx-auto" id="normasGrid" style="max-width: 1600px;">
       <!-- Cards injetados via JavaScript -->
-    </div>
     </div>
   </section>
 
@@ -405,7 +403,7 @@
         </div>
       </div>
 
-      <form action="" id="formContato">
+      <form id="formContato">
         <div class="reveal">
           <div class="form-card">
             <div class="form-row">
@@ -482,7 +480,6 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2024 Training Work. Todos os direitos reservados.</span>
       <div class="footer-social">
         <a href="https://ig.me/" class="social-btn instagram" title="Instagram" aria-label="Instagram"><i
             class="fab fa-instagram"></i></a>
@@ -492,15 +489,10 @@
             class="fab fa-linkedin"></i></a>
         <a href="#" class="social-btn youtube" title="YouTube" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
       </div>
-      <footer>
-        <!-- Seus textos de copyright aqui -->
-        <p>© 2026 Training Work - Todos os direitos reservados.</p>
-
-        <!-- Link discreto para a equipe interna -->
-        <a href="admin/login.html" class="text-muted text-decoration-small small" title="Área Restrita">
-          <i class="fas fa-lock fa-xs me-1"></i> Acesso Administrativo
-        </a>
-      </footer>
+      <span>© 2026 Training Work. Todos os direitos reservados.</span>
+      <a href="admin/login.html" class="text-muted small" title="Área Restrita">
+        <i class="fas fa-lock fa-xs me-1"></i> Acesso Administrativo
+      </a>
     </div>
   </footer>
 
@@ -517,11 +509,11 @@
 
   <!-- Scripts Globais e Módulos Isolados -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script type="module" src="js/script.js" defer></script>
-  <script type="module" src="js/form-handler.js" defer></script>
-  <script type="module" src="js/cursos-loader.js" defer></script>
+  <script type="module" src="js/script.js"></script>
+  <script type="module" src="js/form-handler.js"></script>
+  <script type="module" src="js/cursos-loader.js"></script>
   <script type="module" src="admin/js/contato-lead.js"></script>
-</body>
+
 
 </body>
 
