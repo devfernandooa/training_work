@@ -2,18 +2,6 @@
  * =========================================================================
  * TRAINING WORK — TELA DE LOGIN (login.js)
  * =========================================================================
- *
- * Este arquivo cuida APENAS da tela de login.
- * Toda a "inteligência" de autenticação está em auth-service.js.
- *
- * IDs esperados no HTML:
- *   - #login-form          → o <form>
- *   - #email               → input de e-mail
- *   - #password            → input de senha
- *   - #btn-submit          → botão de entrar
- *   - #error-msg           → div onde mostramos erros
- *   - #btn-esqueci-senha   → link "Esqueci minha senha" (opcional)
- * =========================================================================
  */
 
 import { login, resetarSenha, escutarSessao } from "./auth-service.js";
@@ -22,12 +10,16 @@ import { login, resetarSenha, escutarSessao } from "./auth-service.js";
  * SE O USUÁRIO JÁ ESTIVER LOGADO, REDIRECIONA
  * =========================================================================
  *
- * Se um admin já logado abrir login.html, mandamos ele direto pro dashboard.
- * Assim, ele não precisa fazer login duas vezes.
- * ========================================================================= */
+ * ⚠️ IMPORTANTE: só redireciona se o usuário já estiver há um tempo logado.
+ * Se acabamos de fazer login, o `login.js` redireciona manualmente.
+ * =========================================================================
+ */
+
+let loginAcabouDeAcontecer = false;
 
 escutarSessao((user) => {
-    if (user) {
+    if (user && !loginAcabouDeAcontecer) {
+        // Usuário já estava logado (sessão restaurada)
         window.location.replace("dashboard.html");
     }
 });
@@ -37,7 +29,6 @@ escutarSessao((user) => {
  * ========================================================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
-    // --- Pega os elementos do HTML por ID ---
     const form = document.getElementById("login-form");
     const inputEmail = document.getElementById("email");
     const inputSenha = document.getElementById("password");
@@ -45,12 +36,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const errorBox = document.getElementById("error-msg");
     const btnEsqueci = document.getElementById("btn-esqueci-senha");
 
-    // Se a página atual não tem o formulário, saímos silenciosamente.
     if (!form) return;
 
-    /* -------------------------------------------------------------------
-     * HELPERS
-     * ------------------------------------------------------------------- */
     function mostrarErro(mensagem) {
         if (!errorBox) return;
         errorBox.textContent = mensagem.replace("Firebase: ", "");
@@ -63,11 +50,6 @@ document.addEventListener("DOMContentLoaded", () => {
         errorBox.style.display = "none";
     }
 
-    /* -------------------------------------------------------------------
-     * AÇÃO: BOTÃO DE ENTRAR
-     * -------------------------------------------------------------------
-     * Um único listener de submit. Faz login, mostra erros e redireciona.
-     * ========================================================================= */
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
         esconderErro();
@@ -75,31 +57,37 @@ document.addEventListener("DOMContentLoaded", () => {
         const email = inputEmail.value.trim();
         const senha = inputSenha.value;
 
-        // Validação rápida no lado do cliente
         if (!email || !senha) {
             mostrarErro("Preencha e-mail e senha.");
             return;
         }
 
-        // Estado de "carregando" — desabilita botão e muda o texto.
+        // Marca que o login está sendo feito agora.
+        // Isso impede que o `escutarSessao` redirecione por conta própria
+        // enquanto o processo de login ainda está rodando.
+        loginAcabouDeAcontecer = true;
+
         const textoOriginal = btnSubmit.innerHTML;
         btnSubmit.disabled = true;
         btnSubmit.innerHTML = "Verificando credenciais...";
 
         try {
             await login(email, senha);
+
+            // ✅ Espera o token estar totalmente propagado
+            await new Promise((r) => setTimeout(r, 500));
+
+            // Redireciona
             window.location.href = "dashboard.html";
         } catch (erro) {
             console.error("Erro no login:", erro);
+            loginAcabouDeAcontecer = false;   // ← permite re-login
             mostrarErro(erro.message || "Erro ao fazer login.");
             btnSubmit.disabled = false;
             btnSubmit.innerHTML = textoOriginal;
         }
     });
 
-    /* -------------------------------------------------------------------
-     * AÇÃO: ESQUECI MINHA SENHA
-     * ------------------------------------------------------------------- */
     if (btnEsqueci) {
         btnEsqueci.addEventListener("click", async (e) => {
             e.preventDefault();

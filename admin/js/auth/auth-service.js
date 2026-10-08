@@ -45,11 +45,17 @@ async function aguardarTokenPronto(user) {
  * ========================================================================= */
 
 export async function login(email, senha) {
+    // 1. Autentica
     const credencial = await signInWithEmailAndPassword(auth, email, senha);
     const user = credencial.user;
 
-    await aguardarTokenPronto(user);
+    // 2. ⚡ Espera o token estar pronto
+    await user.getIdToken();
 
+    // 3. ⚡ Pequena pausa para o token propagar
+    await new Promise((r) => setTimeout(r, 200));
+
+    // 4. Busca o doc do admin
     const adminRef = doc(db, "administradores", user.uid);
     const adminSnap = await getDoc(adminRef);
 
@@ -62,7 +68,7 @@ export async function login(email, senha) {
 
     if (adminData.ativo !== true) {
         await signOut(auth);
-        throw new Error("Este administrador está inativo. Contate o suporte.");
+        throw new Error("Este administrador está inativo.");
     }
 
     updateDoc(adminRef, {
