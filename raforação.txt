@@ -1,0 +1,44 @@
+/
+├── index.html                    ← site público (raiz)
+├── js/                           ← JS do site público
+│   ├── firebase-config.js        ← compartilhado
+│   ├── public/                   ← site público
+│   │   ├── cursos-loader.js
+│   │   ├── contato-lead.js
+│   │   └── script.js
+│   └── ...
+├── css/
+├── img/
+│
+└── admin/
+    ├── login.html
+    ├── dashboard.html
+    ├── turmas.html
+    ├── ...
+    ├── _dev/                     ← ferramentas de dev (não versionar em prod)
+    │   ├── seed.html
+    │   └── migrar-colecoes.html
+    ├── js/
+    │   ├── firebase-config.js    ← se for diferente do público
+    │   ├── auth/                 ← 🆕 TUDO de autenticação aqui
+    │   │   ├── auth-service.js   ← (novo — funções puras)
+    │   │   ├── auth-guard.js     ← (movido)
+    │   │   ├── login.js          ← (movido)
+    │   │   └── sidebar.js        ← (movido de modules/)
+    │   ├── backend/              ← services (Firestore)
+    │   │   ├── turmas-service.js
+    │   │   ├── alunos-service.js
+    │   │   ├── cursos-service.js
+    │   │   ├── seed.js
+    │   │   └── ...
+    │   ├── frontend/             ← UIs (DOM)
+    │   │   ├── turmas-ui.js
+    │   │   ├── calendario-aulas-ui.js
+    │   │   ├── vagas-ui.js
+    │   │   ├── cursos-ui.js
+    │   │   └── ...
+    │   └── modules/              ← reservado para componentes reutilizáveis
+    │       ├── modal-helper.js
+    │       └── notificacao.js
+    └── css/
+        └── modules/

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Migrar Administradores — Training Work</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        h1 { color: #0284c7; }
+        button { padding: .75rem 1.5rem; font-size: 1rem; border: none; border-radius: 8px; cursor: pointer; background: #0284c7; color: white; }
+        button:disabled { opacity: .5; cursor: not-allowed; }
+        pre { background: #0f172a; color: #94e2d5; padding: 1rem; border-radius: 8px; max-height: 500px; overflow-y: auto; white-space: pre-wrap; }
+        .aviso { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Migrar administradores</h1>
+
+    <div class="aviso">
+        <strong>O que este script faz:</strong><br>
+        1. Lista todos os usuários do Firebase Auth;<br>
+        2. Para cada usuário, procura um doc em <code>/administradores</code> cujo <code>email</code> bate;<br>
+        3. Copia os dados para um <strong>novo doc</strong> com <code>ID = uid do Auth</code>;<br>
+        4. Remove o doc antigo.
+    </div>
+
+    <button id="btn-migrar">🚀 Rodar migração</button>
+    <pre id="log">Pronto para rodar.</pre>
+
+    <script type="module">
+        import { db } from "../js/firebase-config.js";
+        import {
+            collection, getDocs, doc, setDoc, deleteDoc
+        } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import {
+            getAuth, listUsers
+        } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        const logEl = document.getElementById("log");
+        const escrever = (msg) => {
+            logEl.textContent += "\n" + msg;
+            logEl.scrollTop = logEl.scrollHeight;
+        };
+
+        document.getElementById("btn-migrar").addEventListener("click", async (e) => {
+            e.target.disabled = true;
+            logEl.textContent = "Migrando...\n";
+
+            try {
+                const auth = getAuth();
+
+                // 1. Lista todos os usuários do Auth.
+                // OBS.: `listUsers` do SDK client não existe — só no Admin SDK.
+                // Aqui vamos usar uma abordagem alternativa: ler os admins do
+                // Firestore e pedir pra você migrar manualmente pelo console.
+                //
+                // Se você tiver acesso ao Firebase Console → Authentication,
+                // pode copiar o UID de cada usuário e rodar a migração abaixo.
+
+                escrever("⚠️ Para rodar essa migração, precisamos do UID de cada admin.");
+                escrever("Pegue em Firebase Console → Authentication → Users:");
+                escrever("");
+
+                const snapAdmins = await getDocs(collection(db, "administradores"));
+                const admins = [];
+                snapAdmins.forEach((d) => admins.push({ id: d.id, ...d.data() }));
+
+                escrever("📋 Admins atuais no Firestore:");
+                admins.forEach((a) => {
+                    escrever(`  → ID: ${a.id} | Email: ${a.email} | Nome: ${a.nome}`);
+                });
+
+                escrever("");
+                escrever("📌 Copie o UID de cada usuário no Console e cole aqui:");
+                const uidMap = prompt(
+                    "Cole os UIDs no formato:\nEMAIL=UID\nEMAIL=UID\n\nEx.:\nfernandooar@gmail.com=abc123"
+                );
+
+                if (!uidMap) {
+                    escrever("Migração cancelada.");
+                    return;
+                }
+
+                const pares = uidMap.split("\n").map((l) => l.split("="));
+                escrever("");
+                escrever("🔄 Migrando...");
+
+                for (const [email, uid] of pares) {
+                    const adminAntigo = admins.find((a) => a.email === email.trim());
+                    if (!adminAntigo) {
+                        escrever(`  ⚠️ ${email}: não encontrado no Firestore. Pulando.`);
+                        continue;
+                    }
+
+                    // Cria novo doc com ID = uid.
+                    await setDoc(doc(db, "administradores", uid.trim()), {
+                        ...adminAntigo,
+                        uid: uid.trim()
+                    });
+
+                    // Remove o antigo.
+                    if (adminAntigo.id !== uid.trim()) {
+                        await deleteDoc(doc(db, "administradores", adminAntigo.id));
+                    }
+
+                    escrever(`  ✅ ${email} → ${uid.trim()}`);
+                }
+
+                escrever("");
+                escrever("🎉 Migração concluída!");
+            } catch (erro) {
+                escrever(`❌ ERRO: ${erro.message}`);
+                console.error(erro);
+            } finally {
+                e.target.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

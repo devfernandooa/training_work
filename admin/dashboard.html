@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Training Work</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/modules/global.css">
+    <link rel="stylesheet" href="css/modules/sidebar.css">
+    <link rel="stylesheet" href="css/modules/dashboard.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        (function () {
+            const pagina = window.location.pathname.split("/").pop() || "dashboard.html";
+            document.addEventListener("DOMContentLoaded", () => {
+                document.querySelectorAll(".sidebar-menu .sidebar-link").forEach(link => {
+                    if (link.getAttribute("href") === pagina) {
+                        link.classList.add("active");
+                    } else {
+                        link.classList.remove("active");
+                    }
+                });
+            });
+        })();
+    </script>
+</head>
+
+<body>
+    <!-- SIDEBAR FIXA -->
+    <aside class="sidebar" id="appSidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+            <div class="brand-text">
+                <h5>TrainingWork</h5>
+                <span>Painel Administrativo</span>
+            </div>
+        </div>
+
+        <div class="user-profile-bar loaded">
+            <div class="user-avatar-container">
+                <div class="user-avatar-icon"><i class="fas fa-user"></i></div>
+                <span class="user-status-dot"></span>
+            </div>
+            <div class="user-info-text">
+                <span class="user-name">Carregando...</span>
+                <span class="user-email">...</span>
+                <a href="#editar-perfil" class="user-edit-profile">Editar perfil</a>
+            </div>
+            <button type="button" id="btnLogoutSidebar" class="logout-icon-btn" title="Sair do Sistema">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li>
+                <a href="dashboard.html" class="sidebar-link">
+                    <i class="fas fa-chart-pie"></i> <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="lead_e_triagem.html" class="sidebar-link">
+                    <i class="fas fa-user-friends"></i> <span>Leads & Triagem</span>
+                </a>
+            </li>
+            <li>
+                <a href="financeiro.html" class="sidebar-link">
+                    <i class="fas fa-wallet"></i> <span>Financeiro</span>
+                </a>
+            </li>
+            <li>
+                <a href="cursos.html" class="sidebar-link">
+                    <i class="fas fa-book-open"></i> <span>Cursos</span>
+                </a>
+            </li>
+            <li>
+                <a href="turmas.html" class="sidebar-link">
+                    <i class="fas fa-laptop-code"></i> <span>Turmas & Cursos</span>
+                </a>
+            </li>
+            <li>
+                <a href="alunos.html" class="sidebar-link">
+                    <i class="fas fa-users"></i> <span>Alunos</span>
+                </a>
+            </li>
+            <li>
+                <a href="matriculas.html" class="sidebar-link">
+                    <i class="fas fa-id-card-alt"></i> <span>Matrículas</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="main-content">
+        <div class="d-lg-none mb-3">
+            <button class="btn btn-dark btn-sm px-3 py-2 rounded-3 shadow-sm" id="sidebarToggle" type="button">
+                <i class="fas fa-bars me-1"></i> Menu
+            </button>
+        </div>
+
+        <!-- Cabeçalho -->
+        <div class="dashboard-header-container mb-4">
+            <div class="header-titles">
+                <h1 class="page-title">
+                    <i class="fas fa-chart-pie text-primary"></i> Dashboard
+                </h1>
+                <p class="page-subtitle" id="dashboard-saudacao">
+                    Bem-vindo de volta! Aqui está o resumo geral do sistema.
+                </p>
+            </div>
+            <div class="header-status-badge">
+                <span class="status-dot"></span>
+                <span>Firestore Conectado</span>
+            </div>
+        </div>
+
+        <!-- KPIs do topo -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="kpi-card p-3 rounded-3 border-0 bg-white shadow-sm d-flex align-items-center">
+                    <div class="kpi-icon me-3 p-3 rounded-3 d-flex align-items-center justify-content-center"
+                        style="background-color: #e0f2fe; color: #0284c7; width: 48px; height: 48px;">
+                        <i class="fas fa-layer-group fa-lg"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.72rem;">Turmas
+                            Ativas</small>
+                        <h3 class="mb-0 fw-bold text-dark" id="kpi-turmas-ativas">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="kpi-card p-3 rounded-3 border-0 bg-white shadow-sm d-flex align-items-center">
+                    <div class="kpi-icon me-3 p-3 rounded-3 d-flex align-items-center justify-content-center"
+                        style="background-color: #dcfce7; color: #16a34a; width: 48px; height: 48px;">
+                        <i class="fas fa-user-graduate fa-lg"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.72rem;">Alunos
+                            Matriculados</small>
+                        <h3 class="mb-0 fw-bold text-dark" id="kpi-total-alunos">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="kpi-card p-3 rounded-3 border-0 bg-white shadow-sm d-flex align-items-center">
+                    <div class="kpi-icon me-3 p-3 rounded-3 d-flex align-items-center justify-content-center"
+                        style="background-color: #fef3c7; color: #d97706; width: 48px; height: 48px;">
+                        <i class="fas fa-user-plus fa-lg"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.72rem;">Leads
+                            Ativos</small>
+                        <h3 class="mb-0 fw-bold text-dark" id="kpi-leads-ativos">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="kpi-card p-3 rounded-3 border-0 bg-white shadow-sm d-flex align-items-center">
+                    <div class="kpi-icon me-3 p-3 rounded-3 d-flex align-items-center justify-content-center"
+                        style="background-color: #fce7f3; color: #db2777; width: 48px; height: 48px;">
+                        <i class="fas fa-dollar-sign fa-lg"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.72rem;">Receita
+                            Total</small>
+                        <h3 class="mb-0 fw-bold text-dark" id="kpi-receita-total">R$ 0,00</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações rápidas -->
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm bg-white p-3">
+                    <h6 class="fw-bold text-dark mb-3">
+                        <i class="fas fa-bolt text-warning me-2"></i>Ações rápidas
+                    </h6>
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <a href="turmas.html" class="btn btn-outline-primary w-100 py-3 rounded-3">
+                                <i class="fas fa-plus-circle me-2"></i> Nova Turma
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="alunos.html" class="btn btn-outline-success w-100 py-3 rounded-3">
+                                <i class="fas fa-user-plus me-2"></i> Novo Aluno
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="lead_e_triagem.html" class="btn btn-outline-warning w-100 py-3 rounded-3">
+                                <i class="fas fa-user-friends me-2"></i> Ver Leads
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="financeiro.html" class="btn btn-outline-info w-100 py-3 rounded-3">
+                                <i class="fas fa-wallet me-2"></i> Financeiro
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Últimos leads -->
+        <div class="row g-3">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm bg-white">
+                    <div
+                        class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold text-dark m-0">
+                            <i class="fas fa-clock text-primary me-2"></i>Últimos leads recebidos
+                        </h6>
+                        <a href="lead_e_triagem.html" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                            Ver todos
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
+                            <thead class="bg-light text-secondary text-uppercase fw-semibold"
+                                style="font-size: 0.72rem;">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Curso de interesse</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-tbody-leads">
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-4">
+                                        A carregar leads...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm bg-white p-3">
+                    <h6 class="fw-bold text-dark mb-3">
+                        <i class="fas fa-info-circle text-primary me-2"></i>Resumo do sistema
+                    </h6>
+                    <ul class="list-unstyled small mb-0">
+                        <li class="mb-2 d-flex justify-content-between">
+                            <span class="text-muted">Total de cursos</span>
+                            <strong id="info-total-cursos">-</strong>
+                        </li>
+                        <li class="mb-2 d-flex justify-content-between">
+                            <span class="text-muted">Total de turmas</span>
+                            <strong id="info-total-turmas">-</strong>
+                        </li>
+                        <li class="mb-2 d-flex justify-content-between">
+                            <span class="text-muted">Total de alunos</span>
+                            <strong id="info-total-alunos">-</strong>
+                        </li>
+                        <li class="mb-2 d-flex justify-content-between">
+                            <span class="text-muted">Turmas ativas</span>
+                            <strong class="text-success" id="info-turmas-ativas">-</strong>
+                        </li>
+                        <li class="d-flex justify-content-between">
+                            <span class="text-muted">Turmas inativas</span>
+                            <strong class="text-secondary" id="info-turmas-inativas">-</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
+    <script type="module" src="js/auth/sidebar.js"></script>
+    <script type="module" src="js/frontend/dashboard-ui.js"></script>
+</body>
+
+</html>

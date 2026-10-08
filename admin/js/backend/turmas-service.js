@@ -19,7 +19,8 @@ import {
     onSnapshot,
     query,
     where
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"
 
 const NOME_COLECAO = "turmas";
 
@@ -32,26 +33,42 @@ const NOME_COLECAO = "turmas";
  * @param {Function} callback - Recebe o array de turmas
  * @returns {Function} unsubscribe
  */
+
+
 export function escutarTurmas(callback) {
     const refColecao = collection(db, NOME_COLECAO);
 
-    return onSnapshot(
-        refColecao,
-        (snapshot) => {
+    let unsubscribe = null;
+
+    // ⚡ Só conecta ao Firestore DEPOIS que o usuário está logado
+    // e o token está pronto.
+    const unsubAuth = onAuthStateChanged(auth, async (user) => {
+        if (!user) return;
+
+        // Garante que o token está pronto
+        await user.getIdToken(true);
+
+        // Se já está escutando, ignora
+        if (unsubscribe) return;
+
+        // Agora sim, conecta ao Firestore
+        unsubscribe = onSnapshot(refColecao, (snapshot) => {
             const turmas = [];
             snapshot.forEach((docSnap) => {
                 turmas.push({ id: docSnap.id, ...docSnap.data() });
             });
-
-            //console.log(`📊 escutarTurmas: ${turmas.length} turmas`);
-
             if (typeof callback === "function") callback(turmas);
-        },
-        (erro) => {
+        }, (erro) => {
             console.error("❌ Erro ao escutar /turmas:", erro);
             if (typeof callback === "function") callback([]);
-        }
-    );
+        });
+    });
+
+    // Retorna uma função que cancela ambos
+    return () => {
+        unsubAuth();
+        if (unsubscribe) unsubscribe();
+    };
 }
 
 /* ==========================================================================

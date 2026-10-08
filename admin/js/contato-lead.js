@@ -1,5 +1,5 @@
 import { db } from './firebase-config.js';
-import { collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 // 1. Carregar os cursos da coleção "cursos" do Firestore para o <select id="curso">
 async function carregarCursosNoSelect() {

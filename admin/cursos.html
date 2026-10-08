@@ -6,7 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cursos - Training Work</title>
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <link rel="stylesheet" href="css/modules/global.css">
@@ -117,7 +118,8 @@
 
     <div class="row g-3 mb-4">
       <div class="col-md-4">
-        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card">
+        <div
+          class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card">
           <div class="metric-icon blue"><i class="fas fa-book"></i></div>
           <div class="metric-info">
             <span class="label">Total de Cursos</span>
@@ -126,7 +128,8 @@
         </div>
       </div>
       <div class="col-md-4">
-        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card">
+        <div
+          class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card">
           <div class="metric-icon green"><i class="fas fa-door-open"></i></div>
           <div class="metric-info">
             <span class="label">Turmas Abertas</span>
@@ -135,7 +138,8 @@
         </div>
       </div>
       <div class="col-md-4">
-        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card">
+        <div
+          class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center gap-3 metric-card">
           <div class="metric-icon blue"><i class="fas fa-check-circle"></i></div>
           <div class="metric-info">
             <span class="label">Cursos Ativos</span>
@@ -152,7 +156,8 @@
         <div class="leads-header">
           <h3>Cursos Cadastrados</h3>
           <div class="d-flex gap-2 align-items-center">
-            <input type="text" id="busca-curso" class="form-control form-control-sm" placeholder="Buscar por nome ou código..." style="width: 220px;">
+            <input type="text" id="busca-curso" class="form-control form-control-sm"
+              placeholder="Buscar por nome ou código..." style="width: 220px;">
             <button class="btn btn-primary btn-sm rounded-pill px-3" id="btn-novo-curso">
               <i class="fas fa-plus me-1"></i> Novo Curso
             </button>
@@ -212,21 +217,25 @@
                   <label for="nomeCurso" class="form-label small fw-semibold text-muted mb-1">
                     Nome do Curso <span class="text-danger">*</span>
                   </label>
-                  <input type="text" class="form-control form-control-sm" id="nomeCurso" placeholder="Ex: Arquitetura e Configuração de Redes GPON e EPON" required>
+                  <input type="text" class="form-control form-control-sm" id="nomeCurso"
+                    placeholder="Ex: Arquitetura e Configuração de Redes GPON e EPON" required>
                 </div>
                 <div class="col-md-4">
                   <label for="codigoCurso" class="form-label small fw-semibold text-muted mb-1">
                     Código do Curso (Ementa) <span class="text-danger">*</span>
                   </label>
-                  <input type="text" class="form-control form-control-sm text-uppercase" id="codigoCurso" placeholder="Ex: GPN-03" required>
+                  <input type="text" class="form-control form-control-sm text-uppercase" id="codigoCurso"
+                    placeholder="Ex: GPN-03" required>
                   <div class="form-text" style="font-size: 0.72rem;">Código base da matriz curricular.</div>
                 </div>
                 <div class="col-md-6">
                   <label for="codigoTurma" class="form-label small fw-semibold text-muted mb-1">
                     Código da Turma <span class="text-danger">*</span>
                   </label>
-                  <input type="text" class="form-control form-control-sm text-uppercase" id="codigoTurma" placeholder="Ex: TR-GPN03-2026/001" required>
-                  <div class="form-text" style="font-size: 0.72rem;">Formato: TR-GPN03-2026/001 (Gerado automaticamente se vazio).</div>
+                  <input type="text" class="form-control form-control-sm text-uppercase" id="codigoTurma"
+                    placeholder="Ex: TR-GPN03-2026/001" required>
+                  <div class="form-text" style="font-size: 0.72rem;">Formato: TR-GPN03-2026/001 (Gerado automaticamente
+                    se vazio).</div>
                 </div>
               </div>
             </div>
@@ -247,7 +256,8 @@
                   <label for="valorCurso" class="form-label small fw-semibold text-muted mb-1">
                     Valor Base (R$) <span class="text-danger">*</span>
                   </label>
-                  <input type="number" step="0.01" class="form-control form-control-sm" id="valorCurso" placeholder="480" required>
+                  <input type="number" step="0.01" class="form-control form-control-sm" id="valorCurso"
+                    placeholder="480" required>
                 </div>
                 <div class="col-md-3">
                   <label for="modalidadeCurso" class="form-label small fw-semibold text-muted mb-1">
@@ -280,13 +290,15 @@
                   <label for="vagasDisponiveis" class="form-label small fw-semibold text-muted mb-1">
                     Vagas Disponíveis <span class="text-danger">*</span>
                   </label>
-                  <input type="number" class="form-control form-control-sm" id="vagasDisponiveis" placeholder="20" required>
+                  <input type="number" class="form-control form-control-sm" id="vagasDisponiveis" placeholder="20"
+                    required>
                 </div>
                 <div class="col-md-6">
                   <label for="instrutorCurso" class="form-label small fw-semibold text-muted mb-1">
                     Professor / Instrutor Responsável
                   </label>
-                  <input type="text" class="form-control form-control-sm" id="instrutorCurso" placeholder="Ex: Eng. Carlos Eduardo Silva">
+                  <input type="text" class="form-control form-control-sm" id="instrutorCurso"
+                    placeholder="Ex: Eng. Carlos Eduardo Silva">
                 </div>
               </div>
             </div>
@@ -301,13 +313,15 @@
                   <label for="descricaoCurso" class="form-label small fw-semibold text-muted mb-1">
                     Descrição do Curso <span class="text-danger">*</span>
                   </label>
-                  <textarea class="form-control form-control-sm" id="descricaoCurso" rows="2" placeholder="Resumo do curso..." required></textarea>
+                  <textarea class="form-control form-control-sm" id="descricaoCurso" rows="2"
+                    placeholder="Resumo do curso..." required></textarea>
                 </div>
                 <div class="col-12">
                   <label for="ementaCurso" class="form-label small fw-semibold text-muted mb-1">
                     Ementa / Tópicos (um por linha)
                   </label>
-                  <textarea class="form-control form-control-sm" id="ementaCurso" rows="3" placeholder="Tópicos da ementa..."></textarea>
+                  <textarea class="form-control form-control-sm" id="ementaCurso" rows="3"
+                    placeholder="Tópicos da ementa..."></textarea>
                 </div>
               </div>
             </div>
@@ -328,7 +342,8 @@
                     <option value="oculto">🔒 Não exibir no site (Apenas Gestão Interna)</option>
                   </select>
                   <div class="form-text" style="font-size: 0.72rem;">
-                    Escolha "Não exibir no site" para manter o curso ativo apenas no painel administrativo sem criar cards no catálogo público.
+                    Escolha "Não exibir no site" para manter o curso ativo apenas no painel administrativo sem criar
+                    cards no catálogo público.
                   </div>
                 </div>
               </div>
@@ -344,14 +359,17 @@
                   <label for="curso-atualizado-por" class="form-label small fw-semibold text-muted mb-1">
                     Última Alteração
                   </label>
-                  <input type="text" class="form-control form-control-sm bg-white" id="curso-atualizado-por" readonly value="Sem registo anterior">
+                  <input type="text" class="form-control form-control-sm bg-white" id="curso-atualizado-por" readonly
+                    value="Sem registo anterior">
                 </div>
               </div>
             </div>
 
             <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
-              <button type="button" class="btn btn-light px-4 rounded-pill btn-sm" data-bs-dismiss="modal">Cancelar</button>
-              <button type="submit" class="btn btn-primary px-4 rounded-pill btn-sm" id="btn-salvar-curso">Salvar Curso</button>
+              <button type="button" class="btn btn-light px-4 rounded-pill btn-sm"
+                data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary px-4 rounded-pill btn-sm" id="btn-salvar-curso">Salvar
+                Curso</button>
             </div>
           </form>
         </div>
@@ -361,7 +379,8 @@
   </div>
 
   <!-- Modal Confirmação de Exclusão -->
-  <div class="modal fade" id="modalConfirmarExclusaoCurso" tabindex="-1" aria-labelledby="modalConfirmarExclusaoCursoLabel" aria-hidden="true">
+  <div class="modal fade" id="modalConfirmarExclusaoCurso" tabindex="-1"
+    aria-labelledby="modalConfirmarExclusaoCursoLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg rounded-4">
         <div class="modal-header border-0 pb-0">
@@ -371,20 +390,22 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
         <div class="modal-body py-4">
-          <p class="text-muted mb-0">Tem a certeza que deseja remover este curso da listagem? O registo será inativado com segurança.</p>
+          <p class="text-muted mb-0">Tem a certeza que deseja remover este curso da listagem? O registo será inativado
+            com segurança.</p>
         </div>
         <div class="modal-footer border-0 pt-0">
           <button type="button" class="btn btn-light px-4 rounded-pill btn-sm" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-danger px-4 rounded-pill btn-sm" id="btn-confirmar-exclusao-curso">Sim, Inativar</button>
+          <button type="button" class="btn btn-danger px-4 rounded-pill btn-sm" id="btn-confirmar-exclusao-curso">Sim,
+            Inativar</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-  <script type="module" src="js/modules/sidebar.js"></script>
-  <script type="module" src="js/auth-guard.js"></script>
-  <script type="module" src="js/frontend/cursos-ui.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    crossorigin="anonymous"></script>
+  <script type="module" src="js/auth/auth-guard.js"></script>
+  <script type="module" src="js/auth/sidebar.js"></script>
 </body>
 
 </html>

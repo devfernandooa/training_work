@@ -10,7 +10,7 @@ import {
     getDocs,
     updateDoc,
     addDoc
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 /**
  * Escuta em tempo real a coleção de cursos ativos no Firestore.
