@@ -4,7 +4,6 @@
  * =========================================================================
  *
  * Camada de apresentação: só mexe no DOM.
- * Escuta os dados do service e renderiza.
  * =========================================================================
  */
 
@@ -13,7 +12,8 @@ import {
     obterCursoPorId,
     criarCurso,
     editarCurso,
-    excluirCurso
+    excluirCurso,
+    reativarCurso
 } from "../backend/cursos-service.js";
 
 /* =========================================================================
@@ -29,10 +29,13 @@ let itensPorPagina = 20;
 let termoBusca = "";
 let filtroSecao = "todos";
 let filtroStatus = "todos";
+let filtroExclusao = "ativos";       // ativos / excluidos / todos
 
 let modalCursoInstance = null;
 let modalConfirmacaoInstance = null;
+let modalReativarInstance = null;    // ⚡ NOVO
 let cursoIdParaExcluir = null;
+let cursoIdParaReativar = null;      // ⚡ NOVO
 let toastInstance = null;
 
 let timerBusca = null;
@@ -96,6 +99,7 @@ function inicializarModulo() {
     configurarEventosTabela();
     configurarBotaoNovo();
     configurarBotaoConfirmarExclusao();
+    configurarBotaoConfirmarReativar();     // ⚡ NOVO
 
     try {
         escutarCursos((cursos) => {
@@ -103,7 +107,7 @@ function inicializarModulo() {
             listaCompleta = cursos;
             paginaAtual = 1;
             aplicarFiltrosERenderizar();
-        });
+        }, { incluirExcluidos: true });
     } catch (erro) {
         console.error("❌ Erro ao escutar cursos:", erro);
     }
@@ -129,6 +133,12 @@ function configurarModais() {
     if (modalConfEl && window.bootstrap) {
         modalConfirmacaoInstance = new bootstrap.Modal(modalConfEl);
     }
+
+    // ⚡ NOVO
+    const modalReativarEl = document.getElementById("modalConfirmacaoReativar");
+    if (modalReativarEl && window.bootstrap) {
+        modalReativarInstance = new bootstrap.Modal(modalReativarEl);
+    }
 }
 
 function configurarBotaoConfirmarExclusao() {
@@ -151,6 +161,31 @@ function configurarBotaoConfirmarExclusao() {
             btn.disabled = false;
             btn.textContent = "Excluir";
             cursoIdParaExcluir = null;
+        }
+    });
+}
+
+// ⚡ NOVO
+function configurarBotaoConfirmarReativar() {
+    const btn = document.getElementById("btn-confirmar-reativar-curso");
+    if (!btn) return;
+
+    btn.addEventListener("click", async () => {
+        if (!cursoIdParaReativar) return;
+
+        btn.disabled = true;
+        btn.textContent = "A reativar...";
+
+        try {
+            await reativarCurso(cursoIdParaReativar);
+            if (modalReativarInstance) modalReativarInstance.hide();
+            mostrarSucesso("Curso reativado com sucesso!");
+        } catch (err) {
+            mostrarErro("Erro ao reativar: " + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Reativar";
+            cursoIdParaReativar = null;
         }
     });
 }
@@ -190,6 +225,15 @@ function configurarFiltros() {
         });
     }
 
+    const selExclusao = document.getElementById("filtro-exclusao");
+    if (selExclusao) {
+        selExclusao.addEventListener("change", (e) => {
+            filtroExclusao = e.target.value;
+            paginaAtual = 1;
+            aplicarFiltrosERenderizar();
+        });
+    }
+
     const selItens = document.getElementById("itens-por-pagina-curso");
     if (selItens) {
         selItens.addEventListener("change", (e) => {
@@ -201,13 +245,20 @@ function configurarFiltros() {
 }
 
 /* =========================================================================
- * APLICAR FILTROS + PAGINAÇÃO + RENDERIZAR
+ * APLICAR FILTROS
  * ========================================================================= */
 
 function aplicarFiltrosERenderizar() {
     let filtrados = [...listaCompleta];
 
-    // 1. Busca textual
+    // Filtro de exclusão
+    if (filtroExclusao === "ativos") {
+        filtrados = filtrados.filter((c) => !c.excluido);
+    } else if (filtroExclusao === "excluidos") {
+        filtrados = filtrados.filter((c) => c.excluido);
+    }
+
+    // Busca
     if (termoBusca) {
         filtrados = filtrados.filter((c) => {
             const nome = (c.nome || "").toLowerCase();
@@ -219,12 +270,12 @@ function aplicarFiltrosERenderizar() {
         });
     }
 
-    // 2. Filtro de seção
+    // Seção
     if (filtroSecao !== "todos") {
         filtrados = filtrados.filter((c) => (c.secaoExibicao || "grade") === filtroSecao);
     }
 
-    // 3. Filtro de status
+    // Status ativo/inativo
     if (filtroStatus !== "todos") {
         const querAtivo = filtroStatus === "ativo";
         filtrados = filtrados.filter((c) => Boolean(c.ativo) === querAtivo);
@@ -232,7 +283,6 @@ function aplicarFiltrosERenderizar() {
 
     listaFiltrada = filtrados;
 
-    // 4. Paginação
     const totalPaginas = Math.max(1, Math.ceil(filtrados.length / itensPorPagina));
     if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
 
@@ -240,7 +290,6 @@ function aplicarFiltrosERenderizar() {
     const fim = inicio + itensPorPagina;
     const pagina = filtrados.slice(inicio, fim);
 
-    // 5. Renderiza
     renderizarTabela(pagina);
     renderizarContador(filtrados.length, inicio, fim);
     renderizarPaginacao(totalPaginas);
@@ -252,10 +301,11 @@ function aplicarFiltrosERenderizar() {
  * ========================================================================= */
 
 function atualizarKPIs() {
-    const total = listaCompleta.length;
-    const grade = listaCompleta.filter((c) => (c.secaoExibicao || "grade") === "grade").length;
-    const normas = listaCompleta.filter((c) => c.secaoExibicao === "nr").length;
-    const ocultos = listaCompleta.filter((c) => c.secaoExibicao === "oculto").length;
+    const ativos = listaCompleta.filter((c) => !c.excluido);
+    const total = ativos.length;
+    const grade = ativos.filter((c) => (c.secaoExibicao || "grade") === "grade").length;
+    const normas = ativos.filter((c) => c.secaoExibicao === "nr").length;
+    const ocultos = ativos.filter((c) => c.secaoExibicao === "oculto").length;
 
     const elTotal = document.getElementById("kpi-total-cursos");
     const elGrade = document.getElementById("kpi-grade");
@@ -291,36 +341,53 @@ function renderizarTabela(pagina) {
         const valor = formatarMoeda(curso.investimento_base);
         const modalidade = curso.modalidade_padrao || "Presencial";
         const secao = getIconeSecao(curso.secaoExibicao);
+        const isExcluido = curso.excluido;
 
-        // Status
-        const badgeStatus = curso.ativo
-            ? `<span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success px-3 py-2">Ativo</span>`
-            : `<span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary px-3 py-2">Inativo</span>`;
+        // Badge de status
+        let badgeStatus;
+        if (isExcluido) {
+            badgeStatus = `<span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger px-3 py-2">Excluído</span>`;
+        } else if (curso.ativo) {
+            badgeStatus = `<span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success px-3 py-2">Ativo</span>`;
+        } else {
+            badgeStatus = `<span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary px-3 py-2">Inativo</span>`;
+        }
+
+        // Ações
+        const acoes = isExcluido
+            ? `
+                <div class="d-flex justify-content-end gap-1">
+                    <button class="btn btn-sm btn-outline-success px-2 py-1 btn-reativar-curso" data-id="${curso.id}" title="Reativar Curso">
+                        <i class="fas fa-undo"></i> Reativar
+                    </button>
+                </div>
+            `
+            : `
+                <div class="d-flex justify-content-end gap-1">
+                    <button class="btn btn-sm btn-outline-primary px-2 py-1 btn-editar-curso" data-id="${curso.id}" title="Editar">
+                        <i class="fas fa-pen"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger px-2 py-1 btn-excluir-curso" data-id="${curso.id}" title="Excluir">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            `;
+
+        const rowStyle = isExcluido ? 'style="opacity: 0.6;"' : '';
 
         html += `
-            <tr>
+            <tr ${rowStyle}>
                 <td>
                     <span class="fw-bold text-dark font-monospace">${codCurso}</span><br>
                     <small class="text-muted">${apelido || "—"}</small>
                 </td>
-                <td>
-                    <strong>${nome}</strong>
-                </td>
+                <td><strong>${nome}</strong></td>
                 <td>${carga}h</td>
                 <td>${valor}</td>
                 <td><small>${modalidade}</small></td>
                 <td><small>${secao}</small></td>
                 <td>${badgeStatus}</td>
-                <td class="text-end">
-                    <div class="d-flex justify-content-end gap-1">
-                        <button class="btn btn-sm btn-outline-primary px-2 py-1 btn-editar-curso" data-id="${curso.id}" title="Editar">
-                            <i class="fas fa-pen"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger px-2 py-1 btn-excluir-curso" data-id="${curso.id}" title="Excluir">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </td>
+                <td class="text-end">${acoes}</td>
             </tr>
         `;
     });
@@ -329,7 +396,7 @@ function renderizarTabela(pagina) {
 }
 
 /* =========================================================================
- * CONTADOR + PAGINAÇÃO
+ * CONTADOR
  * ========================================================================= */
 
 function renderizarContador(total, inicio, fim) {
@@ -340,8 +407,16 @@ function renderizarContador(total, inicio, fim) {
         el.textContent = "Nenhum curso encontrado";
         return;
     }
-    el.textContent = `Mostrando ${inicio + 1}-${Math.min(fim, total)} de ${total} curso${total > 1 ? "s" : ""}`;
+
+    const ativos = listaCompleta.filter((c) => !c.excluido).length;
+    const excluidos = listaCompleta.filter((c) => c.excluido).length;
+
+    el.textContent = `Mostrando ${inicio + 1}-${Math.min(fim, total)} de ${total} • ${ativos} ativos • ${excluidos} excluídos`;
 }
+
+/* =========================================================================
+ * PAGINAÇÃO
+ * ========================================================================= */
 
 function renderizarPaginacao(totalPaginas) {
     const ul = document.getElementById("paginacao-cursos");
@@ -422,6 +497,14 @@ function configurarEventosTabela() {
         if (btnExcluir) {
             cursoIdParaExcluir = btnExcluir.getAttribute("data-id");
             if (modalConfirmacaoInstance) modalConfirmacaoInstance.show();
+            return;
+        }
+
+        // Reativar
+        const btnReativar = e.target.closest(".btn-reativar-curso");
+        if (btnReativar) {
+            cursoIdParaReativar = btnReativar.getAttribute("data-id");
+            if (modalReativarInstance) modalReativarInstance.show();
             return;
         }
     });
@@ -506,7 +589,7 @@ function limparFormulario() {
 }
 
 /* =========================================================================
- * FORMULÁRIO (submit)
+ * FORMULÁRIO
  * ========================================================================= */
 
 function configurarFormulario() {
@@ -539,15 +622,8 @@ function configurarFormulario() {
             ementa: getVal("cursoEmenta").trim()
         };
 
-        // Validação
-        if (!dados.nome) {
-            mostrarErro("Nome do curso é obrigatório.");
-            return;
-        }
-        if (!dados.codigo) {
-            mostrarErro("Código do curso é obrigatório.");
-            return;
-        }
+        if (!dados.nome) return mostrarErro("Nome do curso é obrigatório.");
+        if (!dados.codigo) return mostrarErro("Código do curso é obrigatório.");
 
         const btn = document.getElementById("btn-salvar-curso");
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> A guardar...'; }
