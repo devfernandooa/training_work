@@ -2,15 +2,7 @@
  * =========================================================================
  * TRAINING WORK — SERVIÇO DE AUTENTICAÇÃO (auth-service.js)
  * =========================================================================
- *
  * Camada de serviço de autenticação. Não mexe em DOM.
- *
- * Funções exportadas:
- *   - login(email, senha)         → autentica e devolve { user, adminData }
- *   - logout()                    → encerra a sessão
- *   - resetarSenha(email)         → envia e-mail de redefinição
- *   - escutarSessao(callback)     → fica ouvindo o estado da sessão
- *   - obterAdminLogado(user)      → busca o doc /administradores/{uid}
  * =========================================================================
  */
 
@@ -31,49 +23,21 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 /* =========================================================================
- * HELPER — ESPERAR FIRESTORE RECONECTAR
+ * HELPER — ESPERAR TOKEN (SEM FORÇAR REFRESH DE REDE)
  * =========================================================================
- *
- * Depois do login, o Firestore precisa reabrir o canal WebChannel com o
- * novo usuário autenticado. Isso leva alguns ms.
- *
- * Estratégia: fazer uma LEITURA INOFENSIVA em loop até ela responder
- * rápido (o que indica que o canal está OK), ou desistir após N tentativas.
+ * O `getIdToken(true)` faz uma requisição de rede e pode demorar 5-30s
+ * (ou travar). O `getIdToken()` usa o cache local e é instantâneo.
  * =========================================================================
  */
-async function esperarFirestoreConectado(db) {
-    const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js");
-
-    for (let i = 0; i < 10; i++) {
-        try {
-            // Tenta ler um doc qualquer com timeout curto
-            const snap = await Promise.race([
-                getDoc(doc(db, "cursos", "__probe__")),   // ID que provavelmente não existe
-                new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 1000))
-            ]);
-            // Se chegou aqui, o Firestore respondeu
-            return true;
-        } catch (e) {
-            // Se foi timeout, espera 200ms e tenta de novo
-            if (e.message === "timeout") {
-                await new Promise((r) => setTimeout(r, 200));
-                continue;
-            }
-            // Outro erro (permissão, etc.) — o canal respondeu, só não autorizou
-            return true;
-        }
-    }
-    console.warn("⚠️ Firestore não conectou após 10 tentativas");
-    return false;
-}
 async function aguardarTokenPronto(user) {
     if (!user) return;
-
-    // 1. Força a renovação do token (garante que está em cache)
-    await user.getIdToken(true);
-
-    // 2. Pequena pausa para o Firestore receber o token
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    try {
+        await user.getIdToken();   // usa cache, é instantâneo
+    } catch (e) {
+        console.warn("Aviso ao obter token:", e);
+    }
+    // Delay mínimo (era 100ms, agora 20ms)
+    await new Promise((resolve) => setTimeout(resolve, 20));
 }
 
 /* =========================================================================
@@ -81,17 +45,11 @@ async function aguardarTokenPronto(user) {
  * ========================================================================= */
 
 export async function login(email, senha) {
-    // 1. Autentica no Firebase Auth
     const credencial = await signInWithEmailAndPassword(auth, email, senha);
     const user = credencial.user;
 
-    // 2. Aguarda o token
     await aguardarTokenPronto(user);
 
-    // 3. ✅ AGUARDA O FIRESTORE RECONECTAR (novo)
-    await esperarFirestoreConectado(db);
-
-    // 4. Agora sim, busca o doc do admin
     const adminRef = doc(db, "administradores", user.uid);
     const adminSnap = await getDoc(adminRef);
 
@@ -115,6 +73,7 @@ export async function login(email, senha) {
 
     return { user, adminData };
 }
+
 /* =========================================================================
  * LOGOUT
  * ========================================================================= */
@@ -140,24 +99,34 @@ export function escutarSessao(callback) {
 }
 
 /* =========================================================================
- * OBTER ADMIN LOGADO
- * ========================================================================= */
-
-/**
- * Busca o documento /administradores/{uid}.
- *
- * Também aguarda o token para evitar o bug do getDoc pendurado.
+ * OBTER ADMIN LOGADO — COM RETRY
+ * =========================================================================
+ * Tenta até 3 vezes. Se der permission-denied, espera 500ms e tenta
+ * de novo. Isso resolve o timing entre o login e a propagação do token.
+ * =========================================================================
  */
+
 export async function obterAdminLogado(user) {
     if (!user) return null;
 
-    // ⚡ Força o token antes de ler o Firestore
     await aguardarTokenPronto(user);
 
-    const adminRef = doc(db, "administradores", user.uid);
-    const adminSnap = await getDoc(adminRef);
+    // Tenta 3x com espera de 300ms (era 500ms)
+    for (let tentativa = 0; tentativa < 3; tentativa++) {
+        try {
+            const adminRef = doc(db, "administradores", user.uid);
+            const adminSnap = await getDoc(adminRef);
 
-    if (!adminSnap.exists()) return null;
-
-    return { uid: user.uid, ...adminSnap.data() };
+            if (!adminSnap.exists()) return null;
+            return { uid: user.uid, ...adminSnap.data() };
+        } catch (e) {
+            if (e.code === "permission-denied" && tentativa < 2) {
+                console.warn(`[auth] retry ${tentativa + 1}/3`);
+                await new Promise((r) => setTimeout(r, 300));   // ← 300ms
+                continue;
+            }
+            throw e;
+        }
+    }
+    return null;
 }
