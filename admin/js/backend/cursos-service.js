@@ -1,137 +1,231 @@
-// ==========================================================================
-// TRAINING WORK - SERVICE (BACKEND): CATÁLOGO DE CURSOS & TREINAMENTOS
-// ==========================================================================
+/**
+ * =========================================================================
+ * TRAINING WORK — SERVIÇO DE CURSOS (cursos-service.js)
+ * =========================================================================
+ *
+ * Camada de serviço: SÓ conversa com o Firestore.
+ * NÃO mexe em DOM, NÃO faz autenticação.
+ *
+ * Coleção: /cursos
+ * Estrutura do doc:
+ *   {
+ *     codigo, apelido, nome, descricao, ementa,
+ *     carga_horaria, investimento_base, modalidade_padrao,
+ *     secaoExibicao, ativo,
+ *     criado_em, atualizado_em, atualizado_por, excluido
+ *   }
+ * =========================================================================
+ */
+
 import { auth, db } from "../firebase-config.js";
 import {
     collection,
-    onSnapshot,
     doc,
     getDoc,
     getDocs,
+    addDoc,
     updateDoc,
-    addDoc
+    onSnapshot
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-/**
- * Escuta em tempo real a coleção de cursos ativos no Firestore.
+const NOME_COLECAO = "cursos";
+
+/* =========================================================================
+ * NORMALIZAÇÃO
+ * =========================================================================
+ * Tolera campos antigos (snake_case + camelCase).
+ * =========================================================================
  */
-export function escutarCursosService(callback) {
-    const colRef = collection(db, "cursos");
 
-    return onSnapshot(colRef, (snapshot) => {
-        const lista = [];
-        snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            if (!data.excluido) {
-                lista.push({ id: docSnap.id, ...data });
-            }
-        });
+function normalizarCurso(docSnap) {
+    const d = docSnap.data();
 
-        lista.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
+    return {
+        id: docSnap.id,
+        ...d,
 
-        callback(lista);
-    }, (error) => {
-        console.error("Erro ao escutar cursos no Firestore:", error);
-    });
-}
+        // Identificação
+        codigo: d.codigo || d.codigo_curso || "",
+        apelido: d.apelido || "",
+        nome: d.nome || d.nome_curso || "",
 
-/**
- * Recupe os detalhes de um curso específico pelo ID.
- */
-export async function obterCursoPorIdService(id) {
-    try {
-        const docRef = doc(db, "cursos", id);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            return { id: docSnap.id, ...docSnap.data() };
-        }
-        return null;
-    } catch (error) {
-        console.error("Erro ao obter curso:", error);
-        throw error;
-    }
-}
+        // Conteúdo
+        descricao: d.descricao || "",
+        ementa: d.ementa || "",
 
-/**
- * Formata a nomenclatura padrão de turma: TR-[CODIGO_CURSO]-[ANO]/[SEQUENCIAL]
- */
-export function gerarCodigoTurmaFormatado(codigoCurso, ano = 2026, sequencial = 1) {
-    const codLimpo = String(codigoCurso || "GERAL").replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-    const seqFmt = String(sequencial).padStart(3, "0");
-    return `TR-${codLimpo}-${ano}/${seqFmt}`;
-}
+        // Estrutura
+        carga_horaria: Number(d.carga_horaria || d.carga || 0),
+        investimento_base: Number(d.investimento_base || d.valor || 0),
+        modalidade_padrao: d.modalidade_padrao || d.modalidade || "Presencial",
 
-/**
- * Persiste ou atualiza o registro de um curso/turma no Firestore.
- */
-export async function salvarCursoService(dadosCurso, idCurso = null) {
-    const adminEmail = auth.currentUser ? auth.currentUser.email : "Sistema";
-    const dataHoraAtual = new Date().toISOString();
+        // Publicação
+        secaoExibicao: d.secaoExibicao || "grade",
+        ativo: d.ativo !== undefined ? !!d.ativo : (String(d.status || "ativo").toLowerCase() !== "inativo"),
 
-    const codigoCursoBase = String(dadosCurso.codigo || dadosCurso.codigo_curso || "").trim().toUpperCase();
-
-    if (!codigoCursoBase) {
-        throw new Error("O código do curso (ex: GPN-03, NR-06) é obrigatório.");
-    }
-
-    const anoAtual = new Date().getFullYear();
-
-    let codigoTurmaFinal = String(dadosCurso.codigo_turma || dadosCurso.numero_turma || "").trim().toUpperCase();
-
-    if (!codigoTurmaFinal || codigoTurmaFinal === codigoCursoBase) {
-        const seq = dadosCurso.sequencialTurma || 1;
-        codigoTurmaFinal = gerarCodigoTurmaFormatado(codigoCursoBase, anoAtual, seq);
-    }
-
-    const objetoCurso = {
-        nome: dadosCurso.nome || "",
-        codigo: codigoCursoBase,
-        codigo_curso: codigoCursoBase,
-        numero_turma: codigoTurmaFinal,
-        codigo_turma: codigoTurmaFinal,
-        carga: dadosCurso.carga || "0",
-        valor: Number(dadosCurso.valor || 0),
-        modalidade: dadosCurso.modalidade || "Presencial",
-        status: dadosCurso.status || "Ativo",
-        secaoExibicao: dadosCurso.secaoExibicao || "grade",
-        vagasTotal: Number(dadosCurso.vagasTotal || 0),
-        vagasDisponiveis: Number(dadosCurso.vagasDisponiveis || 0),
-        instrutor: dadosCurso.instrutor || "A definir",
-        descricao: dadosCurso.descricao || "",
-        ementa: dadosCurso.ementa || "",
-        atualizado_por: adminEmail,
-        atualizado_em: dataHoraAtual
+        // Auditoria
+        criado_em: d.criado_em || "",
+        atualizado_em: d.atualizado_em || d.atualizado || "",
+        atualizado_por: d.atualizado_por || "",
+        excluido: !!d.excluido
     };
-
-    if (idCurso) {
-        const refDoc = doc(db, "cursos", idCurso);
-        await updateDoc(refDoc, objetoCurso);
-        return { id: idCurso, ...objetoCurso };
-    } else {
-        objetoCurso.criado_em = dataHoraAtual;
-        objetoCurso.excluido = false;
-        const docRef = await addDoc(collection(db, "cursos"), objetoCurso);
-        return { id: docRef.id, ...objetoCurso };
-    }
 }
 
-/**
- * Executa a inativação lógica de um curso mantendo o histórico de auditoria.
- */
-export async function inativarCursoService(idCurso) {
+/* =========================================================================
+ * ESCUTA EM TEMPO REAL
+ * ========================================================================= */
+
+export function escutarCursos(callback) {
+    const colRef = collection(db, NOME_COLECAO);
+
+    return onSnapshot(
+        colRef,
+        (snapshot) => {
+            const cursos = [];
+            snapshot.forEach((docSnap) => {
+                const curso = normalizarCurso(docSnap);
+                if (curso.excluido) return;
+                cursos.push(curso);
+            });
+
+            cursos.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
+
+            if (typeof callback === "function") callback(cursos);
+        },
+        (erro) => {
+            console.error("❌ Erro ao escutar /cursos:", erro);
+            if (typeof callback === "function") callback([]);
+        }
+    );
+}
+
+/* =========================================================================
+ * LEITURA PONTUAL
+ * ========================================================================= */
+
+export async function obterCursoPorId(id) {
     try {
-        const adminEmail = auth.currentUser ? auth.currentUser.email : "Sistema";
-        const docRef = doc(db, "cursos", idCurso);
-
-        await updateDoc(docRef, {
-            excluido: true,
-            atualizado_por: adminEmail,
-            atualizado_em: new Date().toISOString()
-        });
-
-        return true;
-    } catch (error) {
-        console.error("Erro ao inativar curso:", error);
-        throw error;
+        const snap = await getDoc(doc(db, NOME_COLECAO, id));
+        if (!snap.exists()) return null;
+        return normalizarCurso(snap);
+    } catch (erro) {
+        console.error("❌ Erro ao obter curso:", erro);
+        throw erro;
     }
 }
+
+export async function obterCursos() {
+    try {
+        const snap = await getDocs(collection(db, NOME_COLECAO));
+        const cursos = [];
+        snap.forEach((d) => {
+            const curso = normalizarCurso(d);
+            if (!curso.excluido) cursos.push(curso);
+        });
+        return cursos;
+    } catch (erro) {
+        console.error("❌ Erro ao obter cursos:", erro);
+        throw erro;
+    }
+}
+
+/* =========================================================================
+ * CRIAR CURSO
+ * ========================================================================= */
+
+export async function criarCurso(dados) {
+    try {
+        const usuario = auth.currentUser?.email || "Sistema";
+        const agora = new Date().toISOString();
+
+        const payload = {
+            codigo: String(dados.codigo || "").toUpperCase().trim(),
+            apelido: String(dados.apelido || "").trim(),
+            nome: String(dados.nome || "").trim(),
+            descricao: String(dados.descricao || "").trim(),
+            ementa: String(dados.ementa || "").trim(),
+            carga_horaria: Number(dados.carga_horaria || 0),
+            investimento_base: Number(dados.investimento_base || 0),
+            modalidade_padrao: dados.modalidade_padrao || "Presencial",
+            secaoExibicao: dados.secaoExibicao || "grade",
+            ativo: dados.ativo !== false,
+            criado_em: agora,
+            atualizado_em: agora,
+            atualizado_por: usuario,
+            excluido: false
+        };
+
+        if (!payload.codigo) throw new Error("Código é obrigatório.");
+        if (!payload.nome) throw new Error("Nome do curso é obrigatório.");
+
+        const ref = await addDoc(collection(db, NOME_COLECAO), payload);
+        console.log(`✅ Curso criado: ${ref.id}`);
+        return { id: ref.id, ...payload };
+    } catch (erro) {
+        console.error("❌ Erro ao criar curso:", erro);
+        throw erro;
+    }
+}
+
+/* =========================================================================
+ * EDITAR CURSO
+ * ========================================================================= */
+
+export async function editarCurso(id, dados) {
+    try {
+        const usuario = auth.currentUser?.email || "Sistema";
+        const agora = new Date().toISOString();
+
+        const payload = {
+            codigo: String(dados.codigo || "").toUpperCase().trim(),
+            apelido: String(dados.apelido || "").trim(),
+            nome: String(dados.nome || "").trim(),
+            descricao: String(dados.descricao || "").trim(),
+            ementa: String(dados.ementa || "").trim(),
+            carga_horaria: Number(dados.carga_horaria || 0),
+            investimento_base: Number(dados.investimento_base || 0),
+            modalidade_padrao: dados.modalidade_padrao || "Presencial",
+            secaoExibicao: dados.secaoExibicao || "grade",
+            ativo: dados.ativo !== false,
+            atualizado_em: agora,
+            atualizado_por: usuario
+        };
+
+        await updateDoc(doc(db, NOME_COLECAO, id), payload);
+        console.log(`✏️ Curso editado: ${id}`);
+        return { id, ...payload };
+    } catch (erro) {
+        console.error("❌ Erro ao editar curso:", erro);
+        throw erro;
+    }
+}
+
+/* =========================================================================
+ * EXCLUSÃO LÓGICA
+ * ========================================================================= */
+
+export async function excluirCurso(id) {
+    try {
+        const usuario = auth.currentUser?.email || "Sistema";
+        const agora = new Date().toISOString();
+
+        await updateDoc(doc(db, NOME_COLECAO, id), {
+            excluido: true,
+            atualizado_em: agora,
+            atualizado_por: usuario
+        });
+        console.log(`🗑️ Curso excluído (soft delete): ${id}`);
+    } catch (erro) {
+        console.error("❌ Erro ao excluir curso:", erro);
+        throw erro;
+    }
+}
+
+/* =========================================================================
+ * COMPATIBILIDADE
+ * =========================================================================
+ * Alguns módulos (turmas-ui.js, cursos-ui.js) usam `escutarCursosService`.
+ * Mantemos o alias para não quebrar.
+ * =========================================================================
+ */
+
+export const escutarCursosService = escutarCursos;
