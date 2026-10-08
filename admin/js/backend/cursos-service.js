@@ -2,19 +2,6 @@
  * =========================================================================
  * TRAINING WORK — SERVIÇO DE CURSOS (cursos-service.js)
  * =========================================================================
- *
- * Camada de serviço: SÓ conversa com o Firestore.
- * NÃO mexe em DOM, NÃO faz autenticação.
- *
- * Coleção: /cursos
- * Estrutura do doc:
- *   {
- *     codigo, apelido, nome, descricao, ementa,
- *     carga_horaria, investimento_base, modalidade_padrao,
- *     secaoExibicao, ativo,
- *     criado_em, atualizado_em, atualizado_por, excluido
- *   }
- * =========================================================================
  */
 
 import { auth, db } from "../firebase-config.js";
@@ -30,39 +17,22 @@ import {
 
 const NOME_COLECAO = "cursos";
 
-/* =========================================================================
- * NORMALIZAÇÃO
- * =========================================================================
- * Tolera campos antigos (snake_case + camelCase).
- * =========================================================================
- */
-
 function normalizarCurso(docSnap) {
     const d = docSnap.data();
 
     return {
         id: docSnap.id,
         ...d,
-
-        // Identificação
         codigo: d.codigo || d.codigo_curso || "",
         apelido: d.apelido || "",
         nome: d.nome || d.nome_curso || "",
-
-        // Conteúdo
         descricao: d.descricao || "",
         ementa: d.ementa || "",
-
-        // Estrutura
         carga_horaria: Number(d.carga_horaria || d.carga || 0),
         investimento_base: Number(d.investimento_base || d.valor || 0),
         modalidade_padrao: d.modalidade_padrao || d.modalidade || "Presencial",
-
-        // Publicação
         secaoExibicao: d.secaoExibicao || "grade",
         ativo: d.ativo !== undefined ? !!d.ativo : (String(d.status || "ativo").toLowerCase() !== "inativo"),
-
-        // Auditoria
         criado_em: d.criado_em || "",
         atualizado_em: d.atualizado_em || d.atualizado || "",
         atualizado_por: d.atualizado_por || "",
@@ -70,11 +40,14 @@ function normalizarCurso(docSnap) {
     };
 }
 
-/* =========================================================================
- * ESCUTA EM TEMPO REAL
- * ========================================================================= */
-
-export function escutarCursos(callback) {
+/**
+ * Escuta cursos em tempo real.
+ * @param {Function} callback
+ * @param {Object} opcoes
+ * @param {boolean} opcoes.incluirExcluidos — Se true, retorna também os excluídos
+ */
+export function escutarCursos(callback, opcoes = {}) {
+    const incluirExcluidos = opcoes.incluirExcluidos !== false;
     const colRef = collection(db, NOME_COLECAO);
 
     return onSnapshot(
@@ -83,12 +56,11 @@ export function escutarCursos(callback) {
             const cursos = [];
             snapshot.forEach((docSnap) => {
                 const curso = normalizarCurso(docSnap);
-                if (curso.excluido) return;
+                if (!incluirExcluidos && curso.excluido) return;
                 cursos.push(curso);
             });
 
             cursos.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
-
             if (typeof callback === "function") callback(cursos);
         },
         (erro) => {
@@ -97,10 +69,6 @@ export function escutarCursos(callback) {
         }
     );
 }
-
-/* =========================================================================
- * LEITURA PONTUAL
- * ========================================================================= */
 
 export async function obterCursoPorId(id) {
     try {
@@ -127,10 +95,6 @@ export async function obterCursos() {
         throw erro;
     }
 }
-
-/* =========================================================================
- * CRIAR CURSO
- * ========================================================================= */
 
 export async function criarCurso(dados) {
     try {
@@ -166,10 +130,6 @@ export async function criarCurso(dados) {
     }
 }
 
-/* =========================================================================
- * EDITAR CURSO
- * ========================================================================= */
-
 export async function editarCurso(id, dados) {
     try {
         const usuario = auth.currentUser?.email || "Sistema";
@@ -199,10 +159,9 @@ export async function editarCurso(id, dados) {
     }
 }
 
-/* =========================================================================
- * EXCLUSÃO LÓGICA
- * ========================================================================= */
-
+/**
+ * Exclusão LÓGICA (soft delete). O doc permanece no Firestore com `excluido: true`.
+ */
 export async function excluirCurso(id) {
     try {
         const usuario = auth.currentUser?.email || "Sistema";
@@ -220,12 +179,25 @@ export async function excluirCurso(id) {
     }
 }
 
-/* =========================================================================
- * COMPATIBILIDADE
- * =========================================================================
- * Alguns módulos (turmas-ui.js, cursos-ui.js) usam `escutarCursosService`.
- * Mantemos o alias para não quebrar.
- * =========================================================================
+/**
+ * ⚡ NOVO: Reativa um curso que foi excluído logicamente.
+ * Remove o campo `excluido` (ou o coloca como false).
  */
+export async function reativarCurso(id) {
+    try {
+        const usuario = auth.currentUser?.email || "Sistema";
+        const agora = new Date().toISOString();
+
+        await updateDoc(doc(db, NOME_COLECAO, id), {
+            excluido: false,
+            atualizado_em: agora,
+            atualizado_por: usuario
+        });
+        console.log(`♻️ Curso reativado: ${id}`);
+    } catch (erro) {
+        console.error("❌ Erro ao reativar curso:", erro);
+        throw erro;
+    }
+}
 
 export const escutarCursosService = escutarCursos;
