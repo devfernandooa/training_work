@@ -2,19 +2,6 @@
  * =========================================================================
  * TRAINING WORK — SERVIÇO DE CURSOS (cursos-service.js)
  * =========================================================================
- *
- * Camada de serviço: SÓ conversa com o Firestore.
- * NÃO mexe em DOM, NÃO faz autenticação.
- *
- * Coleção: /cursos
- * Estrutura do doc:
- *   {
- *     codigo, apelido, nome, descricao, ementa,
- *     carga_horaria, investimento_base, modalidade_padrao,
- *     secaoExibicao, ativo,
- *     criado_em, atualizado_em, atualizado_por, excluido
- *   }
- * =========================================================================
  */
 
 import { auth, db } from "../firebase-config.js";
@@ -30,39 +17,29 @@ import {
 
 const NOME_COLECAO = "cursos";
 
-/* =========================================================================
- * NORMALIZAÇÃO
- * =========================================================================
- * Tolera campos antigos (snake_case + camelCase).
- * =========================================================================
- */
-
 function normalizarCurso(docSnap) {
     const d = docSnap.data();
 
     return {
         id: docSnap.id,
         ...d,
-
-        // Identificação
         codigo: d.codigo || d.codigo_curso || "",
         apelido: d.apelido || "",
         nome: d.nome || d.nome_curso || "",
-
-        // Conteúdo
         descricao: d.descricao || "",
         ementa: d.ementa || "",
-
-        // Estrutura
         carga_horaria: Number(d.carga_horaria || d.carga || 0),
         investimento_base: Number(d.investimento_base || d.valor || 0),
         modalidade_padrao: d.modalidade_padrao || d.modalidade || "Presencial",
 
-        // Publicação
+        // ⚡ NOVOS: Valores padrão para turmas
+        instrutor_padrao: d.instrutor_padrao || "",
+        dias_padrao: d.dias_padrao || "",
+        horario_padrao: d.horario_padrao || "",
+        turno_padrao: d.turno_padrao || "",
+
         secaoExibicao: d.secaoExibicao || "grade",
         ativo: d.ativo !== undefined ? !!d.ativo : (String(d.status || "ativo").toLowerCase() !== "inativo"),
-
-        // Auditoria
         criado_em: d.criado_em || "",
         atualizado_em: d.atualizado_em || d.atualizado || "",
         atualizado_por: d.atualizado_por || "",
@@ -70,11 +47,8 @@ function normalizarCurso(docSnap) {
     };
 }
 
-/* =========================================================================
- * ESCUTA EM TEMPO REAL
- * ========================================================================= */
-
-export function escutarCursos(callback) {
+export function escutarCursos(callback, opcoes = {}) {
+    const incluirExcluidos = opcoes.incluirExcluidos !== false;
     const colRef = collection(db, NOME_COLECAO);
 
     return onSnapshot(
@@ -83,12 +57,11 @@ export function escutarCursos(callback) {
             const cursos = [];
             snapshot.forEach((docSnap) => {
                 const curso = normalizarCurso(docSnap);
-                if (curso.excluido) return;
+                if (!incluirExcluidos && curso.excluido) return;
                 cursos.push(curso);
             });
 
             cursos.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
-
             if (typeof callback === "function") callback(cursos);
         },
         (erro) => {
@@ -97,10 +70,6 @@ export function escutarCursos(callback) {
         }
     );
 }
-
-/* =========================================================================
- * LEITURA PONTUAL
- * ========================================================================= */
 
 export async function obterCursoPorId(id) {
     try {
@@ -128,10 +97,6 @@ export async function obterCursos() {
     }
 }
 
-/* =========================================================================
- * CRIAR CURSO
- * ========================================================================= */
-
 export async function criarCurso(dados) {
     try {
         const usuario = auth.currentUser?.email || "Sistema";
@@ -146,6 +111,13 @@ export async function criarCurso(dados) {
             carga_horaria: Number(dados.carga_horaria || 0),
             investimento_base: Number(dados.investimento_base || 0),
             modalidade_padrao: dados.modalidade_padrao || "Presencial",
+
+            // ⚡ NOVOS
+            instrutor_padrao: String(dados.instrutor_padrao || "").trim(),
+            dias_padrao: String(dados.dias_padrao || "").trim(),
+            horario_padrao: String(dados.horario_padrao || "").trim(),
+            turno_padrao: String(dados.turno_padrao || "").trim(),
+
             secaoExibicao: dados.secaoExibicao || "grade",
             ativo: dados.ativo !== false,
             criado_em: agora,
@@ -166,10 +138,6 @@ export async function criarCurso(dados) {
     }
 }
 
-/* =========================================================================
- * EDITAR CURSO
- * ========================================================================= */
-
 export async function editarCurso(id, dados) {
     try {
         const usuario = auth.currentUser?.email || "Sistema";
@@ -184,6 +152,13 @@ export async function editarCurso(id, dados) {
             carga_horaria: Number(dados.carga_horaria || 0),
             investimento_base: Number(dados.investimento_base || 0),
             modalidade_padrao: dados.modalidade_padrao || "Presencial",
+
+            // ⚡ NOVOS
+            instrutor_padrao: String(dados.instrutor_padrao || "").trim(),
+            dias_padrao: String(dados.dias_padrao || "").trim(),
+            horario_padrao: String(dados.horario_padrao || "").trim(),
+            turno_padrao: String(dados.turno_padrao || "").trim(),
+
             secaoExibicao: dados.secaoExibicao || "grade",
             ativo: dados.ativo !== false,
             atualizado_em: agora,
@@ -198,10 +173,6 @@ export async function editarCurso(id, dados) {
         throw erro;
     }
 }
-
-/* =========================================================================
- * EXCLUSÃO LÓGICA
- * ========================================================================= */
 
 export async function excluirCurso(id) {
     try {
@@ -220,12 +191,21 @@ export async function excluirCurso(id) {
     }
 }
 
-/* =========================================================================
- * COMPATIBILIDADE
- * =========================================================================
- * Alguns módulos (turmas-ui.js, cursos-ui.js) usam `escutarCursosService`.
- * Mantemos o alias para não quebrar.
- * =========================================================================
- */
+export async function reativarCurso(id) {
+    try {
+        const usuario = auth.currentUser?.email || "Sistema";
+        const agora = new Date().toISOString();
+
+        await updateDoc(doc(db, NOME_COLECAO, id), {
+            excluido: false,
+            atualizado_em: agora,
+            atualizado_por: usuario
+        });
+        console.log(`♻️ Curso reativado: ${id}`);
+    } catch (erro) {
+        console.error("❌ Erro ao reativar curso:", erro);
+        throw erro;
+    }
+}
 
 export const escutarCursosService = escutarCursos;

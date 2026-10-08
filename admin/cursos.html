@@ -74,7 +74,6 @@
             </button>
         </div>
 
-        <!-- HEADER -->
         <div class="dashboard-header-container mb-4">
             <div class="header-titles">
                 <h1 class="page-title">
@@ -128,7 +127,7 @@
             </div>
         </div>
 
-        <!-- CONTROLES DA TABELA -->
+        <!-- CONTROLES -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
                 <h5 class="card-title text-dark fw-bold m-0">
@@ -136,7 +135,6 @@
                 </h5>
 
                 <div class="d-flex flex-wrap align-items-center gap-2">
-                    <!-- Busca -->
                     <div class="input-group input-group-sm" style="width: 240px;">
                         <span class="input-group-text bg-white border-end-0">
                             <i class="fas fa-search text-muted"></i>
@@ -145,7 +143,6 @@
                             placeholder="Buscar nome, código ou apelido..." autocomplete="off">
                     </div>
 
-                    <!-- Filtro por exibição -->
                     <select id="filtro-secao" class="form-select form-select-sm" style="width: 180px;">
                         <option value="todos">Todas as exibições</option>
                         <option value="grade">Grade de Treinamentos</option>
@@ -153,14 +150,18 @@
                         <option value="oculto">Ocultos / Internos</option>
                     </select>
 
-                    <!-- Filtro de status -->
                     <select id="filtro-status-curso" class="form-select form-select-sm" style="width: 150px;">
                         <option value="todos">Todos os status</option>
                         <option value="ativo">Ativos</option>
                         <option value="inativo">Inativos</option>
                     </select>
 
-                    <!-- Itens por página -->
+                    <select id="filtro-exclusao" class="form-select form-select-sm" style="width: 160px;">
+                        <option value="ativos" selected>Ativos</option>
+                        <option value="excluidos">Excluídos</option>
+                        <option value="todos">Todos</option>
+                    </select>
+
                     <select id="itens-por-pagina-curso" class="form-select form-select-sm" style="width: 130px;">
                         <option value="10">10 por página</option>
                         <option value="20" selected>20 por página</option>
@@ -203,7 +204,6 @@
                 </table>
             </div>
 
-            <!-- PAGINAÇÃO -->
             <nav class="d-flex justify-content-center mt-3">
                 <ul class="pagination pagination-sm mb-0" id="paginacao-cursos"></ul>
             </nav>
@@ -244,9 +244,6 @@
                                     </label>
                                     <input type="text" class="form-control form-control-sm" id="cursoApelido"
                                         placeholder="Ex: IoT" maxlength="20">
-                                    <div class="form-text" style="font-size: 0.72rem;">
-                                        Nome curto exibido em listas (ex: GPON, NR-35).
-                                    </div>
                                 </div>
                                 <div class="col-md-4">
                                     <label for="cursoCodigo" class="form-label small fw-semibold text-muted mb-1">
@@ -300,7 +297,54 @@
                             </div>
                         </div>
 
-                        <!-- BLOCO 3: PUBLICAÇÃO NO SITE -->
+                        <!-- ⚡ BLOCO 3 (NOVO): VALORES PADRÃO PARA TURMAS -->
+                        <div class="card border shadow-sm p-3 mb-3 rounded-3 bg-light bg-opacity-10"
+                             style="border-left: 4px solid #0284c7 !important;">
+                            <h6 class="fw-bold text-primary mb-3">
+                                <i class="fas fa-cog me-2"></i>Valores Padrão para Turmas
+                                <small class="text-muted fw-normal ms-2" style="font-size: 0.75rem;">
+                                    (usados para pré-preencher o formulário de novas turmas)
+                                </small>
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="cursoInstrutorPadrao" class="form-label small fw-semibold text-muted mb-1">
+                                        Instrutor Padrão
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" id="cursoInstrutorPadrao"
+                                        placeholder="Ex: Eng. Carlos Eduardo Silva">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="cursoTurnoPadrao" class="form-label small fw-semibold text-muted mb-1">
+                                        Turno Padrão
+                                    </label>
+                                    <select class="form-select form-select-sm" id="cursoTurnoPadrao">
+                                        <option value="">(Não definido)</option>
+                                        <option value="Manhã">Manhã</option>
+                                        <option value="Tarde">Tarde</option>
+                                        <option value="Noite">Noite</option>
+                                        <option value="Integral">Integral</option>
+                                        <option value="Sábados">Sábados</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="cursoDiasPadrao" class="form-label small fw-semibold text-muted mb-1">
+                                        Dias da Semana
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" id="cursoDiasPadrao"
+                                        placeholder="Ex: Terças e Quintas">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="cursoHorarioPadrao" class="form-label small fw-semibold text-muted mb-1">
+                                        Horário
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" id="cursoHorarioPadrao"
+                                        placeholder="Ex: 19:00 - 22:00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BLOCO 4: PUBLICAÇÃO NO SITE -->
                         <div class="card border shadow-sm p-3 mb-3 rounded-3 bg-light bg-opacity-10">
                             <h6 class="fw-bold text-primary mb-3">
                                 <i class="fas fa-globe me-2"></i>Publicação no Site Público
@@ -319,7 +363,7 @@
                             </div>
                         </div>
 
-                        <!-- BLOCO 4: CONTEÚDO -->
+                        <!-- BLOCO 5: CONTEÚDO -->
                         <div class="card border shadow-sm p-3 mb-3 rounded-3 bg-light bg-opacity-10">
                             <h6 class="fw-bold text-primary mb-3">
                                 <i class="fas fa-file-alt me-2"></i>Conteúdo
@@ -337,12 +381,12 @@
                                         Ementa / Tópicos (um por linha)
                                     </label>
                                     <textarea class="form-control form-control-sm" id="cursoEmenta" rows="3"
-                                        placeholder="Ex:&#10;Introdução a IoT&#10;Protocolos MQTT&#10;Configuração de dispositivos"></textarea>
+                                        placeholder="Tópicos..."></textarea>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- BLOCO 5: AUDITORIA -->
+                        <!-- BLOCO 6: AUDITORIA -->
                         <div class="card border shadow-sm p-3 mb-3 rounded-3 bg-light bg-opacity-10">
                             <h6 class="fw-bold text-primary mb-3">
                                 <i class="fas fa-history me-2"></i>Auditoria
@@ -365,7 +409,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE CONFIRMAÇÃO -->
+    <!-- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO -->
     <div class="modal fade" id="modalConfirmacaoCurso" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
             <div class="modal-content border-0 shadow-lg rounded-4">
@@ -386,6 +430,33 @@
                     <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-danger px-4 rounded-pill fw-semibold" id="btn-confirmar-exclusao-curso">
                         Excluir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO DE REATIVAR -->
+    <div class="modal fade" id="modalConfirmacaoReativar" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center px-4 pb-2">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+                        style="width: 72px; height: 72px; background: #dcfce7;">
+                        <i class="fas fa-undo fa-2x" style="color: #16a34a;"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Reativar Curso?</h5>
+                    <p class="text-muted mb-0" style="font-size: 0.95rem; line-height: 1.5;">
+                        Deseja reativar este curso? Ele voltará a aparecer na listagem principal.
+                    </p>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-3 d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success px-4 rounded-pill fw-semibold" id="btn-confirmar-reativar-curso">
+                        Reativar
                     </button>
                 </div>
             </div>
