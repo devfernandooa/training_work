@@ -1,296 +1,255 @@
-import { auth, db } from "../firebase-config.js"; 
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+/**
+ * =========================================================================
+ * TRAINING WORK — SERVIÇO DE LEADS (lead-service.js)
+ * =========================================================================
+ *
+ * Este arquivo é a "camada de serviço" dos leads.
+ *
+ * O QUE É UM SERVICE?
+ * Um service só conversa com o Firestore (banco de dados).
+ * Ele NÃO mexe em HTML, NÃO faz login, NÃO mostra mensagens.
+ *
+ * Pense num restaurante:
+ *   - O SERVICE é o COZINHEIRO (só prepara os dados)
+ *   - A UI (lead-ui.js) é o GARÇOM (leva os dados para a mesa/HTML)
+ *   - O AUTH-GUARD é o PORTEIRO (verifica quem pode entrar)
+ *
+ * Cada um faz uma coisa. Isso deixa o código:
+ *   - Mais fácil de testar
+ *   - Mais fácil de entender
+ *   - Mais fácil de reutilizar em outras telas
+ *
+ * COLEÇÃO: /leads
+ * Estrutura de um lead:
+ *   {
+ *     nome, email, telefone,
+ *     curso_interesse_id, curso_interesse_nome,
+ *     status, origem, criado_em, excluido
+ *   }
+ *
+ * FUNÇÕES EXPORTADAS (o que este arquivo oferece):
+ *   - escutarLeads(callback)              → escuta a coleção em tempo real
+ *   - obterLeads()                        → lê todos uma vez
+ *   - atualizarStatusLead(id, novoStatus) → muda o status
+ *   - salvarEdicaoLead(id, dados)         → atualiza campos
+ *   - excluirLead(id)                     → marca como excluído (soft delete)
+ * =========================================================================
+ */
+
+import { auth, db } from "../firebase-config.js";
 import {
-  collection,
-  onSnapshot,
-  doc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  setDoc,
-  addDoc,
-  query,
-  where,
-  increment
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    updateDoc,
+    onSnapshot
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-import { renderizarTabela, preencherModalEdicao } from "../frontend/lead-ui.js";
-
-/* ==========================================================================
- * CONTROLO DE SESSÃO E AUTENTICAÇÃO
- * ========================================================================== */
-
-onAuthStateChanged(auth, (user) => {
-  const userDisplay = document.getElementById("user-display");
-  if (!user) {
-    window.location.replace("login.html");
-    return;
-  }
-
-  if (userDisplay) {
-    userDisplay.innerHTML = `<i class="fas fa-user-circle"></i> ${user.email}`;
-  }
-
-  escutarInscricoes();
-});
-
-const btnLogout = document.getElementById("btn-logout");
-if (btnLogout) {
-  btnLogout.addEventListener("click", () => {
-    signOut(auth).then(() => window.location.replace("login.html"));
-  });
-}
+// Nome da coleção no Firestore.
+// Colocamos numa constante porque, se um dia mudar, é só mudar AQUI.
+const NOME_COLECAO = "leads";
 
 
 /* ==========================================================================
- * SINCRONIZAÇÃO EM TEMPO REAL (FIRESTORE)
- * ========================================================================== */
-
-let listaInscricoes = [];
-
-function escutarInscricoes() {
-  const colRef = collection(db, "inscricoes");
-
-  onSnapshot(colRef, (snapshot) => {
-    listaInscricoes = [];
-
-    snapshot.forEach((docSnap) => {
-      const dataLead = docSnap.data();
-      if (!dataLead.excluido) {
-        listaInscricoes.push({ id: docSnap.id, ...dataLead });
-      }
-    });
-
-    listaInscricoes.sort((a, b) => {
-      const tempoA = a.criado_em ? new Date(a.criado_em).getTime() : (a.data?.seconds ? a.data.seconds * 1000 : 0);
-      const tempoB = b.criado_em ? new Date(b.criado_em).getTime() : (b.data?.seconds ? b.data.seconds * 1000 : 0);
-      return tempoB - tempoA;
-    });
-
-    renderizarTabela(listaInscricoes);
-  }, (error) => {
-    console.error("Erro na leitura do Firestore:", error);
-  });
-}
-
-export function obterListaInscricoes() {
-  return listaInscricoes;
-}
-
-
-/* ==========================================================================
- * GESTÃO DE ESTADO (WHATSAPP, PERDIDO, ETC.)
- * ========================================================================== */
-
-export async function atualizarStatusLead(id, novoStatus) {
-  try {
-    await updateDoc(doc(db, "inscricoes", id), { status: novoStatus });
-  } catch (err) {
-    console.error("Erro ao atualizar status do lead:", err);
-  }
-}
-
-
-/* ==========================================================================
- * FLUXO DE CONVERSÃO DE LEAD EM ALUNO (COM SUPORTE A PAGAMENTO PENDENTE/AGUARDANDO)
- * ========================================================================== */
-
-export async function processarMatriculaLead(lead, formaPagamento, statusPagamento, obsFinanceiro = "") {
-  try {
-    // 1. Validação do CPF obrigatório (exatamente 11 dígitos)
-    const cpfLimpo = (lead.cpf || "").replace(/\D/g, "");
-    if (cpfLimpo.length !== 11) {
-      throw new Error("O CPF é obrigatório e deve conter exatamente 11 dígitos numéricos para a conversão.");
-    }
-
-    const cleanPhone = (lead.telefone || "").replace(/\D/g, "");
-    const alunoId = cpfLimpo; // Usa o CPF como ID padrão e primário do aluno
-    const dataAtual = new Date().toISOString();
-
-    const inputValorEl = document.getElementById("input-valor-curso");
-    const selectParcelasEl = document.getElementById("select-parcelas");
-
-    const valorCurso = inputValorEl ? parseFloat(inputValorEl.value) || 0 : Number(lead.valorCurso || 0);
-    const parcelasStr = selectParcelasEl ? selectParcelasEl.value : "1x";
-
-    let formaPagamentoFinal = formaPagamento || "Pix";
-    if ((formaPagamentoFinal.includes("Cartão") || formaPagamentoFinal.includes("Boleto")) && parcelasStr && parcelasStr !== "1x") {
-      formaPagamentoFinal = `${formaPagamentoFinal} (${parcelasStr})`;
-    }
-
-    const nomeCursoDesejado = (lead.curso || "Geral").trim();
-    const statusFinanceiroFinal = statusPagamento || "Aguardando pagamento";
-
-    // 2. Localiza o curso correspondente na coleção de cursos para atualizar as vagas
-    const cursosRef = collection(db, "cursos");
-    const cursoSnapshot = await getDocs(cursosRef);
-
-    let cursoDocId = null;
-    cursoSnapshot.forEach((cursoDoc) => {
-      const data = cursoDoc.data();
-      if (data.nome && data.nome.trim().toLowerCase() === nomeCursoDesejado.toLowerCase()) {
-        cursoDocId = cursoDoc.id;
-      }
-    });
-
-    // 3. Cria ou atualiza o registo na coleção de Alunos
-    await setDoc(doc(db, "alunos", alunoId), {
-      nome: lead.nome || "Não informado",
-      email: lead.email || "",
-      telefone: cleanPhone,
-      curso: nomeCursoDesejado,
-      cpf: cpfLimpo,
-      empresa: lead.empresa || "",
-      status: "ativo",
-      lead_origem_id: lead.id,
-      criado_em: dataAtual
-    }, { merge: true });
-
-    // 4. Regista a matrícula formal na coleção 'matriculas' (respeitando o status financeiro escolhido)
-    await addDoc(collection(db, "matriculas"), {
-      aluno_id: alunoId,
-      aluno_nome: lead.nome || "Não informado",
-      aluno_telefone: cleanPhone,
-      aluno_email: lead.email || "",
-      curso_nome: nomeCursoDesejado,
-      forma_pagamento: formaPagamentoFinal,
-      status_pagamento: statusFinanceiroFinal,
-      status_matricula: "confirmada",
-      data_matricula: dataAtual
-    });
-
-    // 5. Regista a transação na coleção financeira (com o status e observação correspondentes)
-    await addDoc(collection(db, "financeiro"), {
-      alunoId: alunoId,
-      alunoNome: lead.nome || "Não informado",
-      curso: nomeCursoDesejado,
-      valor: valorCurso,
-      formaPagamento: formaPagamentoFinal,
-      status: statusFinanceiroFinal,
-      observacoes: obsFinanceiro,
-      criado_em: dataAtual
-    });
-
-    // 6. Atualiza as vagas do curso no Firestore (decrementa 1 vaga se encontrado)
-    if (cursoDocId) {
-      await updateDoc(doc(db, "cursos", cursoDocId), {
-        vagasDisponiveis: increment(-1)
-      });
-    }
-
-    // 7. Atualiza o status do lead original para matriculado e oculta da listagem principal
-    await updateDoc(doc(db, "inscricoes", lead.id), { 
-      status: "matriculado",
-      convertido_aluno: true,
-      excluido: true, 
-      atualizado_em: dataAtual
-    });
-
-    return true;
-  } catch (err) {
-    console.error("Erro ao processar matrícula e conversão:", err);
-    throw err;
-  }
-}
-
-/* ==========================================================================
- * BUSCA E ATUALIZAÇÃO DE DADOS (MODAL DE EDIÇÃO)
- * ========================================================================== */
-
-export async function carregarDadosEdicaoLead(id) {
-  try {
-    const docRef = doc(db, "inscricoes", id);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      preencherModalEdicao(id, docSnap.data());
-    } else {
-      console.warn("Inscrição não encontrada.");
-    }
-  } catch (error) {
-    console.error("Erro ao carregar dados do lead:", error);
-  }
-}
-
-export async function salvarEdicaoLead(id, dadosFormulario) {
-  const adminEmail = auth.currentUser ? auth.currentUser.email : "Sistema";
-  const dataHoraAtual = new Date().toISOString();
-
-  const docRef = doc(db, "inscricoes", id);
-  await updateDoc(docRef, {
-    ...dadosFormulario,
-    atualizado_por: adminEmail,
-    atualizado_em: dataHoraAtual
-  });
-}
-
-
-/* ==========================================================================
- * EXCLUSÃO LÓGICA DE LEADS
- * ========================================================================== */
-
-export async function executarExclusaoLogicaBackend(id) {
-  const docRef = doc(db, "inscricoes", id);
-  const adminEmail = auth.currentUser ? auth.currentUser.email : "Sistema";
-  const dataHoraAtual = new Date().toISOString();
-
-  await updateDoc(docRef, {
-    excluido: true,
-    atualizado_por: adminEmail,
-    atualizado_em: dataHoraAtual
-  });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const selectPagamento = document.getElementById("select-forma-pagamento");
-  const blocoParcelas = document.getElementById("bloco-parcelas");
-
-  if (selectPagamento) {
-    selectPagamento.addEventListener("change", (e) => {
-      const valor = e.target.value;
-      if (valor === "Cartão de Crédito" || valor === "Boleto Bancário") {
-        if (blocoParcelas) blocoParcelas.style.display = "block";
-      } else {
-        if (blocoParcelas) blocoParcelas.style.display = "none";
-      }
-    });
-  }
-});
-
-/* ==========================================================================
- * ESCUTA EM TEMPO REAL DE LEADS
+ * ESCUTA EM TEMPO REAL
+ * ==========================================================================
+ *
+ * "Escutar" significa: toda vez que um lead mudar no banco,
+ * o Firestore chama nossa função de volta (callback).
+ *
+ * Isso permite atualizar a tela SEM o usuário precisar dar F5.
  * ========================================================================== */
 
 /**
- * Escuta em tempo real os leads não-excluídos da coleção /leads.
- * @param {Function} callback - recebe o array de leads
- * @returns {Function} unsubscribe
+ * Escuta todos os leads não-excluídos em tempo real.
+ *
+ * @param {Function} callback — recebe o array de leads (mais recentes primeiro)
+ * @returns {Function} — função para CANCELAR a escuta (importante!)
  */
 export function escutarLeads(callback) {
-    const colRef = collection(db, "leads");
+    const colRef = collection(db, NOME_COLECAO);
 
-    return onSnapshot(colRef,
+    return onSnapshot(
+        colRef,
+
+        // SUCESSO: o Firestore mandou os dados
         (snapshot) => {
             const leads = [];
 
             snapshot.forEach((docSnap) => {
                 const dados = docSnap.data();
-                if (dados.excluido) return;   // ignora excluídos
+
+                // Ignora leads "excluídos" (soft delete)
+                if (dados.excluido) return;
+
                 leads.push({ id: docSnap.id, ...dados });
             });
 
             // Ordena: mais recentes primeiro
             leads.sort((a, b) => {
-                const tA = a.criado_em ? new Date(a.criado_em).getTime() : 0;
-                const tB = b.criado_em ? new Date(b.criado_em).getTime() : 0;
-                return tB - tA;
+                const tempoA = a.criado_em ? new Date(a.criado_em).getTime() : 0;
+                const tempoB = b.criado_em ? new Date(b.criado_em).getTime() : 0;
+                return tempoB - tempoA;
             });
 
             if (typeof callback === "function") callback(leads);
         },
+
+        // ERRO: algo deu errado (ex.: sem permissão)
         (erro) => {
             console.error("❌ Erro ao escutar /leads:", erro);
             if (typeof callback === "function") callback([]);
         }
     );
+}
+
+
+/* ==========================================================================
+ * LEITURA PONTUAL
+ * ==========================================================================
+ *
+ * Diferente de "escutar", aqui a gente lê UMA VEZ e pronto.
+ * Útil quando você só quer uma lista para exportar CSV, por exemplo.
+ * ========================================================================== */
+
+/**
+ * Lê todos os leads uma única vez.
+ *
+ * @returns {Promise<Array>} — array de leads
+ */
+export async function obterLeads() {
+    try {
+        const snap = await getDocs(collection(db, NOME_COLECAO));
+        const leads = [];
+
+        snap.forEach((d) => {
+            const dados = d.data();
+            if (!dados.excluido) {
+                leads.push({ id: d.id, ...dados });
+            }
+        });
+
+        return leads;
+    } catch (erro) {
+        console.error("❌ Erro ao obter leads:", erro);
+        throw erro;
+    }
+}
+
+
+/* ==========================================================================
+ * ATUALIZAR STATUS DO LEAD
+ * ==========================================================================
+ *
+ * Status possíveis (fluxo típico):
+ *   "Novo" → "Em Contato" → "Qualificado" → "Convertido" ou "Perdido"
+ * ========================================================================== */
+
+/**
+ * Atualiza o campo `status` de um lead.
+ *
+ * @param {string} id — ID do documento do lead
+ * @param {string} novoStatus — ex.: "Em Contato", "Qualificado"
+ */
+export async function atualizarStatusLead(id, novoStatus) {
+    try {
+        await updateDoc(doc(db, NOME_COLECAO, id), {
+            status: novoStatus,
+            atualizado_em: new Date().toISOString(),
+            // `?.` significa: se auth.currentUser for null, não quebra
+            atualizado_por: auth.currentUser?.email || "Sistema"
+        });
+    } catch (erro) {
+        console.error("❌ Erro ao atualizar status do lead:", erro);
+        throw erro;
+    }
+}
+
+
+/* ==========================================================================
+ * SALVAR EDIÇÃO COMPLETA
+ * ==========================================================================
+ *
+ * Quando o admin edita vários campos de uma vez no modal.
+ * ========================================================================== */
+
+/**
+ * Atualiza vários campos do lead de uma só vez.
+ *
+ * @param {string} id — ID do documento
+ * @param {Object} dados — objeto com os campos a atualizar
+ */
+export async function salvarEdicaoLead(id, dados) {
+    try {
+        await updateDoc(doc(db, NOME_COLECAO, id), {
+            ...dados,
+            atualizado_em: new Date().toISOString(),
+            atualizado_por: auth.currentUser?.email || "Sistema"
+        });
+    } catch (erro) {
+        console.error("❌ Erro ao salvar edição do lead:", erro);
+        throw erro;
+    }
+}
+
+
+/* ==========================================================================
+ * BUSCAR UM LEAD POR ID
+ * ==========================================================================
+ *
+ * Útil quando precisamos dos dados antes de abrir um modal de edição.
+ * A UI chama esta função, recebe os dados e preenche o modal.
+ * ========================================================================== */
+
+/**
+ * Busca um lead específico por ID.
+ *
+ * @param {string} id — ID do documento
+ * @returns {Promise<Object|null>} — os dados do lead, ou null se não existir
+ */
+export async function obterLeadPorId(id) {
+    try {
+        const snap = await getDoc(doc(db, NOME_COLECAO, id));
+
+        if (!snap.exists()) {
+            console.warn("⚠️ Lead não encontrado:", id);
+            return null;
+        }
+
+        return { id: snap.id, ...snap.data() };
+    } catch (erro) {
+        console.error("❌ Erro ao buscar lead:", erro);
+        throw erro;
+    }
+}
+
+
+/* ==========================================================================
+ * EXCLUSÃO LÓGICA (SOFT DELETE)
+ * ==========================================================================
+ *
+ * Em vez de APAGAR o documento, marcamos com `excluido: true`.
+ * Assim:
+ *   - O lead some da listagem
+ *   - Mas o histórico fica preservado
+ *   - Podemos "desfazer" se precisar
+ * ========================================================================== */
+
+/**
+ * Marca um lead como excluído (não apaga de verdade).
+ *
+ * @param {string} id — ID do documento
+ */
+export async function excluirLead(id) {
+    try {
+        await updateDoc(doc(db, NOME_COLECAO, id), {
+            excluido: true,
+            atualizado_em: new Date().toISOString(),
+            atualizado_por: auth.currentUser?.email || "Sistema"
+        });
+    } catch (erro) {
+        console.error("❌ Erro ao excluir lead:", erro);
+        throw erro;
+    }
 }
