@@ -8,9 +8,10 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="css/modules/global.css">
+  <!-- <link rel="stylesheet" href="css/modules/global.css"> -->
   <link rel="stylesheet" href="css/modules/sidebar.css">
   <link rel="stylesheet" href="css/modules/dashboard.css">
+  <link rel="stylesheet" href="css/modules/leadsETriagem.css">
   <link rel="stylesheet" href="css/style.css">
   <script>
     // Aplica o estado ativo imediatamente antes de renderizar a página
@@ -159,13 +160,48 @@
     <section class="card table-container">
       <div class="card-leads-container">
 
+        <!-- ─────────────────────────────────────────────────────────
+         HEADER: título + busca + filtros
+         ───────────────────────────────────────────────────────── -->
         <div class="leads-header">
+
           <h3>Inscrições Recentes</h3>
-          <select id="filter-priority" class="filtro-select">
-            <option value="all">Todas as prioridades</option>
-            <option value="alta">Alta Prioridade</option>
-            <option value="baixa">Baixa Prioridade</option>
-          </select>
+
+          <div class="leads-header-controls">
+
+            <!-- 🔍 Busca -->
+            <div class="input-group input-group-sm" style="width: 240px;">
+              <span class="input-group-text bg-white border-end-0">
+                <i class="fas fa-search text-muted"></i>
+              </span>
+              <input type="text" id="busca-lead" class="form-control border-start-0 ps-0"
+                placeholder="Buscar nome, email, curso..." autocomplete="off">
+            </div>
+
+            <!-- 🎯 Filtro de prioridade -->
+            <select id="filter-priority" class="filtro-select">
+              <option value="all">Todas as prioridades</option>
+              <option value="alta">Alta Prioridade</option>
+              <option value="media">Média Prioridade</option>
+              <option value="baixa">Baixa Prioridade</option>
+            </select>
+
+            <!-- 📄 Itens por página -->
+            <select id="itens-por-pagina" class="filtro-select">
+              <option value="10">10 por página</option>
+              <option value="20" selected>20 por página</option>
+              <option value="50">50 por página</option>
+              <option value="100">100 por página</option>
+            </select>
+
+          </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────────────────────
+         CONTADOR
+         ───────────────────────────────────────────────────────── -->
+        <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+          <small class="text-muted" id="contador-leads">Mostrando 0 de 0 leads</small>
         </div>
 
         <!-- DESKTOP: Tabela -->
@@ -188,10 +224,19 @@
           </table>
         </div>
 
-        <!-- MOBILE: Cards Empilhados -->
+        <!-- MOBILE: Cards -->
         <div class="view-mobile" id="leads-mobile-container">
           <!-- Cartões mobile via JS -->
         </div>
+
+        <!-- ─────────────────────────────────────────────────────────
+         PAGINAÇÃO
+         ───────────────────────────────────────────────────────── -->
+        <nav class="d-flex justify-content-center mt-3" aria-label="Navegação de páginas">
+          <ul class="pagination pagination-sm mb-0" id="paginacao-leads">
+            <!-- Botões gerados via JS -->
+          </ul>
+        </nav>
 
       </div>
     </section>
