@@ -1,200 +1,362 @@
-import { 
-    iniciarAutenticacaoFinanceiro, 
-    configurarLogout, 
+/**
+ * =========================================================================
+ * TRAINING WORK — UI FINANCEIRO (financeiro-ui.js)
+ * =========================================================================
+ *
+ * Camada de apresentação: só mexe no DOM.
+ * Escuta os dados do service e renderiza.
+ * =========================================================================
+ */
+
+import {
     escutarFinanceiro,
-    atualizarStatusFinanceiroBackend,
-    editarTransacaoFinanceiraBackend 
+    atualizarStatusFinanceiro,
+    editarTransacaoFinanceira,
+    excluirTransacaoFinanceira
 } from "../backend/financeiro-service.js";
 
-let graficoFluxoCaixaInstance = null;
-let graficoFormasPagamentoInstance = null;
-let listaTransacoesGlobal = [];
+/* =========================================================================
+ * ESTADO
+ * ========================================================================= */
+/* =========================================================================
+ * HELPERS DE FEEDBACK (substituem alert() e confirm())
+ * ========================================================================= */
 
-function formatarMoeda(valor) {
-    return Number(valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
+let modalConfirmacaoInstance = null;
+let toastSucessoInstance = null;
+let callbackConfirmacao = null;
 
-// 1. Inicialização
-iniciarAutenticacaoFinanceiro(() => {
-    configurarLogout();
-    escutarFinanceiro((transacoes) => {
-        listaTransacoesGlobal = transacoes;
-        atualizarDashboardFinanceiro(listaTransacoesGlobal);
-    });
-});
-
-/* ==========================================================================
- * PROCESSAMENTO DE DADOS E RENDERIZAÇÃO
- * ========================================================================== */
-
-function atualizarTransacoes(transacoes) {
-    const tbody = document.getElementById("financeiro-tbody");
-    const filtroStatus = document.getElementById("filtroStatusFinanceiro")?.value || "todos";
-    const termoBusca = (document.getElementById("busca-transacao")?.value || "").toLowerCase();
-
-    if (!tbody) return;
-    tbody.innerHTML = "";
-
-    // Aplica filtros combinados (Status + Termo de Busca por Aluno/Curso)
-    const filtradas = transacoes.filter(t => {
-        const statusMatch = filtroStatus === "todos" || (t.status || "").toLowerCase() === filtroStatus.toLowerCase();
-        const nomeAluno = (t.alunoNome || t.aluno_nome || "").toLowerCase();
-        const nomeCurso = (t.curso || "").toLowerCase();
-        const buscaMatch = nomeAluno.includes(termoBusca) || nomeCurso.includes(termoBusca);
-        return statusMatch && buscaMatch;
-    });
-
-    if (filtradas.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">Nenhum registo financeiro encontrado.</td></tr>`;
+/**
+ * Mostra um modal de confirmação estilizado.
+ *
+ * @param {Object} opcoes
+ * @param {string} opcoes.titulo — Título do modal
+ * @param {string} opcoes.mensagem — Texto principal
+ * @param {string} opcoes.textoBotao — Texto do botão de confirmar (padrão: "Confirmar")
+ * @param {string} opcoes.corBotao — Classe Bootstrap (padrão: "btn-primary")
+ * @param {string} opcoes.icone — Classe Font Awesome (padrão: "fa-question-circle")
+ * @param {Function} opcoes.onConfirmar — Função a executar ao confirmar
+ */
+function pedirConfirmacao(opcoes) {
+    const modalEl = document.getElementById("modalConfirmacao");
+    if (!modalEl) {
+        if (window.confirm(opcoes.mensagem)) {
+            if (typeof opcoes.onConfirmar === "function") opcoes.onConfirmar();
+        }
         return;
     }
 
-    let html = "";
-    filtradas.forEach(t => {
-        let dataFormatada = "Recente";
-        if (t.criado_em) {
-            dataFormatada = new Date(t.criado_em).toLocaleDateString("pt-BR");
-        }
+    // Mapeia ícone + cores conforme o tipo
+    const icones = {
+        "warning": { icone: "fa-exclamation-triangle", cor: "#f59e0b", fundo: "#fef3c7" },
+        "success": { icone: "fa-check-circle", cor: "#16a34a", fundo: "#dcfce7" },
+        "danger": { icone: "fa-trash-alt", cor: "#dc2626", fundo: "#fee2e2" },
+        "info": { icone: "fa-info-circle", cor: "#0284c7", fundo: "#e0f2fe" },
+    };
 
-        const status = t.status || "Aguardando pagamento";
+    const tipo = opcoes.tipo || "info";
+    const cfg = icones[tipo] || icones.info;
 
-        // Padronização exata das Pills (badges) idênticas ao restante do sistema
-        let badgeClass = "badge rounded-pill bg-warning bg-opacity-10 text-warning px-3 py-2 fw-normal border border-warning border-opacity-25";
-        let textoStatus = status;
+    // Ícone
+    const iconeEl = document.getElementById("modalConfirmacaoIcone");
+    if (iconeEl) {
+        iconeEl.style.background = cfg.fundo;
+        iconeEl.innerHTML = `<i class="fas ${cfg.icone} fa-2x" style="color: ${cfg.cor};"></i>`;
+    }
 
-        if (status.includes("Recebido") || status.includes("Pago")) {
-            badgeClass = "badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2 fw-normal border border-success border-opacity-25";
-            textoStatus = "Recebido";
-        } else if (status === "Pendente") {
-            badgeClass = "badge rounded-pill bg-info bg-opacity-10 text-info px-3 py-2 fw-normal border border-info border-opacity-25";
-        } else if (status.includes("Aguardando")) {
-            badgeClass = "badge rounded-pill bg-warning bg-opacity-10 text-warning px-3 py-2 fw-normal border border-warning border-opacity-25";
-        }
+    // Título
+    const titulo = document.getElementById("modalConfirmacaoTitulo");
+    if (titulo) titulo.textContent = opcoes.titulo || "Confirmação";
 
-        const ultimaData = t.ultima_alteracao_em || "";
-        const ultimoPor = t.ultima_alteracao_por || "";
-        const ultimaNota = t.auditoria_financeira || "";
+    // Mensagem
+    const mensagem = document.getElementById("modalConfirmacaoMensagem");
+    if (mensagem) {
+        // Suporta \n como <br>
+        mensagem.innerHTML = (opcoes.mensagem || "Tem certeza?")
+            .replace(/\n/g, "<br>");
+    }
 
-        const nomeAluno = t.alunoNome || t.aluno_nome || "";
-        const cursoNome = t.curso || "";
-        const formaPgto = t.formaPagamento || t.forma_pagamento || "Pix";
+    // Botão
+    const btn = document.getElementById("modalConfirmacaoBtn");
+    if (btn) {
+        btn.textContent = opcoes.textoBotao || "Confirmar";
+        btn.className = `btn ${opcoes.corBotao || "btn-primary"} px-4 rounded-pill fw-semibold`;
+    }
 
-        html += `
-          <tr>
-            <td>${dataFormatada}</td>
-            <td><strong>${nomeAluno || "Aluno"}</strong></td>
-            <td>${cursoNome || "Geral"}</td>
-            <td><span class="badge bg-light text-dark border">${formaPgto}</span></td>
-            <td class="fw-bold">${formatarMoeda(t.valor)}</td>
-            <td><span class="${badgeClass}">${textoStatus}</span></td>
-            <td class="text-end">
-              <div class="d-flex justify-content-end gap-1">
-                <button class="btn btn-sm btn-outline-success px-2 py-1 btn-validar-pagamento" data-id="${t.id}" data-alunoid="${t.alunoId || t.aluno_id || ''}" title="Validar Pagamento">
-                  <i class="fas fa-check"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-primary px-2 py-1 btn-editar-financeiro" 
-                    data-id="${t.id}" 
-                    data-alunoid="${t.alunoId || t.aluno_id || ''}" 
-                    data-nome="${nomeAluno}" 
-                    data-curso="${cursoNome}" 
-                    data-valor="${t.valor || 0}" 
-                    data-status="${status}" 
-                    data-forma="${formaPgto}" 
-                    data-ultima-data="${ultimaData}"
-                    data-ultimo-por="${ultimoPor}"
-                    data-ultima-nota="${ultimaNota}"
-                    title="Editar Transação, Descontos e Aluno">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-secondary px-2 py-1 btn-recibo-individual" 
-                    data-nome="${nomeAluno}" 
-                    data-curso="${cursoNome}" 
-                    data-valor="${formatarMoeda(t.valor)}" 
-                    data-status="${status}" 
-                    data-forma="${formaPgto}" 
-                    data-data="${dataFormatada}"
-                    title="Gerar Recibo / Relatório Individual">
-                  <i class="fas fa-file-alt"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-        `;
-    });
+    callbackConfirmacao = opcoes.onConfirmar;
 
-    tbody.innerHTML = html;
+    if (!modalConfirmacaoInstance && window.bootstrap) {
+        modalConfirmacaoInstance = new bootstrap.Modal(modalEl);
+    }
+    if (modalConfirmacaoInstance) modalConfirmacaoInstance.show();
 }
 
-function atualizarDashboardFinanceiro(transacoes) {
-    let totalRecebido = 0;
-    let totalPendente = 0;
-    let totalGeral = 0;
+/**
+ * Mostra um toast de sucesso no canto superior direito.
+ * @param {string} mensagem
+ */
+function mostrarSucesso(mensagem) {
+    const toastEl = document.getElementById("toastSucesso");
+    const mensagemEl = document.getElementById("toastSucessoMensagem");
 
-    let contagemFormas = { Pix: 0, "Cartão de Crédito": 0, "Boleto Bancário": 0, "À Vista": 0 };
-    let contagemStatus = { Recebido: 0, Pendente: 0, "Aguardando pagamento": 0 };
+    if (!toastEl) {
+        console.log("✅", mensagem);   // fallback
+        return;
+    }
 
-    transacoes.forEach(t => {
-        const valor = Number(t.valor || 0);
-        totalGeral += valor;
+    if (mensagemEl) mensagemEl.textContent = mensagem;
 
-        const status = t.status || "Aguardando pagamento";
-        if (status.includes("Recebido") || status.includes("Pago")) {
-            totalRecebido += valor;
-        } else {
-            totalPendente += valor;
-        }
-
-        if (contagemStatus[status] !== undefined) {
-            contagemStatus[status] += valor;
-        } else {
-            contagemStatus[status] = valor;
-        }
-
-        const forma = t.formaPagamento || t.forma_pagamento || "Pix";
-        if (contagemFormas[forma] !== undefined) {
-            contagemFormas[forma] += 1;
-        } else {
-            contagemFormas[forma] = 1;
-        }
-    });
-
-    // Atualiza os cartões de topo
-    const elRecebido = document.getElementById("financeiro-total-recebido");
-    const elPendente = document.getElementById("financeiro-total-pendente");
-    const elGeral = document.getElementById("financeiro-total-geral");
-
-    if (elRecebido) elRecebido.textContent = formatarMoeda(totalRecebido);
-    if (elPendente) elPendente.textContent = formatarMoeda(totalPendente);
-    if (elGeral) elGeral.textContent = formatarMoeda(totalGeral);
-
-    // Renderiza a tabela aplicando o filtro atual
-    atualizarTransacoes(transacoes);
-
-    // Renderiza os Gráficos
-    renderizarGraficos(contagemStatus, contagemFormas);
+    if (!toastSucessoInstance && window.bootstrap) {
+        toastSucessoInstance = new bootstrap.Toast(toastEl, { delay: 3000 });
+    }
+    if (toastSucessoInstance) toastSucessoInstance.show();
 }
 
-/* ==========================================================================
- * CONFIGURAÇÃO DOS GRÁFICOS (CHART.JS)
- * ========================================================================== */
+/**
+ * Mostra um toast de erro (vermelho).
+ */
+function mostrarErro(mensagem) {
+    const toastEl = document.getElementById("toastSucesso");
+    const mensagemEl = document.getElementById("toastSucessoMensagem");
 
-function renderizarGraficos(statusData, formasData) {
-    const ctxFluxo = document.getElementById("graficoFluxoCaixa")?.getContext("2d");
-    if (ctxFluxo) {
-        if (graficoFluxoCaixaInstance) graficoFluxoCaixaInstance.destroy();
+    if (!toastEl) {
+        console.error("❌", mensagem);
+        return;
+    }
 
-        graficoFluxoCaixaInstance = new Chart(ctxFluxo, {
-            type: 'bar',
+    toastEl.classList.remove("bg-success");
+    toastEl.classList.add("bg-danger");
+
+    if (mensagemEl) mensagemEl.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${mensagem}`;
+
+    const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+    toast.show();
+
+    // Volta ao normal depois
+    toastEl.addEventListener("hidden.bs.toast", () => {
+        toastEl.classList.remove("bg-danger");
+        toastEl.classList.add("bg-success");
+    }, { once: true });
+}
+let listaCompleta = [];
+let listaFiltrada = [];
+
+let paginaAtual = 1;
+let itensPorPagina = 20;
+
+let termoBusca = "";
+let filtroStatus = "todos";
+let filtroForma = "todas";
+
+let graficoFluxoInstance = null;
+let graficoFormasInstance = null;
+let modalEdicaoInstance = null;
+
+let timerBusca = null;
+
+/* =========================================================================
+ * HELPERS
+ * ========================================================================= */
+
+function formatarMoeda(valor) {
+    return Number(valor || 0).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+    });
+}
+
+/* =========================================================================
+ * BOOTSTRAP
+ * ========================================================================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("🚀 [financeiro-ui] Inicializando...");
+
+    // Modal de edição
+    const modalEl = document.getElementById("modalEditarFinanceiro");
+    if (modalEl && window.bootstrap) {
+        modalEdicaoInstance = new bootstrap.Modal(modalEl);
+    }
+
+    // ✅ Listener do botão de confirmação
+    const btnConf = document.getElementById("modalConfirmacaoBtn");
+    if (btnConf) {
+        btnConf.addEventListener("click", async () => {
+            if (typeof callbackConfirmacao === "function") {
+                const cb = callbackConfirmacao;
+                callbackConfirmacao = null;
+
+                // Fecha o modal antes de executar
+                if (modalConfirmacaoInstance) modalConfirmacaoInstance.hide();
+
+                try {
+                    await cb();
+                } catch (err) {
+                    console.error("Erro na ação confirmada:", err);
+                }
+            }
+        });
+    }
+
+    configurarFiltros();
+    configurarFormularioEdicao();
+    configurarEventosTabela();
+
+    escutarFinanceiro((transacoes) => {
+        console.log("📊 [financeiro-ui] Recebi", transacoes.length, "transações");
+        listaCompleta = transacoes;
+        paginaAtual = 1;
+        aplicarFiltrosERenderizar();
+    });
+});
+
+/* =========================================================================
+ * FILTROS
+ * ========================================================================= */
+
+function configurarFiltros() {
+    const inputBusca = document.getElementById("busca-transacao");
+    if (inputBusca) {
+        inputBusca.addEventListener("input", (e) => {
+            clearTimeout(timerBusca);
+            timerBusca = setTimeout(() => {
+                termoBusca = e.target.value.trim().toLowerCase();
+                paginaAtual = 1;
+                aplicarFiltrosERenderizar();
+            }, 300);
+        });
+    }
+
+    const selectStatus = document.getElementById("filtroStatusFinanceiro");
+    if (selectStatus) {
+        selectStatus.addEventListener("change", (e) => {
+            filtroStatus = e.target.value;
+            paginaAtual = 1;
+            aplicarFiltrosERenderizar();
+        });
+    }
+
+    const selectForma = document.getElementById("filtroFormaPagamento");
+    if (selectForma) {
+        selectForma.addEventListener("change", (e) => {
+            filtroForma = e.target.value;
+            paginaAtual = 1;
+            aplicarFiltrosERenderizar();
+        });
+    }
+
+    const selectItens = document.getElementById("itens-por-pagina-financeiro");
+    if (selectItens) {
+        selectItens.addEventListener("change", (e) => {
+            itensPorPagina = parseInt(e.target.value, 10) || 20;
+            paginaAtual = 1;
+            aplicarFiltrosERenderizar();
+        });
+    }
+}
+
+/* =========================================================================
+ * APLICAR FILTROS + PAGINAÇÃO + RENDERIZAR
+ * ========================================================================= */
+
+function aplicarFiltrosERenderizar() {
+    // 1. Busca textual
+    let filtrados = [...listaCompleta];
+
+    if (termoBusca) {
+        filtrados = filtrados.filter((t) => {
+            const nome = (t.alunoNome || "").toLowerCase();
+            const curso = (t.curso || "").toLowerCase();
+            const descricao = (t.descricao || "").toLowerCase();
+            return nome.includes(termoBusca)
+                || curso.includes(termoBusca)
+                || descricao.includes(termoBusca);
+        });
+    }
+
+    // 2. Status
+    if (filtroStatus !== "todos") {
+        filtrados = filtrados.filter((t) => t.status === filtroStatus);
+    }
+
+    // 3. Forma
+    if (filtroForma !== "todas") {
+        filtrados = filtrados.filter((t) => t.formaPagamento === filtroForma);
+    }
+
+    listaFiltrada = filtrados;
+
+    // 4. Paginação
+    const totalPaginas = Math.max(1, Math.ceil(filtrados.length / itensPorPagina));
+    if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+
+    const inicio = (paginaAtual - 1) * itensPorPagina;
+    const fim = inicio + itensPorPagina;
+    const pagina = filtrados.slice(inicio, fim);
+
+    // 5. Renderiza
+    renderizarTabela(pagina);
+    renderizarContador(filtrados.length, inicio, fim);
+    renderizarPaginacao(totalPaginas);
+    atualizarKPIs();
+    renderizarGraficos();
+}
+
+/* =========================================================================
+ * KPIs
+ * ========================================================================= */
+
+function atualizarKPIs() {
+    let recebido = 0, pendente = 0, aguardando = 0, total = 0;
+
+    listaCompleta.forEach((t) => {
+        const v = Number(t.valor || 0);
+        total += v;
+        if (t.status === "Recebido") recebido += v;
+        else if (t.status === "Pendente") pendente += v;
+        else aguardando += v;
+    });
+
+    const el1 = document.getElementById("financeiro-total-recebido");
+    const el2 = document.getElementById("financeiro-total-pendente");
+    const el3 = document.getElementById("financeiro-total-aguardando");
+    const el4 = document.getElementById("financeiro-total-geral");
+
+    if (el1) el1.textContent = formatarMoeda(recebido);
+    if (el2) el2.textContent = formatarMoeda(pendente);
+    if (el3) el3.textContent = formatarMoeda(aguardando);
+    if (el4) el4.textContent = formatarMoeda(total);
+}
+
+/* =========================================================================
+ * GRÁFICOS
+ * ========================================================================= */
+
+function renderizarGraficos() {
+    let recebido = 0, pendente = 0, aguardando = 0;
+    const formas = { "Pix": 0, "Cartão de Crédito": 0, "Boleto Bancário": 0, "À Vista": 0 };
+
+    listaCompleta.forEach((t) => {
+        const v = Number(t.valor || 0);
+        if (t.status === "Recebido") recebido += v;
+        else if (t.status === "Pendente") pendente += v;
+        else aguardando += v;
+
+        if (formas[t.formaPagamento] !== undefined) formas[t.formaPagamento] += v;
+    });
+
+    // Gráfico 1 — Fluxo
+    const ctx1 = document.getElementById("graficoFluxoCaixa")?.getContext("2d");
+    if (ctx1) {
+        if (graficoFluxoInstance) graficoFluxoInstance.destroy();
+        graficoFluxoInstance = new Chart(ctx1, {
+            type: "bar",
             data: {
-                labels: ['Recebido', 'Pendente', 'Aguardando Pagamento'],
+                labels: ["Recebido", "Pendente", "Aguardando"],
                 datasets: [{
-                    label: 'Valor (R$)',
-                    data: [
-                        statusData["Recebido (Pago)"] || statusData["Recebido"] || 0,
-                        statusData["Pendente"] || 0,
-                        statusData["Aguardando pagamento"] || 0
-                    ],
-                    backgroundColor: ['#198754', '#0dcaf0', '#ffc107'],
+                    label: "R$",
+                    data: [recebido, pendente, aguardando],
+                    backgroundColor: ["#198754", "#0dcaf0", "#ffc107"],
                     borderRadius: 6
                 }]
             },
@@ -207,241 +369,310 @@ function renderizarGraficos(statusData, formasData) {
         });
     }
 
-    const ctxFormas = document.getElementById("graficoFormasPagamento")?.getContext("2d");
-    if (ctxFormas) {
-        if (graficoFormasPagamentoInstance) graficoFormasPagamentoInstance.destroy();
-
-        graficoFormasPagamentoInstance = new Chart(ctxFormas, {
-            type: 'doughnut',
+    // Gráfico 2 — Formas
+    const ctx2 = document.getElementById("graficoFormasPagamento")?.getContext("2d");
+    if (ctx2) {
+        if (graficoFormasInstance) graficoFormasInstance.destroy();
+        graficoFormasInstance = new Chart(ctx2, {
+            type: "doughnut",
             data: {
-                labels: ['Pix', 'Cartão de Crédito', 'Boleto Bancário', 'À Vista'],
+                labels: ["Pix", "Cartão", "Boleto", "À Vista"],
                 datasets: [{
-                    data: [
-                        formasData["Pix"] || 0,
-                        formasData["Cartão de Crédito"] || 0,
-                        formasData["Boleto Bancário"] || 0,
-                        formasData["À Vista"] || 0
-                    ],
-                    backgroundColor: ['#0d6efd', '#6610f2', '#6c757d', '#20c997']
+                    data: [formas["Pix"], formas["Cartão de Crédito"], formas["Boleto Bancário"], formas["À Vista"]],
+                    backgroundColor: ["#0d6efd", "#6610f2", "#6c757d", "#20c997"]
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }
+                plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } } }
             }
         });
     }
 }
 
-/* ==========================================================================
- * EVENTOS DE INTERAÇÃO, PESQUISA E RELATÓRIOS
- * ========================================================================== */
+/* =========================================================================
+ * TABELA
+ * ========================================================================= */
 
-document.addEventListener("DOMContentLoaded", () => {
-    const selectFiltro = document.getElementById("filtroStatusFinanceiro");
-    if (selectFiltro) {
-        selectFiltro.addEventListener("change", () => {
-            atualizarTransacoes(listaTransacoesGlobal);
-        });
+function renderizarTabela(pagina) {
+    const tbody = document.getElementById("financeiro-tbody");
+    if (!tbody) return;
+
+    if (pagina.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">Nenhuma transação encontrada.</td></tr>`;
+        return;
     }
 
-    const inputBusca = document.getElementById("busca-transacao");
-    if (inputBusca) {
-        inputBusca.addEventListener("input", () => {
-            atualizarTransacoes(listaTransacoesGlobal);
-        });
-    }
+    let html = "";
 
-    // Ações de clique globais na tabela do financeiro
-    document.addEventListener("click", async (e) => {
-        // Ação: Validar Pagamento Rápido
-        const btnValidar = e.target.closest(".btn-validar-pagamento");
-        if (btnValidar) {
-            const transacaoId = btnValidar.getAttribute("data-id");
-            const alunoId = btnValidar.getAttribute("data-alunoid");
-            if (!transacaoId) return;
+    pagina.forEach((t) => {
+        const dataFmt = t.criado_em
+            ? new Date(t.criado_em).toLocaleDateString("pt-BR")
+            : "—";
 
-            try {
-                await atualizarStatusFinanceiroBackend(transacaoId, alunoId, "Recebido (Pago)", "Pix");
-            } catch (error) {
-                console.error("Erro ao validar pagamento:", error);
-            }
-            return;
-        }
+        // Badge de status
+        let badgeClass = "bg-warning bg-opacity-10 text-warning border border-warning";
+        if (t.status === "Recebido") badgeClass = "bg-success bg-opacity-10 text-success border border-success";
+        else if (t.status === "Pendente") badgeClass = "bg-info bg-opacity-10 text-info border border-info";
 
-        // Ação: Abrir Modal Detalhado de Edição
-        const btnEditar = e.target.closest(".btn-editar-financeiro");
-        if (btnEditar) {
-            const transacaoId = btnEditar.getAttribute("data-id");
-            const alunoId = btnEditar.getAttribute("data-alunoid");
-            const nomeAluno = btnEditar.getAttribute("data-nome") || "";
-            const curso = btnEditar.getAttribute("data-curso") || "";
-            const valorAtual = btnEditar.getAttribute("data-valor") || 0;
-            const statusAtual = btnEditar.getAttribute("data-status") || "Aguardando pagamento";
-            const formaAtual = btnEditar.getAttribute("data-forma") || "Pix";
-
-            const ultimaData = btnEditar.getAttribute("data-ultima-data") || "";
-            const ultimoPor = btnEditar.getAttribute("data-ultimo-por") || "";
-            const ultimaNota = btnEditar.getAttribute("data-ultima-nota") || "";
-
-            document.getElementById("finTransacaoId").value = transacaoId;
-            document.getElementById("finAlunoId").value = alunoId;
-            document.getElementById("finNomeAluno").value = nomeAluno;
-            document.getElementById("finCurso").value = curso;
-            document.getElementById("finValorBase").value = valorAtual;
-            document.getElementById("finStatusPagamento").value = statusAtual;
-            document.getElementById("finFormaPagamento").value = formaAtual;
-            document.getElementById("finAjusteTipo").value = "nenhum";
-            document.getElementById("finValorAjuste").value = "0";
-
-            const textareaNotas = document.getElementById("finAuditoriaNotas");
-            if (textareaNotas) textareaNotas.value = ultimaNota;
-
-            const boxInfo = document.getElementById("infoUltimaAlteracao");
-            const textoInfo = document.getElementById("textoUltimaAlteracao");
-            if (boxInfo && textoInfo) {
-                if (ultimaData && ultimoPor) {
-                    const dataFormatada = new Date(ultimaData).toLocaleString("pt-BR");
-                    textoInfo.innerHTML = `Última alteração por <strong>${ultimoPor}</strong> em <em>${dataFormatada}</em>`;
-                    boxInfo.style.display = "block";
-                } else {
-                    boxInfo.style.display = "none";
-                }
-            }
-
-            const modalEl = document.getElementById("modalEditarFinanceiro");
-            if (modalEl) {
-                const modal = window.bootstrap.Modal.getInstance(modalEl) || new window.bootstrap.Modal(modalEl);
-                modal.show();
-            }
-            return;
-        }
-
-        // Ação: Gerar Recibo / Relatório Individual
-        const btnRecibo = e.target.closest(".btn-recibo-individual");
-        if (btnRecibo) {
-            const nome = btnRecibo.getAttribute("data-nome");
-            const curso = btnRecibo.getAttribute("data-curso");
-            const valor = btnRecibo.getAttribute("data-valor");
-            const status = btnRecibo.getAttribute("data-status");
-            const forma = btnRecibo.getAttribute("data-forma");
-            const data = btnRecibo.getAttribute("data-data");
-
-            const janelaRecibo = window.open('', '_blank');
-            janelaRecibo.document.write(`
-                <html>
-                <head>
-                    <title>Recibo de Pagamento - ${nome}</title>
-                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-                </head>
-                <body class="p-5">
-                    <div class="container border p-4 rounded shadow-sm bg-white" style="max-width: 600px;">
-                        <h3 class="text-center text-primary mb-3">TrainingWork - Recibo de Pagamento</h3>
-                        <hr>
-                        <p><strong>Data:</strong> ${data}</p>
-                        <p><strong>Aluno:</strong> ${nome}</p>
-                        <p><strong>Curso / Treinamento:</strong> ${curso}</p>
-                        <p><strong>Forma de Pagamento:</strong> ${forma}</p>
-                        <p><strong>Valor:</strong> ${valor}</p>
-                        <p><strong>Status:</strong> <span class="badge bg-success">${status}</span></p>
-                        <hr>
-                        <div class="text-center mt-4">
-                            <button onclick="window.print()" class="btn btn-primary px-4">Imprimir Recibo</button>
-                        </div>
+        html += `
+            <tr>
+                <td>${dataFmt}</td>
+                <td><strong>${t.alunoNome || "—"}</strong></td>
+                <td>${t.curso || "—"}</td>
+                <td><span class="badge bg-light text-dark border">${t.formaPagamento}</span></td>
+                <td class="fw-bold">${formatarMoeda(t.valor)}</td>
+                <td><span class="badge rounded-pill ${badgeClass} px-3 py-2">${t.status}</span></td>
+                <td class="text-end">
+                    <div class="d-flex justify-content-end gap-1">
+                        <button class="btn btn-sm btn-outline-success px-2 py-1 btn-validar-pagamento"
+                                data-id="${t.id}" title="Marcar como Recebido">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary px-2 py-1 btn-editar-financeiro"
+                                data-id="${t.id}" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger px-2 py-1 btn-excluir-financeiro"
+                                data-id="${t.id}" title="Excluir">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </div>
-                </body>
-                </html>
-            `);
-            janelaRecibo.document.close();
-            return;
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+}
+
+/* =========================================================================
+ * CONTADOR + PAGINAÇÃO
+ * ========================================================================= */
+
+function renderizarContador(total, inicio, fim) {
+    const el = document.getElementById("contador-transacoes");
+    if (!el) return;
+    if (total === 0) {
+        el.textContent = "Nenhuma transação encontrada";
+        return;
+    }
+    el.textContent = `Mostrando ${inicio + 1}-${Math.min(fim, total)} de ${total} transações`;
+}
+
+function renderizarPaginacao(totalPaginas) {
+    const ul = document.getElementById("paginacao-financeiro");
+    if (!ul) return;
+
+    if (totalPaginas <= 1) {
+        ul.innerHTML = "";
+        return;
+    }
+
+    let html = "";
+
+    html += `<li class="page-item ${paginaAtual === 1 ? "disabled" : ""}">
+        <a class="page-link" href="#" data-page="${paginaAtual - 1}"><i class="fas fa-chevron-left"></i></a>
+    </li>`;
+
+    const paginas = calcularPaginasVisiveis(paginaAtual, totalPaginas);
+    paginas.forEach((p) => {
+        if (p === "...") {
+            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        } else {
+            html += `<li class="page-item ${p === paginaAtual ? "active" : ""}">
+                <a class="page-link" href="#" data-page="${p}">${p}</a>
+            </li>`;
         }
     });
 
-    // Ação: Gerar Relatório Geral do Financeiro
-    const btnRelatorioGeral = document.getElementById("btnRelatorioGeral");
-    if (btnRelatorioGeral) {
-        btnRelatorioGeral.addEventListener("click", () => {
-            const janelaRelatorio = window.open('', '_blank');
-            janelaRelatorio.document.write(`
-                <html>
-                <head>
-                    <title>Relatório Financeiro Geral</title>
-                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-                </head>
-                <body class="p-4">
-                    <div class="container">
-                        <h2 class="text-primary mb-3">Relatório Financeiro Geral - TrainingWork</h2>
-                        <p class="text-muted">Emitido em: ${new Date().toLocaleDateString("pt-BR")}</p>
-                        <table class="table table-bordered table-striped mt-3">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Data</th>
-                                    <th>Aluno</th>
-                                    <th>Curso</th>
-                                    <th>Forma</th>
-                                    <th>Valor</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${listaTransacoesGlobal.map(t => `
-                                    <tr>
-                                        <td>${t.criado_em ? new Date(t.criado_em).toLocaleDateString("pt-BR") : 'Recente'}</td>
-                                        <td>${t.alunoNome || t.aluno_nome || ''}</td>
-                                        <td>${t.curso || ''}</td>
-                                        <td>${t.formaPagamento || t.forma_pagamento || ''}</td>
-                                        <td>${formatarMoeda(t.valor)}</td>
-                                        <td>${t.status || ''}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                        <div class="text-end mt-4">
-                            <button onclick="window.print()" class="btn btn-primary px-4">Imprimir Relatório</button>
-                        </div>
-                    </div>
-                </body>
-                </html>
-            `);
-            janelaRelatorio.document.close();
-        });
-    }
+    html += `<li class="page-item ${paginaAtual === totalPaginas ? "disabled" : ""}">
+        <a class="page-link" href="#" data-page="${paginaAtual + 1}"><i class="fas fa-chevron-right"></i></a>
+    </li>`;
 
-    // Submissão do Formulário do Modal Financeiro com Auditoria
-    const formEditarFin = document.getElementById("formEditarFinanceiro");
-    if (formEditarFin) {
-        formEditarFin.addEventListener("submit", async (e) => {
+    ul.innerHTML = html;
+
+    ul.querySelectorAll("a.page-link").forEach((link) => {
+        link.addEventListener("click", (e) => {
             e.preventDefault();
-
-            const transacaoId = document.getElementById("finTransacaoId").value;
-            const alunoId = document.getElementById("finAlunoId").value;
-            const nomeAluno = document.getElementById("finNomeAluno").value;
-            const valorBase = parseFloat(document.getElementById("finValorBase").value) || 0;
-            const ajusteTipo = document.getElementById("finAjusteTipo").value;
-            const valorAjuste = parseFloat(document.getElementById("finValorAjuste").value) || 0;
-            const novoStatus = document.getElementById("finStatusPagamento").value;
-            const novaForma = document.getElementById("finFormaPagamento").value;
-            const notasAuditoria = document.getElementById("finAuditoriaNotas")?.value || "";
-
-            let valorFinal = valorBase;
-            if (ajusteTipo === "desconto") {
-                valorFinal = valorBase - (valorBase * (valorAjuste / 100));
-            } else if (ajusteTipo === "acrescimo") {
-                valorFinal = valorBase + (valorBase * (valorAjuste / 100));
-            }
-
-            try {
-                await editarTransacaoFinanceiraBackend(transacaoId, alunoId, nomeAluno, valorFinal, novoStatus, novaForma, notasAuditoria);
-
-                const modalEl = document.getElementById("modalEditarFinanceiro");
-                if (modalEl) {
-                    const modal = window.bootstrap.Modal.getInstance(modalEl);
-                    if (modal) modal.hide();
-                }
-            } catch (error) {
-                console.error("Erro ao atualizar transação com auditoria:", error);
+            const p = parseInt(link.getAttribute("data-page"), 10);
+            if (!isNaN(p) && p >= 1 && p <= totalPaginas && p !== paginaAtual) {
+                paginaAtual = p;
+                aplicarFiltrosERenderizar();
+                window.scrollTo({ top: 0, behavior: "smooth" });
             }
         });
+    });
+}
+
+function calcularPaginasVisiveis(atual, total) {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const paginas = [1];
+    if (atual > 4) paginas.push("...");
+    const inicio = Math.max(2, atual - 1);
+    const fim = Math.min(total - 1, atual + 1);
+    for (let i = inicio; i <= fim; i++) paginas.push(i);
+    if (atual < total - 3) paginas.push("...");
+    paginas.push(total);
+    return paginas;
+}
+
+/* =========================================================================
+ * EVENTOS DA TABELA
+ * ========================================================================= */
+
+function configurarEventosTabela() {
+    const tbody = document.getElementById("financeiro-tbody");
+    if (!tbody) return;
+
+    tbody.addEventListener("click", async (e) => {
+        // ═══════════════════════════════════════════════════════════
+        // VALIDAR PAGAMENTO
+        // ═══════════════════════════════════════════════════════════
+        const btnValidar = e.target.closest(".btn-validar-pagamento");
+        if (btnValidar) {
+            const id = btnValidar.getAttribute("data-id");
+
+            pedirConfirmacao({
+                titulo: "Marcar como Recebido",
+                mensagem: "Deseja marcar esta transação como RECEBIDA? O status será propagado para o aluno e matrículas.",
+                textoBotao: "Marcar Recebido",
+                corBotao: "btn-success",
+                icone: "fa-check-circle",
+                onConfirmar: async () => {
+                    try {
+                        await atualizarStatusFinanceiro(id, "Recebido", "Pix");
+                        mostrarSucesso("Transação marcada como recebida!");
+                    } catch (err) {
+                        mostrarErro("Erro ao validar pagamento: " + err.message);
+                    }
+                }
+            });
+            return;
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // EDITAR
+        // ═══════════════════════════════════════════════════════════
+        const btnEditar = e.target.closest(".btn-editar-financeiro");
+        if (btnEditar) {
+            const id = btnEditar.getAttribute("data-id");
+            abrirModalEdicao(id);
+            return;
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // EXCLUIR
+        // ═══════════════════════════════════════════════════════════
+        const btnExcluir = e.target.closest(".btn-excluir-financeiro");
+        if (btnExcluir) {
+            const id = btnExcluir.getAttribute("data-id");
+
+            pedirConfirmacao({
+                titulo: "Excluir Transação",
+                mensagem: "Deseja excluir esta transação? A exclusão é lógica (mantém histórico), e a transação desaparecerá da listagem.",
+                textoBotao: "Excluir",
+                corBotao: "btn-danger",
+                icone: "fa-exclamation-triangle",
+                onConfirmar: async () => {
+                    try {
+                        await excluirTransacaoFinanceira(id);
+                        mostrarSucesso("Transação excluída com sucesso!");
+                    } catch (err) {
+                        mostrarErro("Erro ao excluir: " + err.message);
+                    }
+                }
+            });
+            return;
+        }
+    });
+}
+/* =========================================================================
+ * MODAL DE EDIÇÃO
+ * ========================================================================= */
+
+function abrirModalEdicao(id) {
+    const t = listaCompleta.find((x) => x.id === id);
+    if (!t) return;
+
+    document.getElementById("finTransacaoId").value = t.id;
+    document.getElementById("finAlunoId").value = t.alunoId || "";
+    document.getElementById("finNomeAluno").value = t.alunoNome || "";
+    document.getElementById("finCurso").value = t.curso || "";
+    document.getElementById("finValorBase").value = t.valor || 0;
+    document.getElementById("finAjusteTipo").value = "nenhum";
+    document.getElementById("finValorAjuste").value = "0";
+    document.getElementById("finFormaPagamento").value = t.formaPagamento || "Pix";
+    document.getElementById("finStatusPagamento").value = t.status || "Aguardando pagamento";
+    document.getElementById("finAuditoriaNotas").value = t.auditoriaFinanceira || "";
+
+    // Auditoria
+    const boxInfo = document.getElementById("infoUltimaAlteracao");
+    const textoInfo = document.getElementById("textoUltimaAlteracao");
+    if (boxInfo && textoInfo) {
+        if (t.ultimaAlteracaoEm && t.ultimaAlteracaoPor) {
+            const fmt = new Date(t.ultimaAlteracaoEm).toLocaleString("pt-BR");
+            textoInfo.innerHTML = `Última alteração por <strong>${t.ultimaAlteracaoPor}</strong> em <em>${fmt}</em>`;
+            boxInfo.style.display = "block";
+        } else {
+            boxInfo.style.display = "none";
+        }
     }
-});
+
+    if (modalEdicaoInstance) modalEdicaoInstance.show();
+}
+
+function configurarFormularioEdicao() {
+    const form = document.getElementById("formEditarFinanceiro");
+    if (!form) return;
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const id = document.getElementById("finTransacaoId").value;
+        const alunoNome = document.getElementById("finNomeAluno").value;
+        const valorBase = parseFloat(document.getElementById("finValorBase").value) || 0;
+        const ajusteTipo = document.getElementById("finAjusteTipo").value;
+        const valorAjuste = parseFloat(document.getElementById("finValorAjuste").value) || 0;
+        const status = document.getElementById("finStatusPagamento").value;
+        const forma = document.getElementById("finFormaPagamento").value;
+        const obs = document.getElementById("finAuditoriaNotas").value;
+
+        let valorFinal = valorBase;
+        if (ajusteTipo === "desconto") valorFinal = valorBase - (valorBase * valorAjuste / 100);
+        else if (ajusteTipo === "acrescimo") valorFinal = valorBase + (valorBase * valorAjuste / 100);
+
+        // ⚡ Confirmação ANTES de salvar, com resumo das alterações
+        pedirConfirmacao({
+            tipo: "warning",
+            titulo: "Confirmar Alterações?",
+            mensagem: `Deseja realmente guardar as alterações desta transação?\n\n` +
+                `• Aluno: ${alunoNome}\n` +
+                `• Valor final: R$ ${valorFinal.toFixed(2).replace(".", ",")}\n` +
+                `• Status: ${status}\n` +
+                `• Forma: ${forma}`,
+            textoBotao: "Guardar Alterações",
+            corBotao: "btn-primary",
+            onConfirmar: async () => {
+                const btn = form.querySelector('button[type="submit"]');
+                if (btn) { btn.disabled = true; btn.textContent = "A guardar..."; }
+
+                try {
+                    await editarTransacaoFinanceira(id, {
+                        alunoNome, valor: valorFinal, status,
+                        formaPagamento: forma, observacoes: obs
+                    });
+
+                    if (modalEdicaoInstance) modalEdicaoInstance.hide();
+                    mostrarSucesso("Transação atualizada com sucesso!");
+
+                } catch (err) {
+                    mostrarErro("Erro ao guardar: " + err.message);
+                } finally {
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i> Guardar'; }
+                }
+            }
+        });
+    });
+}
