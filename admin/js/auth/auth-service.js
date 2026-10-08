@@ -49,10 +49,10 @@ export async function login(email, senha) {
     const credencial = await signInWithEmailAndPassword(auth, email, senha);
     const user = credencial.user;
 
-    // 2. ⚡ Espera o token estar pronto
+    // 2. Espera o token estar pronto
     await user.getIdToken();
 
-    // 3. ⚡ Pequena pausa para o token propagar
+    // 3.  Pequena pausa para o token propagar
     await new Promise((r) => setTimeout(r, 200));
 
     // 4. Busca o doc do admin
