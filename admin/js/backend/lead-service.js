@@ -1,5 +1,5 @@
 import { auth, db } from "../firebase-config.js"; 
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import {
   collection,
   onSnapshot,
@@ -12,7 +12,7 @@ import {
   query,
   where,
   increment
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 import { renderizarTabela, preencherModalEdicao } from "../frontend/lead-ui.js";
 
@@ -256,3 +256,41 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+/* ==========================================================================
+ * ESCUTA EM TEMPO REAL DE LEADS
+ * ========================================================================== */
+
+/**
+ * Escuta em tempo real os leads não-excluídos da coleção /leads.
+ * @param {Function} callback - recebe o array de leads
+ * @returns {Function} unsubscribe
+ */
+export function escutarLeads(callback) {
+    const colRef = collection(db, "leads");
+
+    return onSnapshot(colRef,
+        (snapshot) => {
+            const leads = [];
+
+            snapshot.forEach((docSnap) => {
+                const dados = docSnap.data();
+                if (dados.excluido) return;   // ignora excluídos
+                leads.push({ id: docSnap.id, ...dados });
+            });
+
+            // Ordena: mais recentes primeiro
+            leads.sort((a, b) => {
+                const tA = a.criado_em ? new Date(a.criado_em).getTime() : 0;
+                const tB = b.criado_em ? new Date(b.criado_em).getTime() : 0;
+                return tB - tA;
+            });
+
+            if (typeof callback === "function") callback(leads);
+        },
+        (erro) => {
+            console.error("❌ Erro ao escutar /leads:", erro);
+            if (typeof callback === "function") callback([]);
+        }
+    );
+}

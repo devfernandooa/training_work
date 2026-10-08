@@ -2,14 +2,14 @@
 // TRAINING WORK - SERVICE: VAGAS, METRICAS DO TOPO E DETALHES DA TURMA
 // ==========================================================================
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { 
     getFirestore, 
     collection, 
     getDocs,
     doc,
     getDoc 
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 let db;
 

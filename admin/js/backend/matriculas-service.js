@@ -2,7 +2,7 @@
 // TRAINING WORK - SERVICE: MATRÍCULAS (COM VALIDAÇÃO DE VAGAS DA TURMA)
 // ==========================================================================
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { 
     getFirestore, 
     collection, 
@@ -13,7 +13,7 @@ import {
     getDoc,
     query, 
     where 
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 let db;
 

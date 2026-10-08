@@ -226,7 +226,8 @@
                         <!-- E-mail validado logo abaixo do e-mail -->
                         <div class="form-check form-check-inline mt-1 mb-0">
                           <input class="form-check-input" type="checkbox" id="edit-email-validado">
-                          <label class="form-check-label small text-muted" for="edit-email-validado">E-mail Validado</label>
+                          <label class="form-check-label small text-muted" for="edit-email-validado">E-mail
+                            Validado</label>
                         </div>
                       </div>
                       <div class="col-md-6">
@@ -236,11 +237,13 @@
                         <div class="mt-1">
                           <div class="form-check form-check-inline mb-0">
                             <input class="form-check-input" type="checkbox" id="edit-zap-msg">
-                            <label class="form-check-label small text-muted" for="edit-zap-msg">Aceita Msg WhatsApp</label>
+                            <label class="form-check-label small text-muted" for="edit-zap-msg">Aceita Msg
+                              WhatsApp</label>
                           </div>
                           <div class="form-check form-check-inline mb-0">
                             <input class="form-check-input" type="checkbox" id="edit-zap-ligacao">
-                            <label class="form-check-label small text-muted" for="edit-zap-ligacao">Aceita Ligações WhatsApp</label>
+                            <label class="form-check-label small text-muted" for="edit-zap-ligacao">Aceita Ligações
+                              WhatsApp</label>
                           </div>
                         </div>
                       </div>
@@ -377,13 +380,15 @@
                     <div class="row g-2">
 
                       <div class="col-md-4">
-                        <label for="input-valor-curso" class="form-label small text-muted mb-1">Valor do Curso (R$) *</label>
+                        <label for="input-valor-curso" class="form-label small text-muted mb-1">Valor do Curso (R$)
+                          *</label>
                         <input type="number" step="0.01" class="form-control form-control-sm border-primary"
                           id="input-valor-curso" placeholder="Ex: 450.00" required>
                       </div>
 
                       <div class="col-md-4">
-                        <label for="select-forma-pagamento" class="form-label small text-muted mb-1">Forma de Pagamento *</label>
+                        <label for="select-forma-pagamento" class="form-label small text-muted mb-1">Forma de Pagamento
+                          *</label>
                         <select class="form-select form-select-sm border-primary" id="select-forma-pagamento">
                           <option value="Pix" selected>⚡ Pix (Instantâneo)</option>
                           <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
@@ -393,7 +398,8 @@
                       </div>
 
                       <div class="col-md-4">
-                        <label for="select-status-pagamento" class="form-label small text-muted mb-1">Status Financeiro *</label>
+                        <label for="select-status-pagamento" class="form-label small text-muted mb-1">Status Financeiro
+                          *</label>
                         <select class="form-select form-select-sm" id="select-status-pagamento">
                           <option value="Recebido">Recebido (Pago)</option>
                           <option value="Pendente">Pendente</option>
@@ -415,13 +421,16 @@
 
                       <!-- Campo de observações no financeiro -->
                       <div class="col-12">
-                        <label for="edit-obs-financeiro" class="form-label small text-muted mb-1">Observações Financeiras (Opcional)</label>
-                        <input type="text" class="form-control form-control-sm" id="edit-obs-financeiro" placeholder="Ex: Comprovante enviado via WhatsApp, aguardando compensação...">
+                        <label for="edit-obs-financeiro" class="form-label small text-muted mb-1">Observações
+                          Financeiras (Opcional)</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-obs-financeiro"
+                          placeholder="Ex: Comprovante enviado via WhatsApp, aguardando compensação...">
                       </div>
 
                       <!-- Botão redimensionado -->
                       <div class="col-12 mt-2 d-flex justify-content-end">
-                        <button type="button" class="btn btn-success btn-sm fw-bold px-4 rounded-pill" id="btn-executar-matricula">
+                        <button type="button" class="btn btn-success btn-sm fw-bold px-4 rounded-pill"
+                          id="btn-executar-matricula">
                           <i class="fas fa-check-circle me-1"></i> Converter em Aluno
                         </button>
                       </div>
@@ -441,12 +450,14 @@
                     </span>
                     <div class="row g-2">
                       <div class="col-12">
-                        <label for="edit-resumo-ia" class="form-label small text-muted mb-0">Análise do Gemini / Observações</label>
+                        <label for="edit-resumo-ia" class="form-label small text-muted mb-0">Análise do Gemini /
+                          Observações</label>
                         <textarea class="form-control form-control-sm" id="edit-resumo-ia" rows="2"
                           placeholder="Notas do atendimento..."></textarea>
                       </div>
                       <div class="col-12 mt-1">
-                        <label for="edit-atualizado-por" class="form-label small text-muted mb-0">Última Alteração</label>
+                        <label for="edit-atualizado-por" class="form-label small text-muted mb-0">Última
+                          Alteração</label>
                         <input type="text" class="form-control form-control-sm bg-white text-muted"
                           id="edit-atualizado-por" disabled readonly>
                       </div>
@@ -459,7 +470,8 @@
               <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
                 <button type="button" class="btn btn-light px-4 rounded-pill btn-sm"
                   data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary px-4 rounded-pill btn-sm" id="btn-save-edit">Salvar</button>
+                <button type="submit" class="btn btn-primary px-4 rounded-pill btn-sm"
+                  id="btn-save-edit">Salvar</button>
               </div>
             </form>
           </div>
@@ -494,15 +506,10 @@
     </div> <!-- Confirmação de Exclusão -->
   </main>
 
- <!-- Importação obrigatória do Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-
-  <!-- Scripts com caminhos relativos corretos a partir da pasta admin/ -->
-  <script type="module" src="js/modules/sidebar.js"></script>
-  <script type="module" src="js/auth-guard.js"></script>
-  <script type="module" src="js/firebase-config.js"></script>
-  <script type="module" src="js/backend/lead-service.js"></script>
-  <script type="module" src="js/frontend/lead-ui.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    crossorigin="anonymous"></script>
+  <script type="module" src="js/auth/auth-guard.js"></script>
+  <script type="module" src="js/auth/sidebar.js"></script>
 
 </body>
 

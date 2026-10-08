@@ -28,7 +28,7 @@ import {
     getDocs,
     setDoc,
     writeBatch
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 /* =========================================================================
  * UTILITÁRIOS INTERNOS
