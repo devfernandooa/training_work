@@ -1,353 +1,574 @@
-// ==========================================================================
-// TRAINING WORK - FRONTEND UI: CATÁLOGO DE CURSOS & TREINAMENTOS
-// ==========================================================================
+/**
+ * =========================================================================
+ * TRAINING WORK — UI DE CURSOS (cursos-ui.js)
+ * =========================================================================
+ *
+ * Camada de apresentação: só mexe no DOM.
+ * Escuta os dados do service e renderiza.
+ * =========================================================================
+ */
 
-import { auth } from "../firebase-config.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import {
-    escutarCursosService,
-    obterCursoPorIdService,
-    salvarCursoService,
-    inativarCursoService
+    escutarCursos,
+    obterCursoPorId,
+    criarCurso,
+    editarCurso,
+    excluirCurso
 } from "../backend/cursos-service.js";
 
-let listaCursos = [];
+/* =========================================================================
+ * ESTADO
+ * ========================================================================= */
+
+let listaCompleta = [];
+let listaFiltrada = [];
+
+let paginaAtual = 1;
+let itensPorPagina = 20;
+
+let termoBusca = "";
+let filtroSecao = "todos";
+let filtroStatus = "todos";
+
+let modalCursoInstance = null;
+let modalConfirmacaoInstance = null;
 let cursoIdParaExcluir = null;
-let cursoModalInstance = null;
+let toastInstance = null;
 
-onAuthStateChanged(auth, (user) => {
-    if (!user) {
-        window.location.replace("login.html");
-        return;
+let timerBusca = null;
+
+/* =========================================================================
+ * HELPERS
+ * ========================================================================= */
+
+function formatarMoeda(valor) {
+    return Number(valor || 0).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+    });
+}
+
+function getIconeSecao(secao) {
+    const s = String(secao || "grade").toLowerCase();
+    if (s === "nr") return "⚖️ Normas";
+    if (s === "oculto") return "🔒 Oculto";
+    return "📚 Grade";
+}
+
+function mostrarSucesso(msg) {
+    const toastEl = document.getElementById("toastCurso");
+    const mensagem = document.getElementById("toastCursoMensagem");
+    if (!toastEl) return console.log("✅", msg);
+
+    toastEl.classList.remove("bg-danger");
+    toastEl.classList.add("bg-success");
+    if (mensagem) mensagem.innerHTML = `<i class="fas fa-check-circle me-2"></i>${msg}`;
+
+    if (!toastInstance && window.bootstrap) {
+        toastInstance = new bootstrap.Toast(toastEl, { delay: 3000 });
     }
-
-    escutarCursosService((cursos) => {
-        listaCursos = cursos;
-        atualizarMetricas(listaCursos);
-        renderizarTabelaCursos(listaCursos);
-    });
-});
-
-/**
- * Atualiza os indicadores quantitativos no painel superior.
- */
-function atualizarMetricas(cursos) {
-    const total = cursos.length;
-    let turmasAbertas = 0;
-    let ativos = 0;
-
-    cursos.forEach(c => {
-        const status = (c.status || "").toLowerCase();
-        if (status === "turma aberta") turmasAbertas++;
-        if (status === "ativo" || status === "em andamento") ativos++;
-    });
-
-    const elTotal = document.getElementById("metric-total-cursos");
-    const elTurmas = document.getElementById("metric-turmas-abertas");
-    const elAtivos = document.getElementById("metric-ativos");
-
-    if (elTotal) elTotal.textContent = total;
-    if (elTurmas) elTurmas.textContent = turmasAbertas;
-    if (elAtivos) elAtivos.textContent = ativos;
+    if (toastInstance) toastInstance.show();
 }
 
-function capitalizarPrimeiraLetra(string) {
-    if (!string) return "Ativo";
-    const str = string.toLowerCase();
-    return str.charAt(0).toUpperCase() + str.slice(1);
+function mostrarErro(msg) {
+    const toastEl = document.getElementById("toastCurso");
+    const mensagem = document.getElementById("toastCursoMensagem");
+    if (!toastEl) return console.error("❌", msg);
+
+    toastEl.classList.remove("bg-success");
+    toastEl.classList.add("bg-danger");
+    if (mensagem) mensagem.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${msg}`;
+
+    const t = new bootstrap.Toast(toastEl, { delay: 4000 });
+    t.show();
 }
 
-/**
- * Renderiza as visões desktop (tabela) e mobile (cards) com base nos dados filtrados.
- */
-function renderizarTabelaCursos(cursos) {
-    const tbody = document.getElementById("cursos-tbody");
-    const mobileContainer = document.getElementById("cursos-mobile-container");
-    const inputBusca = document.getElementById("busca-curso");
-    const termoBusca = inputBusca ? inputBusca.value.toLowerCase() : "";
+/* =========================================================================
+ * BOOTSTRAP
+ * ========================================================================= */
 
-    if (!tbody) return;
+function inicializarModulo() {
+    console.log("🚀 [cursos-ui] Inicializando...");
 
-    const filtrados = cursos.filter(c => {
-        const nome = (c.nome || "").toLowerCase();
-        const codigo = (c.codigo || c.codigo_curso || "").toLowerCase();
-        return nome.includes(termoBusca) || codigo.includes(termoBusca);
-    });
+    configurarModais();
+    configurarFiltros();
+    configurarFormulario();
+    configurarEventosTabela();
+    configurarBotaoNovo();
+    configurarBotaoConfirmarExclusao();
 
-    if (filtrados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhum curso encontrado.</td></tr>`;
-        if (mobileContainer) {
-            mobileContainer.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhum curso encontrado.</div>`;
-        }
-        return;
-    }
-
-    let htmlDesktop = "";
-    let htmlMobile = "";
-
-    filtrados.forEach((curso, index) => {
-        const codCurso = curso.codigo_curso || curso.codigo || '-';
-        const codLimpo = codCurso.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-        const anoAtual = new Date().getFullYear();
-
-        let numeroTurma = curso.codigo_turma || curso.numero_turma || "";
-        if (!numeroTurma || numeroTurma.startsWith("TR-2026-") || numeroTurma === codCurso) {
-            const seq = String(index + 1).padStart(3, '0');
-            numeroTurma = `TR-${codLimpo}-${anoAtual}/${seq}`;
-        }
-
-        const statusBruto = (curso.status || "Ativo").toLowerCase();
-        const statusLabel = capitalizarPrimeiraLetra(curso.status || "Ativo");
-
-        let statusStyle = "border: 1px solid #22c55e; color: #15803d; background: #f0fdf4;";
-        if (statusBruto === "em andamento") {
-            statusStyle = "border: 1px solid #3b82f6; color: #1d4ed8; background: #eff6ff;";
-        } else if (statusBruto === "turma aberta") {
-            statusStyle = "border: 1px solid #10b981; color: #047857; background: #ecfdf5;";
-        } else if (statusBruto === "finalizado") {
-            statusStyle = "border: 1px solid #94a3b8; color: #475569; background: #f1f5f9;";
-        } else if (statusBruto === "turma lotada") {
-            statusStyle = "border: 1px solid #f97316; color: #c2410c; background: #fff7ed;";
-        }
-
-        const statusPill = `<span class="px-3 py-1 rounded-pill d-inline-flex align-items-center gap-1" style="${statusStyle} font-size: 0.82rem; font-weight: 500;">${statusLabel}</span>`;
-
-        const acoesBotoes = `
-            <div style="display: inline-flex; gap: 0.4rem; justify-content: center;">
-                <button data-id="${curso.id}" class="btn-icon btn-icon-edit btn-editar-curso" title="Editar Curso">
-                    <i class="fas fa-pen"></i>
-                </button>
-                <button data-id="${curso.id}" class="btn-icon btn-icon-delete btn-excluir-curso" title="Inativar Curso">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </div>
-        `;
-
-        htmlDesktop += `
-            <tr>
-                <td>
-                    <span class="fw-bold text-dark">${numeroTurma}</span><br>
-                    <small class="badge bg-light text-muted border font-monospace mt-1">${codCurso}</small>
-                </td>
-                <td>
-                    <strong>${curso.nome || "Não informado"}</strong><br>
-                    <small class="text-muted">${curso.instrutor || "A definir"}</small>
-                </td>
-                <td>${curso.carga || "0"} horas</td>
-                <td>R$ ${Number(curso.valor || 0).toFixed(2)}</td>
-                <td>${curso.modalidade || "Presencial"}</td>
-                <td>
-                    <span class="fw-semibold text-dark">${curso.vagasDisponiveis ?? '-'}</span> 
-                    <small class="text-muted">/ ${curso.vagasTotal ?? '-'}</small>
-                </td>
-                <td>${statusPill}</td>
-                <td style="text-align: right;">${acoesBotoes}</td>
-            </tr>
-        `;
-
-        htmlMobile += `
-            <div class="card bg-white border-0 shadow-sm p-3 mb-3 rounded-3">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div>
-                        <span class="badge bg-secondary mb-1">${numeroTurma}</span>
-                        <h6 class="fw-bold mb-0">${curso.nome || "Não informado"}</h6>
-                        <small class="text-muted">${curso.instrutor || "A definir"}</small>
-                    </div>
-                    <div>${statusPill}</div>
-                </div>
-                <div class="small text-muted mb-2">
-                    <div><strong>Carga:</strong> ${curso.carga || "0"}h | <strong>Valor:</strong> R$ ${Number(curso.valor || 0).toFixed(2)}</div>
-                    <div><strong>Vagas Disponíveis:</strong> <span class="text-dark fw-bold">${curso.vagasDisponiveis ?? '-'}</span> de ${curso.vagasTotal ?? '-'}</div>
-                </div>
-                <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-2">
-                    <small class="text-muted font-monospace">${codCurso}</small>
-                    <div>${acoesBotoes}</div>
-                </div>
-            </div>
-        `;
-    });
-
-    tbody.innerHTML = htmlDesktop;
-    if (mobileContainer) mobileContainer.innerHTML = htmlMobile;
-
-    configurarAcoesTabela();
-}
-
-/**
- * Atribui os event listeners aos elementos dinâmicos da tabela.
- */
-function configurarAcoesTabela() {
-    document.querySelectorAll(".btn-editar-curso").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            const id = e.currentTarget.getAttribute("data-id");
-            abrirModalEditarCurso(id);
+    try {
+        escutarCursos((cursos) => {
+            console.log("📊 [cursos-ui] Recebi", cursos.length, "cursos");
+            listaCompleta = cursos;
+            paginaAtual = 1;
+            aplicarFiltrosERenderizar();
         });
-    });
-
-    document.querySelectorAll(".btn-excluir-curso").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            const id = e.currentTarget.getAttribute("data-id");
-            iniciarExclusaoCurso(id);
-        });
-    });
-}
-
-/**
- * Carrega a entidade do curso e popula o formulário para edição.
- */
-async function abrirModalEditarCurso(id) {
-    try {
-        const data = await obterCursoPorIdService(id);
-        if (!data) return;
-
-        const setVal = (elementId, val) => {
-            const el = document.getElementById(elementId);
-            if (el) el.value = val !== undefined && val !== null ? val : "";
-        };
-
-        const codigoCursoBase = data.codigo_curso || data.codigo || "";
-        const codLimpo = codigoCursoBase.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-        const anoAtual = new Date().getFullYear();
-
-        setVal("codigoCurso", codigoCursoBase);
-
-        let codigoTurmaCalculado = data.codigo_turma || data.numero_turma || "";
-        if (!codigoTurmaCalculado || codigoTurmaCalculado === codigoCursoBase || codigoTurmaCalculado.startsWith("TR-2026-")) {
-            codigoTurmaCalculado = `TR-${codLimpo}-${anoAtual}/001`;
-        }
-
-        setVal("codigoTurma", codigoTurmaCalculado);
-        setVal("codigoCursoBase", codigoTurmaCalculado);
-
-        setVal("nomeCurso", data.nome);
-        setVal("cargaCurso", data.carga);
-        setVal("valorCurso", data.valor);
-        setVal("modalidadeCurso", data.modalidade || "Presencial");
-        setVal("statusCurso", data.status || "Ativo");
-        setVal("secaoExibicao", data.secaoExibicao || "grade");
-        setVal("vagasTotal", data.vagasTotal);
-        setVal("vagasDisponiveis", data.vagasDisponiveis);
-        setVal("instrutorCurso", data.instrutor);
-        setVal("descricaoCurso", data.descricao);
-        setVal("ementaCurso", data.ementa);
-
-        const modalEl = document.getElementById("novoCursoModal");
-        const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-        modalInstance.show();
-
-    } catch (err) {
-        console.error("Erro ao carregar curso para edição:", err);
+    } catch (erro) {
+        console.error("❌ Erro ao escutar cursos:", erro);
     }
 }
 
-function iniciarExclusaoCurso(id) {
-    cursoIdParaExcluir = id;
-    const modalEl = document.getElementById("modalConfirmarExclusaoCurso");
-    if (modalEl) {
-        const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-        modalInstance.show();
-    }
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", inicializarModulo);
+} else {
+    inicializarModulo();
 }
 
-async function executarInativacaoCurso() {
-    if (!cursoIdParaExcluir) return;
+/* =========================================================================
+ * MODAIS
+ * ========================================================================= */
 
-    try {
-        await inativarCursoService(cursoIdParaExcluir);
-
-        const modalEl = document.getElementById("modalConfirmarExclusaoCurso");
-        if (modalEl) {
-            const modalInstance = bootstrap.Modal.getInstance(modalEl);
-            if (modalInstance) modalInstance.hide();
-        }
-    } catch (err) {
-        console.error("Erro ao inativar curso:", err);
-        alert("Não foi possível inativar o curso.");
-    } finally {
-        cursoIdParaExcluir = null;
-    }
-}
-
-/**
- * Processa a submissão do formulário de criação/edição de curso.
- */
-async function salvarCursoHandler(e) {
-    e.preventDefault();
-
-    const inputId = document.getElementById("curso-id-oculto");
-    const cursoId = inputId ? inputId.value : "";
-
-    const getVal = (elementId) => {
-        const el = document.getElementById(elementId);
-        return el ? el.value : "";
-    };
-
-    const dadosCurso = {
-        nome: getVal("nomeCurso"),
-        codigo: getVal("codigoCurso"),
-        codigo_curso: getVal("codigoCurso"),
-        codigo_turma: getVal("codigoTurma") || getVal("codigoCursoBase"),
-        carga: getVal("cargaCurso"),
-        valor: Number(getVal("valorCurso") || 0),
-        modalidade: getVal("modalidadeCurso"),
-        status: getVal("statusCurso"),
-        secaoExibicao: getVal("secaoExibicao") || "grade",
-        vagasTotal: Number(getVal("vagasTotal") || 0),
-        vagasDisponiveis: Number(getVal("vagasDisponiveis") || 0),
-        instrutor: getVal("instrutorCurso"),
-        descricao: getVal("descricaoCurso"),
-        ementa: getVal("ementaCurso")
-    };
-
-    try {
-        await salvarCursoService(dadosCurso, cursoId || null);
-
-        const modalEl = document.getElementById("novoCursoModal");
-        if (modalEl) {
-            const modalInstance = bootstrap.Modal.getInstance(modalEl);
-            if (modalInstance) modalInstance.hide();
-        }
-    } catch (err) {
-        console.error("Erro ao salvar curso:", err);
-        alert(err.message || "Erro ao gravar dados do curso.");
-    }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    const modalCursoEl = document.getElementById("novoCursoModal");
+function configurarModais() {
+    const modalCursoEl = document.getElementById("modalCurso");
     if (modalCursoEl && window.bootstrap) {
-        cursoModalInstance = new bootstrap.Modal(modalCursoEl);
+        modalCursoInstance = new bootstrap.Modal(modalCursoEl);
     }
 
-    const btnConfirmarExcluir = document.getElementById("btn-confirmar-exclusao-curso");
-    if (btnConfirmarExcluir) {
-        btnConfirmarExcluir.addEventListener("click", executarInativacaoCurso);
+    const modalConfEl = document.getElementById("modalConfirmacaoCurso");
+    if (modalConfEl && window.bootstrap) {
+        modalConfirmacaoInstance = new bootstrap.Modal(modalConfEl);
     }
+}
 
-    const formCurso = document.getElementById("formNovoCurso");
-    if (formCurso) {
-        formCurso.addEventListener("submit", salvarCursoHandler);
-    }
+function configurarBotaoConfirmarExclusao() {
+    const btn = document.getElementById("btn-confirmar-exclusao-curso");
+    if (!btn) return;
 
+    btn.addEventListener("click", async () => {
+        if (!cursoIdParaExcluir) return;
+
+        btn.disabled = true;
+        btn.textContent = "A excluir...";
+
+        try {
+            await excluirCurso(cursoIdParaExcluir);
+            if (modalConfirmacaoInstance) modalConfirmacaoInstance.hide();
+            mostrarSucesso("Curso excluído com sucesso!");
+        } catch (err) {
+            mostrarErro("Erro ao excluir: " + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Excluir";
+            cursoIdParaExcluir = null;
+        }
+    });
+}
+
+/* =========================================================================
+ * FILTROS
+ * ========================================================================= */
+
+function configurarFiltros() {
     const inputBusca = document.getElementById("busca-curso");
     if (inputBusca) {
-        inputBusca.addEventListener("input", () => {
-            renderizarTabelaCursos(listaCursos);
+        inputBusca.addEventListener("input", (e) => {
+            clearTimeout(timerBusca);
+            timerBusca = setTimeout(() => {
+                termoBusca = e.target.value.trim().toLowerCase();
+                paginaAtual = 1;
+                aplicarFiltrosERenderizar();
+            }, 300);
         });
     }
 
-    const btnNovoCurso = document.getElementById("btn-novo-curso");
-    if (btnNovoCurso) {
-        btnNovoCurso.addEventListener("click", () => {
-            if (formCurso) formCurso.reset();
-            const inputId = document.getElementById("curso-id-oculto");
-            if (inputId) inputId.value = "";
-            const modalTitulo = document.getElementById("novoCursoModalLabel");
-            if (modalTitulo) modalTitulo.textContent = "Novo Treinamento";
-            const auditEl = document.getElementById("curso-atualizado-por");
-            if (auditEl) auditEl.value = "Registro novo";
-
-            if (cursoModalInstance) cursoModalInstance.show();
+    const selSecao = document.getElementById("filtro-secao");
+    if (selSecao) {
+        selSecao.addEventListener("change", (e) => {
+            filtroSecao = e.target.value;
+            paginaAtual = 1;
+            aplicarFiltrosERenderizar();
         });
     }
-});
+
+    const selStatus = document.getElementById("filtro-status-curso");
+    if (selStatus) {
+        selStatus.addEventListener("change", (e) => {
+            filtroStatus = e.target.value;
+            paginaAtual = 1;
+            aplicarFiltrosERenderizar();
+        });
+    }
+
+    const selItens = document.getElementById("itens-por-pagina-curso");
+    if (selItens) {
+        selItens.addEventListener("change", (e) => {
+            itensPorPagina = parseInt(e.target.value, 10) || 20;
+            paginaAtual = 1;
+            aplicarFiltrosERenderizar();
+        });
+    }
+}
+
+/* =========================================================================
+ * APLICAR FILTROS + PAGINAÇÃO + RENDERIZAR
+ * ========================================================================= */
+
+function aplicarFiltrosERenderizar() {
+    let filtrados = [...listaCompleta];
+
+    // 1. Busca textual
+    if (termoBusca) {
+        filtrados = filtrados.filter((c) => {
+            const nome = (c.nome || "").toLowerCase();
+            const codigo = (c.codigo || "").toLowerCase();
+            const apelido = (c.apelido || "").toLowerCase();
+            return nome.includes(termoBusca)
+                || codigo.includes(termoBusca)
+                || apelido.includes(termoBusca);
+        });
+    }
+
+    // 2. Filtro de seção
+    if (filtroSecao !== "todos") {
+        filtrados = filtrados.filter((c) => (c.secaoExibicao || "grade") === filtroSecao);
+    }
+
+    // 3. Filtro de status
+    if (filtroStatus !== "todos") {
+        const querAtivo = filtroStatus === "ativo";
+        filtrados = filtrados.filter((c) => Boolean(c.ativo) === querAtivo);
+    }
+
+    listaFiltrada = filtrados;
+
+    // 4. Paginação
+    const totalPaginas = Math.max(1, Math.ceil(filtrados.length / itensPorPagina));
+    if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+
+    const inicio = (paginaAtual - 1) * itensPorPagina;
+    const fim = inicio + itensPorPagina;
+    const pagina = filtrados.slice(inicio, fim);
+
+    // 5. Renderiza
+    renderizarTabela(pagina);
+    renderizarContador(filtrados.length, inicio, fim);
+    renderizarPaginacao(totalPaginas);
+    atualizarKPIs();
+}
+
+/* =========================================================================
+ * KPIs
+ * ========================================================================= */
+
+function atualizarKPIs() {
+    const total = listaCompleta.length;
+    const grade = listaCompleta.filter((c) => (c.secaoExibicao || "grade") === "grade").length;
+    const normas = listaCompleta.filter((c) => c.secaoExibicao === "nr").length;
+    const ocultos = listaCompleta.filter((c) => c.secaoExibicao === "oculto").length;
+
+    const elTotal = document.getElementById("kpi-total-cursos");
+    const elGrade = document.getElementById("kpi-grade");
+    const elNormas = document.getElementById("kpi-normas");
+    const elOcultos = document.getElementById("kpi-ocultos");
+
+    if (elTotal) elTotal.textContent = total;
+    if (elGrade) elGrade.textContent = grade;
+    if (elNormas) elNormas.textContent = normas;
+    if (elOcultos) elOcultos.textContent = ocultos;
+}
+
+/* =========================================================================
+ * TABELA
+ * ========================================================================= */
+
+function renderizarTabela(pagina) {
+    const tbody = document.getElementById("cursos-tbody");
+    if (!tbody) return;
+
+    if (pagina.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">Nenhum curso encontrado.</td></tr>`;
+        return;
+    }
+
+    let html = "";
+
+    pagina.forEach((curso) => {
+        const codCurso = curso.codigo || "—";
+        const apelido = curso.apelido || "";
+        const nome = curso.nome || "Sem nome";
+        const carga = curso.carga_horaria || 0;
+        const valor = formatarMoeda(curso.investimento_base);
+        const modalidade = curso.modalidade_padrao || "Presencial";
+        const secao = getIconeSecao(curso.secaoExibicao);
+
+        // Status
+        const badgeStatus = curso.ativo
+            ? `<span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success px-3 py-2">Ativo</span>`
+            : `<span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary px-3 py-2">Inativo</span>`;
+
+        html += `
+            <tr>
+                <td>
+                    <span class="fw-bold text-dark font-monospace">${codCurso}</span><br>
+                    <small class="text-muted">${apelido || "—"}</small>
+                </td>
+                <td>
+                    <strong>${nome}</strong>
+                </td>
+                <td>${carga}h</td>
+                <td>${valor}</td>
+                <td><small>${modalidade}</small></td>
+                <td><small>${secao}</small></td>
+                <td>${badgeStatus}</td>
+                <td class="text-end">
+                    <div class="d-flex justify-content-end gap-1">
+                        <button class="btn btn-sm btn-outline-primary px-2 py-1 btn-editar-curso" data-id="${curso.id}" title="Editar">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger px-2 py-1 btn-excluir-curso" data-id="${curso.id}" title="Excluir">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+}
+
+/* =========================================================================
+ * CONTADOR + PAGINAÇÃO
+ * ========================================================================= */
+
+function renderizarContador(total, inicio, fim) {
+    const el = document.getElementById("contador-cursos");
+    if (!el) return;
+
+    if (total === 0) {
+        el.textContent = "Nenhum curso encontrado";
+        return;
+    }
+    el.textContent = `Mostrando ${inicio + 1}-${Math.min(fim, total)} de ${total} curso${total > 1 ? "s" : ""}`;
+}
+
+function renderizarPaginacao(totalPaginas) {
+    const ul = document.getElementById("paginacao-cursos");
+    if (!ul) return;
+
+    if (totalPaginas <= 1) {
+        ul.innerHTML = "";
+        return;
+    }
+
+    let html = "";
+
+    html += `<li class="page-item ${paginaAtual === 1 ? "disabled" : ""}">
+        <a class="page-link" href="#" data-page="${paginaAtual - 1}"><i class="fas fa-chevron-left"></i></a>
+    </li>`;
+
+    const paginas = calcularPaginasVisiveis(paginaAtual, totalPaginas);
+    paginas.forEach((p) => {
+        if (p === "...") {
+            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        } else {
+            html += `<li class="page-item ${p === paginaAtual ? "active" : ""}">
+                <a class="page-link" href="#" data-page="${p}">${p}</a>
+            </li>`;
+        }
+    });
+
+    html += `<li class="page-item ${paginaAtual === totalPaginas ? "disabled" : ""}">
+        <a class="page-link" href="#" data-page="${paginaAtual + 1}"><i class="fas fa-chevron-right"></i></a>
+    </li>`;
+
+    ul.innerHTML = html;
+
+    ul.querySelectorAll("a.page-link").forEach((link) => {
+        link.addEventListener("click", (e) => {
+            e.preventDefault();
+            const p = parseInt(link.getAttribute("data-page"), 10);
+            if (!isNaN(p) && p >= 1 && p <= totalPaginas && p !== paginaAtual) {
+                paginaAtual = p;
+                aplicarFiltrosERenderizar();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+        });
+    });
+}
+
+function calcularPaginasVisiveis(atual, total) {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const paginas = [1];
+    if (atual > 4) paginas.push("...");
+    const inicio = Math.max(2, atual - 1);
+    const fim = Math.min(total - 1, atual + 1);
+    for (let i = inicio; i <= fim; i++) paginas.push(i);
+    if (atual < total - 3) paginas.push("...");
+    paginas.push(total);
+    return paginas;
+}
+
+/* =========================================================================
+ * EVENTOS DA TABELA
+ * ========================================================================= */
+
+function configurarEventosTabela() {
+    const tbody = document.getElementById("cursos-tbody");
+    if (!tbody) return;
+
+    tbody.addEventListener("click", async (e) => {
+        // Editar
+        const btnEditar = e.target.closest(".btn-editar-curso");
+        if (btnEditar) {
+            const id = btnEditar.getAttribute("data-id");
+            await abrirModalEdicao(id);
+            return;
+        }
+
+        // Excluir
+        const btnExcluir = e.target.closest(".btn-excluir-curso");
+        if (btnExcluir) {
+            cursoIdParaExcluir = btnExcluir.getAttribute("data-id");
+            if (modalConfirmacaoInstance) modalConfirmacaoInstance.show();
+            return;
+        }
+    });
+}
+
+/* =========================================================================
+ * MODAL DE EDIÇÃO / CRIAÇÃO
+ * ========================================================================= */
+
+async function abrirModalEdicao(id) {
+    try {
+        const curso = await obterCursoPorId(id);
+        if (!curso) {
+            mostrarErro("Curso não encontrado.");
+            return;
+        }
+
+        preencherFormulario(curso);
+
+        const titulo = document.getElementById("modalCursoTitulo");
+        if (titulo) titulo.innerHTML = `<i class="fas fa-book-medical me-2 text-primary"></i>Editar Curso`;
+
+        if (modalCursoInstance) modalCursoInstance.show();
+    } catch (erro) {
+        console.error("Erro ao abrir modal:", erro);
+        mostrarErro("Erro ao carregar dados do curso.");
+    }
+}
+
+function preencherFormulario(curso) {
+    const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val !== undefined && val !== null ? val : "";
+    };
+
+    setVal("cursoId", curso.id);
+    setVal("cursoNome", curso.nome);
+    setVal("cursoApelido", curso.apelido);
+    setVal("cursoCodigo", curso.codigo);
+    setVal("cursoModalidade", curso.modalidade_padrao);
+    setVal("cursoAtivo", curso.ativo ? "true" : "false");
+    setVal("cursoCarga", curso.carga_horaria);
+    setVal("cursoValor", curso.investimento_base);
+    setVal("cursoSecao", curso.secaoExibicao);
+    setVal("cursoDescricao", curso.descricao);
+    setVal("cursoEmenta", curso.ementa);
+
+    const auditEl = document.getElementById("cursoAuditoria");
+    if (auditEl) {
+        if (curso.atualizado_por && curso.atualizado_em) {
+            const fmt = new Date(curso.atualizado_em).toLocaleString("pt-BR");
+            auditEl.value = `Última alteração por ${curso.atualizado_por} em ${fmt}`;
+        } else {
+            auditEl.value = "Sem registo anterior";
+        }
+    }
+}
+
+function limparFormulario() {
+    const form = document.getElementById("formCurso");
+    if (form) form.reset();
+
+    const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+    };
+
+    setVal("cursoId", "");
+    setVal("cursoAtivo", "true");
+    setVal("cursoModalidade", "Presencial");
+    setVal("cursoSecao", "grade");
+    setVal("cursoAuditoria", "Registro novo");
+}
+
+/* =========================================================================
+ * FORMULÁRIO (submit)
+ * ========================================================================= */
+
+function configurarFormulario() {
+    const form = document.getElementById("formCurso");
+    if (!form) return;
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const getVal = (id) => document.getElementById(id)?.value || "";
+        const id = getVal("cursoId");
+
+        const dados = {
+            nome: getVal("cursoNome").trim(),
+            apelido: getVal("cursoApelido").trim(),
+            codigo: getVal("cursoCodigo").trim().toUpperCase(),
+            modalidade_padrao: getVal("cursoModalidade"),
+            ativo: getVal("cursoAtivo") === "true",
+            carga_horaria: Number(getVal("cursoCarga")) || 0,
+            investimento_base: Number(getVal("cursoValor")) || 0,
+            secaoExibicao: getVal("cursoSecao") || "grade",
+            descricao: getVal("cursoDescricao").trim(),
+            ementa: getVal("cursoEmenta").trim()
+        };
+
+        // Validação
+        if (!dados.nome) {
+            mostrarErro("Nome do curso é obrigatório.");
+            return;
+        }
+        if (!dados.codigo) {
+            mostrarErro("Código do curso é obrigatório.");
+            return;
+        }
+
+        const btn = document.getElementById("btn-salvar-curso");
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> A guardar...'; }
+
+        try {
+            if (id) {
+                await editarCurso(id, dados);
+                mostrarSucesso("Curso atualizado com sucesso!");
+            } else {
+                await criarCurso(dados);
+                mostrarSucesso("Curso criado com sucesso!");
+            }
+
+            if (modalCursoInstance) modalCursoInstance.hide();
+            limparFormulario();
+        } catch (err) {
+            mostrarErro("Erro ao guardar: " + err.message);
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i> Guardar Curso'; }
+        }
+    });
+}
+
+/* =========================================================================
+ * BOTÃO "NOVO CURSO"
+ * ========================================================================= */
+
+function configurarBotaoNovo() {
+    const btn = document.getElementById("btn-novo-curso");
+    if (!btn) return;
+
+    btn.addEventListener("click", () => {
+        limparFormulario();
+
+        const titulo = document.getElementById("modalCursoTitulo");
+        if (titulo) titulo.innerHTML = `<i class="fas fa-book-medical me-2 text-primary"></i>Novo Curso`;
+
+        if (modalCursoInstance) modalCursoInstance.show();
+    });
+}
