@@ -31,6 +31,13 @@ function normalizarCurso(docSnap) {
         carga_horaria: Number(d.carga_horaria || d.carga || 0),
         investimento_base: Number(d.investimento_base || d.valor || 0),
         modalidade_padrao: d.modalidade_padrao || d.modalidade || "Presencial",
+
+        // ⚡ NOVOS: Valores padrão para turmas
+        instrutor_padrao: d.instrutor_padrao || "",
+        dias_padrao: d.dias_padrao || "",
+        horario_padrao: d.horario_padrao || "",
+        turno_padrao: d.turno_padrao || "",
+
         secaoExibicao: d.secaoExibicao || "grade",
         ativo: d.ativo !== undefined ? !!d.ativo : (String(d.status || "ativo").toLowerCase() !== "inativo"),
         criado_em: d.criado_em || "",
@@ -40,12 +47,6 @@ function normalizarCurso(docSnap) {
     };
 }
 
-/**
- * Escuta cursos em tempo real.
- * @param {Function} callback
- * @param {Object} opcoes
- * @param {boolean} opcoes.incluirExcluidos — Se true, retorna também os excluídos
- */
 export function escutarCursos(callback, opcoes = {}) {
     const incluirExcluidos = opcoes.incluirExcluidos !== false;
     const colRef = collection(db, NOME_COLECAO);
@@ -110,6 +111,13 @@ export async function criarCurso(dados) {
             carga_horaria: Number(dados.carga_horaria || 0),
             investimento_base: Number(dados.investimento_base || 0),
             modalidade_padrao: dados.modalidade_padrao || "Presencial",
+
+            // ⚡ NOVOS
+            instrutor_padrao: String(dados.instrutor_padrao || "").trim(),
+            dias_padrao: String(dados.dias_padrao || "").trim(),
+            horario_padrao: String(dados.horario_padrao || "").trim(),
+            turno_padrao: String(dados.turno_padrao || "").trim(),
+
             secaoExibicao: dados.secaoExibicao || "grade",
             ativo: dados.ativo !== false,
             criado_em: agora,
@@ -144,6 +152,13 @@ export async function editarCurso(id, dados) {
             carga_horaria: Number(dados.carga_horaria || 0),
             investimento_base: Number(dados.investimento_base || 0),
             modalidade_padrao: dados.modalidade_padrao || "Presencial",
+
+            // ⚡ NOVOS
+            instrutor_padrao: String(dados.instrutor_padrao || "").trim(),
+            dias_padrao: String(dados.dias_padrao || "").trim(),
+            horario_padrao: String(dados.horario_padrao || "").trim(),
+            turno_padrao: String(dados.turno_padrao || "").trim(),
+
             secaoExibicao: dados.secaoExibicao || "grade",
             ativo: dados.ativo !== false,
             atualizado_em: agora,
@@ -159,9 +174,6 @@ export async function editarCurso(id, dados) {
     }
 }
 
-/**
- * Exclusão LÓGICA (soft delete). O doc permanece no Firestore com `excluido: true`.
- */
 export async function excluirCurso(id) {
     try {
         const usuario = auth.currentUser?.email || "Sistema";
@@ -179,10 +191,6 @@ export async function excluirCurso(id) {
     }
 }
 
-/**
- * ⚡ NOVO: Reativa um curso que foi excluído logicamente.
- * Remove o campo `excluido` (ou o coloca como false).
- */
 export async function reativarCurso(id) {
     try {
         const usuario = auth.currentUser?.email || "Sistema";

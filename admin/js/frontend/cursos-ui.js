@@ -551,6 +551,10 @@ function preencherFormulario(curso) {
     setVal("cursoSecao", curso.secaoExibicao);
     setVal("cursoDescricao", curso.descricao);
     setVal("cursoEmenta", curso.ementa);
+    setVal("cursoInstrutorPadrao", curso.instrutor_padrao || "");
+    setVal("cursoDiasPadrao", curso.dias_padrao || "");
+    setVal("cursoHorarioPadrao", curso.horario_padrao || "");
+    setVal("cursoTurnoPadrao", curso.turno_padrao || "");
 
     const auditEl = document.getElementById("cursoAuditoria");
     if (auditEl) {
@@ -577,6 +581,11 @@ function limparFormulario() {
     setVal("cursoModalidade", "Presencial");
     setVal("cursoSecao", "grade");
     setVal("cursoAuditoria", "Registro novo");
+    setVal("cursoInstrutorPadrao", "");
+    setVal("cursoDiasPadrao", "");
+    setVal("cursoHorarioPadrao", "");
+    setVal("cursoTurnoPadrao", "");
+
 }
 
 /* =========================================================================
@@ -601,6 +610,13 @@ function configurarFormulario() {
             ativo: getVal("cursoAtivo") === "true",
             carga_horaria: Number(getVal("cursoCarga")) || 0,
             investimento_base: Number(getVal("cursoValor")) || 0,
+
+            // ⚡ NOVOS
+            instrutor_padrao: getVal("cursoInstrutorPadrao").trim(),
+            dias_padrao: getVal("cursoDiasPadrao").trim(),
+            horario_padrao: getVal("cursoHorarioPadrao").trim(),
+            turno_padrao: getVal("cursoTurnoPadrao"),
+
             secaoExibicao: getVal("cursoSecao") || "grade",
             descricao: getVal("cursoDescricao").trim(),
             ementa: getVal("cursoEmenta").trim()
