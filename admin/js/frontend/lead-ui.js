@@ -3,20 +3,15 @@
  * TRAINING WORK — UI DE LEADS (lead-ui.js)
  * =========================================================================
  *
- * Este arquivo cuida da TELA de leads.
- *
- * O QUE É UM UI?
- * O UI pega os dados do service e mostra no HTML.
- * Ele NUNCA fala direto com o Firestore — quem faz isso é o service.
- *
- * DIVISÃO DE RESPONSABILIDADES:
- *   - lead-service.js → conversa com o Firestore
- *   - lead-ui.js      → mostra no HTML, trata cliques
- *   - lead_e_triagem.html → estrutura da página
+ * Responsabilidades:
+ *   - Escutar os leads do service (escutarLeads);
+ *   - Renderizar tabela (desktop) e cards (mobile);
+ *   - Aplicar filtros: busca + prioridade;
+ *   - Aplicar paginação;
+ *   - Tratar cliques: editar, excluir, contatar.
  * =========================================================================
  */
 
-// ✅ IMPORTS CORRIGIDOS — só funções que EXISTEM no service
 import {
     escutarLeads,
     atualizarStatusLead,
@@ -25,45 +20,48 @@ import {
     excluirLead
 } from "../backend/lead-service.js";
 
-// Referências dos modais do Bootstrap
+/* ==========================================================================
+ * ESTADO GLOBAL DA PÁGINA
+ * ========================================================================== */
+
+let listaLeadsCompleta = [];       // todos os leads do Firestore
+let listaLeadsFiltrada = [];       // após aplicar busca + prioridade
+
+let paginaAtual = 1;
+let itensPorPagina = 20;
+let termoBusca = "";
+
 let editModalInstance = null;
 let excluirModalInstance = null;
 let leadIdParaExcluir = null;
 
-// Guarda a lista atual de leads para filtros
-let listaLeadsAtual = [];
+let timerBusca = null;             // debounce da busca
 
 
 /* ==========================================================================
  * INICIALIZAÇÃO
- * ==========================================================================
- *
- * Tudo começa aqui: quando a página carrega, começamos a escutar os leads
- * no Firestore. Sempre que mudar algo, a função `renderizarTabela` roda.
  * ========================================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
     console.log("🚀 [lead-ui] Inicializando...");
 
-    // 1. Configurar modais
     configurarModais();
+    configurarFiltros();
+    configurarBusca();
+    configurarSeletorItensPorPagina();
+    configurarFormularioEdicao();
+    configurarViaCEP();
+    configurarBotaoConversao();
 
-    // 2. Escutar leads em tempo real
     try {
         escutarLeads((leads) => {
-            console.log("📊 [lead-ui] Recebi", leads.length, "leads");
-            listaLeadsAtual = leads;
-            renderizarTabela(leads);
+            listaLeadsCompleta = leads;
+            paginaAtual = 1;              // reseta ao receber novos dados
+            aplicarFiltrosERenderizar();
         });
     } catch (erro) {
         console.error("❌ Erro ao escutar leads:", erro);
     }
-
-    // 3. Configurar filtros e formulários
-    configurarFiltros();
-    configurarFormularioEdicao();
-    configurarViaCEP();
-    configurarBotaoConversao();
 });
 
 
@@ -82,7 +80,6 @@ function configurarModais() {
         excluirModalInstance = new bootstrap.Modal(modalExcluirEl);
     }
 
-    // Botão de confirmar exclusão
     const btnConfirmarExclusao = document.getElementById("btn-confirmar-exclusao");
     if (btnConfirmarExclusao) {
         btnConfirmarExclusao.addEventListener("click", async () => {
@@ -108,50 +105,158 @@ function configurarModais() {
 
 
 /* ==========================================================================
- * RENDERIZAÇÃO DA TABELA (DESKTOP) E CARDS (MOBILE)
- * ==========================================================================
- *
- * Essa função é chamada SEMPRE que a lista de leads muda no Firestore.
- * Ela monta o HTML da tabela e dos cards mobile.
+ * FILTROS
  * ========================================================================== */
 
-function renderizarTabela(leads) {
-    const tbody = document.getElementById("leads-tbody");
-    const mobileContainer = document.getElementById("leads-mobile-container");
-    const filterElement = document.getElementById("filter-priority");
-    const filtro = filterElement ? filterElement.value : "all";
+function configurarFiltros() {
+    const filterPriority = document.getElementById("filter-priority");
+    if (filterPriority) {
+        filterPriority.addEventListener("change", () => {
+            paginaAtual = 1;
+            aplicarFiltrosERenderizar();
+        });
+    }
+}
 
-    if (!tbody) return;
 
-    // Aplica filtro de prioridade
-    const filtrados = filtro === "all"
-        ? leads
-        : leads.filter((l) => (l.prioridade || "Média").toLowerCase() === filtro.toLowerCase());
+/* ==========================================================================
+ * BUSCA COM DEBOUNCE
+ * ==========================================================================
+ * Debounce = esperar 300ms após a última tecla antes de filtrar.
+ * Sem isso, o filtro roda a cada letra digitada, o que trava a UI.
+ * ========================================================================== */
 
-    // Contadores para os KPIs
+function configurarBusca() {
+    const inputBusca = document.getElementById("busca-lead");
+    if (!inputBusca) return;
+
+    inputBusca.addEventListener("input", (e) => {
+        clearTimeout(timerBusca);
+        timerBusca = setTimeout(() => {
+            termoBusca = e.target.value.trim().toLowerCase();
+            paginaAtual = 1;
+            aplicarFiltrosERenderizar();
+        }, 300);
+    });
+}
+
+
+/* ==========================================================================
+ * SELETOR DE ITENS POR PÁGINA
+ * ========================================================================== */
+
+function configurarSeletorItensPorPagina() {
+    const selectItens = document.getElementById("itens-por-pagina");
+    if (!selectItens) return;
+
+    selectItens.addEventListener("change", (e) => {
+        itensPorPagina = parseInt(e.target.value, 10) || 20;
+        paginaAtual = 1;
+        aplicarFiltrosERenderizar();
+    });
+}
+
+
+/* ==========================================================================
+ * APLICAR FILTROS + PAGINAÇÃO + RENDERIZAR
+ * ==========================================================================
+ * Ordem:
+ *   1. Filtra por busca (nome, email, curso)
+ *   2. Filtra por prioridade
+ *   3. Aplica paginação (fatia)
+ *   4. Renderiza
+ * ========================================================================== */
+
+function aplicarFiltrosERenderizar() {
+    // 1. Busca textual
+    let filtrados = [...listaLeadsCompleta];
+
+    if (termoBusca) {
+        filtrados = filtrados.filter((lead) => {
+            const nome = (lead.nome || "").toLowerCase();
+            const email = (lead.email || "").toLowerCase();
+            const curso = (lead.curso || "").toLowerCase();
+            return nome.includes(termoBusca)
+                || email.includes(termoBusca)
+                || curso.includes(termoBusca);
+        });
+    }
+
+    // 2. Filtro de prioridade
+    const filterPriority = document.getElementById("filter-priority");
+    const filtroPrio = filterPriority ? filterPriority.value : "all";
+
+    if (filtroPrio !== "all") {
+        filtrados = filtrados.filter((lead) => {
+            const prio = (lead.prioridade || "média").toLowerCase();
+            return prio === filtroPrio.toLowerCase();
+        });
+    }
+
+    listaLeadsFiltrada = filtrados;
+
+    // 3. Paginação
+    const totalPaginas = Math.max(1, Math.ceil(filtrados.length / itensPorPagina));
+
+    if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+    if (paginaAtual < 1) paginaAtual = 1;
+
+    const inicio = (paginaAtual - 1) * itensPorPagina;
+    const fim = inicio + itensPorPagina;
+    const pagina = filtrados.slice(inicio, fim);
+
+    // 4. Renderiza
+    renderizarTabela(pagina, filtrados.length, inicio, fim);
+    renderizarContador(filtrados.length, inicio, fim);
+    renderizarPaginacao(totalPaginas);
+    atualizarKPIs();
+}
+
+
+/* ==========================================================================
+ * ATUALIZAR KPIs DO TOPO (sempre com base na lista completa)
+ * ========================================================================== */
+
+function atualizarKPIs() {
     let alta = 0;
     let emAtendimento = 0;
 
-    leads.forEach((l) => {
+    listaLeadsCompleta.forEach((l) => {
         const prio = (l.prioridade || "").toLowerCase();
         const stat = (l.status || "").toLowerCase();
         if (prio === "alta") alta++;
-        if (stat === "em_contato" || stat === "em atendimento" || stat === "em atendimento") emAtendimento++;
+        if (stat === "em_contato" || stat === "em atendimento") emAtendimento++;
     });
 
     const elTotal = document.getElementById("metric-total");
     const elAlta = document.getElementById("metric-alta");
     const elAtendimento = document.getElementById("metric-atendimento");
 
-    if (elTotal) elTotal.textContent = leads.length;
+    if (elTotal) elTotal.textContent = listaLeadsCompleta.length;
     if (elAlta) elAlta.textContent = alta;
     if (elAtendimento) elAtendimento.textContent = emAtendimento;
+}
 
-    // Se não tem leads, mostra mensagem
-    if (filtrados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhuma inscrição encontrada.</td></tr>`;
+
+/* ==========================================================================
+ * RENDERIZAR TABELA
+ * ========================================================================== */
+
+function renderizarTabela(pagina, totalFiltrados, inicio, fim) {
+    const tbody = document.getElementById("leads-tbody");
+    const mobileContainer = document.getElementById("leads-mobile-container");
+
+    if (!tbody) return;
+
+    // Estado vazio
+    if (pagina.length === 0) {
+        const msg = listaLeadsCompleta.length === 0
+            ? "Nenhuma inscrição encontrada."
+            : "Nenhum lead corresponde aos filtros atuais.";
+
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 2rem;">${msg}</td></tr>`;
         if (mobileContainer) {
-            mobileContainer.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhuma inscrição encontrada.</div>`;
+            mobileContainer.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">${msg}</div>`;
         }
         return;
     }
@@ -159,7 +264,7 @@ function renderizarTabela(leads) {
     let htmlDesktop = "";
     let htmlMobile = "";
 
-    filtrados.forEach((lead) => {
+    pagina.forEach((lead) => {
         // ── Badge de prioridade ──
         const prioridade = lead.prioridade || "Média";
         let badgeClass = "bg-warning text-dark";
@@ -184,7 +289,7 @@ function renderizarTabela(leads) {
 
         const statusPill = `<span class="status-pill px-3 py-1 rounded-pill d-inline-flex align-items-center gap-1" style="${statusStyle} font-size: 0.82rem; font-weight: 500;">${lead.status || "Novo"}</span>`;
 
-        // ── Data formatada ──
+        // ── Data ──
         let dataFormatada = "Recente";
         if (lead.criado_em) {
             dataFormatada = new Date(lead.criado_em).toLocaleDateString("pt-BR");
@@ -194,30 +299,24 @@ function renderizarTabela(leads) {
             dataFormatada = new Date(lead.data.seconds * 1000).toLocaleDateString("pt-BR");
         }
 
-        // ── Botões de ação ──
+        // ── Botões ──
         const acoesBotoes = `
             <div class="actions-group" style="display: inline-flex; gap: 0.4rem; justify-content: center;">
                 <a href="https://wa.me/${lead.telefone || ""}" target="_blank"
                    class="btn-icon btn-icon-whatsapp text-decoration-none"
-                   title="Contatar WhatsApp"
-                   data-action="contatar"
-                   data-id="${lead.id}">
+                   title="Contatar WhatsApp" data-action="contatar" data-id="${lead.id}">
                     <i class="fab fa-whatsapp"></i>
                 </a>
-                <button class="btn-icon btn-icon-edit btn-editar-action"
-                        data-id="${lead.id}"
-                        title="Editar Lead">
+                <button class="btn-icon btn-icon-edit btn-editar-action" data-id="${lead.id}" title="Editar Lead">
                     <i class="fas fa-pen"></i>
                 </button>
-                <button class="btn-icon btn-icon-delete btn-excluir-action"
-                        data-id="${lead.id}"
-                        title="Excluir Lead">
+                <button class="btn-icon btn-icon-delete btn-excluir-action" data-id="${lead.id}" title="Excluir Lead">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </div>
         `;
 
-        // ── Versão DESKTOP ──
+        // ── HTML Desktop ──
         htmlDesktop += `
             <tr>
                 <td>${dataFormatada}</td>
@@ -235,7 +334,7 @@ function renderizarTabela(leads) {
             </tr>
         `;
 
-        // ── Versão MOBILE ──
+        // ── HTML Mobile ──
         htmlMobile += `
             <div class="card-lead-item" style="background: white; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
@@ -261,31 +360,132 @@ function renderizarTabela(leads) {
     tbody.innerHTML = htmlDesktop;
     if (mobileContainer) mobileContainer.innerHTML = htmlMobile;
 
-    // Configura os cliques dos botões recém-criados
     configurarEventosTabela();
 }
 
 
 /* ==========================================================================
+ * CONTADOR "X-Y de Z leads"
+ * ========================================================================== */
+
+function renderizarContador(totalFiltrado, inicio, fim) {
+    const el = document.getElementById("contador-leads");
+    if (!el) return;
+
+    if (totalFiltrado === 0) {
+        el.textContent = `Nenhum lead encontrado`;
+        return;
+    }
+
+    const fimExibido = Math.min(fim, totalFiltrado);
+    el.textContent = `Mostrando ${inicio + 1}-${fimExibido} de ${totalFiltrado} lead${totalFiltrado > 1 ? "s" : ""}`;
+}
+
+
+/* ==========================================================================
+ * PAGINAÇÃO
+ * ========================================================================== */
+
+function renderizarPaginacao(totalPaginas) {
+    const ul = document.getElementById("paginacao-leads");
+    if (!ul) return;
+
+    if (totalPaginas <= 1) {
+        ul.innerHTML = "";
+        return;
+    }
+
+    let html = "";
+
+    // Botão anterior
+    html += `
+        <li class="page-item ${paginaAtual === 1 ? "disabled" : ""}">
+            <a class="page-link" href="#" data-page="${paginaAtual - 1}" aria-label="Anterior">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        </li>
+    `;
+
+    // Números das páginas (máx 7)
+    const paginas = calcularPaginasVisiveis(paginaAtual, totalPaginas);
+
+    paginas.forEach((p) => {
+        if (p === "...") {
+            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        } else {
+            html += `
+                <li class="page-item ${p === paginaAtual ? "active" : ""}">
+                    <a class="page-link" href="#" data-page="${p}">${p}</a>
+                </li>
+            `;
+        }
+    });
+
+    // Botão próximo
+    html += `
+        <li class="page-item ${paginaAtual === totalPaginas ? "disabled" : ""}">
+            <a class="page-link" href="#" data-page="${paginaAtual + 1}" aria-label="Próxima">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </li>
+    `;
+
+    ul.innerHTML = html;
+
+    // Eventos dos botões
+    ul.querySelectorAll("a.page-link").forEach((link) => {
+        link.addEventListener("click", (e) => {
+            e.preventDefault();
+            const p = parseInt(link.getAttribute("data-page"), 10);
+            if (!isNaN(p) && p >= 1 && p <= totalPaginas && p !== paginaAtual) {
+                paginaAtual = p;
+                aplicarFiltrosERenderizar();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+        });
+    });
+}
+
+
+/**
+ * Calcula quais números de página mostrar.
+ * Se tiver muitas páginas, mostra "..." no meio.
+ */
+function calcularPaginasVisiveis(atual, total) {
+    if (total <= 7) {
+        return Array.from({ length: total }, (_, i) => i + 1);
+    }
+
+    const paginas = [1];
+
+    if (atual > 4) paginas.push("...");
+
+    const inicio = Math.max(2, atual - 1);
+    const fim = Math.min(total - 1, atual + 1);
+
+    for (let i = inicio; i <= fim; i++) paginas.push(i);
+
+    if (atual < total - 3) paginas.push("...");
+
+    paginas.push(total);
+
+    return paginas;
+}
+
+
+/* ==========================================================================
  * EVENTOS DA TABELA (delegação)
- * ==========================================================================
- *
- * Usamos DELEGAÇÃO: registramos o listener UMA VEZ no tbody.
- * Quando o HTML muda, os cliques continuam funcionando.
- * Isso é melhor do que registrar listener em cada botão.
  * ========================================================================== */
 
 function configurarEventosTabela() {
     const tbody = document.getElementById("leads-tbody");
     if (!tbody) return;
 
-    // Remove listeners antigos (evita duplicação)
     if (tbody._handler) {
         tbody.removeEventListener("click", tbody._handler);
     }
 
     tbody._handler = async (e) => {
-        // Botão WhatsApp → marca como "em contato"
         const btnContatar = e.target.closest("[data-action='contatar']");
         if (btnContatar) {
             const id = btnContatar.getAttribute("data-id");
@@ -297,7 +497,6 @@ function configurarEventosTabela() {
             return;
         }
 
-        // Botão Editar → abre modal
         const btnEditar = e.target.closest(".btn-editar-action");
         if (btnEditar) {
             const id = btnEditar.getAttribute("data-id");
@@ -305,7 +504,6 @@ function configurarEventosTabela() {
             return;
         }
 
-        // Botão Excluir → abre modal de confirmação
         const btnExcluir = e.target.closest(".btn-excluir-action");
         if (btnExcluir) {
             leadIdParaExcluir = btnExcluir.getAttribute("data-id");
@@ -329,13 +527,13 @@ async function abrirModalEdicao(id) {
             alert("Lead não encontrado.");
             return;
         }
-
         preencherModalEdicao(id, lead);
     } catch (erro) {
         console.error("Erro ao abrir modal:", erro);
         alert("Erro ao carregar dados do lead.");
     }
 }
+
 
 function preencherModalEdicao(id, data) {
     const setVal = (elementId, val) => {
@@ -396,20 +594,6 @@ function preencherModalEdicao(id, data) {
 
 
 /* ==========================================================================
- * FILTROS
- * ========================================================================== */
-
-function configurarFiltros() {
-    const filterPriority = document.getElementById("filter-priority");
-    if (filterPriority) {
-        filterPriority.addEventListener("change", () => {
-            renderizarTabela(listaLeadsAtual);
-        });
-    }
-}
-
-
-/* ==========================================================================
  * FORMULÁRIO DE EDIÇÃO
  * ========================================================================== */
 
@@ -432,7 +616,6 @@ function configurarFormularioEdicao() {
         const getVal = (elementId) => document.getElementById(elementId)?.value || "";
         const getCheck = (elementId) => document.getElementById(elementId)?.checked || false;
 
-        // Valida CPF (11 dígitos)
         const cpfValor = getVal("edit-cpf").replace(/\D/g, "");
         if (cpfValor.length !== 11) {
             alert("O CPF é obrigatório e deve conter exatamente 11 dígitos.");
@@ -486,7 +669,7 @@ function configurarFormularioEdicao() {
 
 
 /* ==========================================================================
- * VIACEP (preenchimento automático de endereço)
+ * VIACEP
  * ========================================================================== */
 
 function configurarViaCEP() {
@@ -519,15 +702,7 @@ function configurarViaCEP() {
 
 
 /* ==========================================================================
- * BOTÃO DE CONVERSÃO EM ALUNO
- * ==========================================================================
- *
- * ⚠️ ATENÇÃO: este botão está desativado por enquanto.
- *
- * A função `processarMatriculaLead` foi removida do `lead-service.js`
- * e será refatorada num PR separado (dividir em funções menores).
- *
- * Enquanto isso, o botão mostra uma mensagem avisando.
+ * BOTÃO DE CONVERSÃO EM ALUNO (desativado temporariamente)
  * ========================================================================== */
 
 function configurarBotaoConversao() {
@@ -539,7 +714,7 @@ function configurarBotaoConversao() {
     btn.addEventListener("click", () => {
         if (feedback) {
             feedback.className = "alert alert-warning py-2 px-3 small mb-0 d-block";
-            feedback.textContent = "⚠️ A conversão em aluno será reativada após refatoração do serviço. Em desenvolvimento.";
+            feedback.textContent = "⚠️ A conversão em aluno será reativada após refatoração do serviço.";
         }
     });
 }

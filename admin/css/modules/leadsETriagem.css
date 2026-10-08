@@ -1,0 +1,19 @@
+.leads-header-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .leads-header-controls {
+        width: 100%;
+        justify-content: stretch;
+    }
+    .leads-header-controls > * {
+        flex: 1;
+    }
+    .leads-header-controls .input-group {
+        width: 100% !important;
+    }
+}
