@@ -56,13 +56,18 @@
         </div>
 
         <ul class="sidebar-menu">
-            <li><a href="dashboard.html" class="sidebar-link"><i class="fas fa-chart-pie"></i> <span>Dashboard</span></a></li>
-            <li><a href="lead_e_triagem.html" class="sidebar-link"><i class="fas fa-user-friends"></i> <span>Leads & Triagem</span></a></li>
-            <li><a href="financeiro.html" class="sidebar-link"><i class="fas fa-wallet"></i> <span>Financeiro</span></a></li>
+            <li><a href="dashboard.html" class="sidebar-link"><i class="fas fa-chart-pie"></i>
+                    <span>Dashboard</span></a></li>
+            <li><a href="lead_e_triagem.html" class="sidebar-link"><i class="fas fa-user-friends"></i> <span>Leads &
+                        Triagem</span></a></li>
+            <li><a href="financeiro.html" class="sidebar-link"><i class="fas fa-wallet"></i> <span>Financeiro</span></a>
+            </li>
             <li><a href="cursos.html" class="sidebar-link"><i class="fas fa-book-open"></i> <span>Cursos</span></a></li>
-            <li><a href="turmas.html" class="sidebar-link"><i class="fas fa-laptop-code"></i> <span>Turmas & Cursos</span></a></li>
+            <li><a href="turmas.html" class="sidebar-link"><i class="fas fa-laptop-code"></i> <span>Turmas &
+                        Cursos</span></a></li>
             <li><a href="alunos.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Alunos</span></a></li>
-            <li><a href="matriculas.html" class="sidebar-link"><i class="fas fa-id-card-alt"></i> <span>Matrículas</span></a></li>
+            <li><a href="matriculas.html" class="sidebar-link"><i class="fas fa-id-card-alt"></i>
+                    <span>Matrículas</span></a></li>
         </ul>
     </aside>
 
@@ -128,7 +133,7 @@
             </div>
         </div>
 
-        <!-- CONTROLES DA TABELA -->
+        <!-- CONTROLES -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
                 <h5 class="card-title text-dark fw-bold m-0">
@@ -136,7 +141,6 @@
                 </h5>
 
                 <div class="d-flex flex-wrap align-items-center gap-2">
-                    <!-- Busca -->
                     <div class="input-group input-group-sm" style="width: 240px;">
                         <span class="input-group-text bg-white border-end-0">
                             <i class="fas fa-search text-muted"></i>
@@ -145,7 +149,6 @@
                             placeholder="Buscar nome, código ou apelido..." autocomplete="off">
                     </div>
 
-                    <!-- Filtro por exibição -->
                     <select id="filtro-secao" class="form-select form-select-sm" style="width: 180px;">
                         <option value="todos">Todas as exibições</option>
                         <option value="grade">Grade de Treinamentos</option>
@@ -153,14 +156,19 @@
                         <option value="oculto">Ocultos / Internos</option>
                     </select>
 
-                    <!-- Filtro de status -->
                     <select id="filtro-status-curso" class="form-select form-select-sm" style="width: 150px;">
                         <option value="todos">Todos os status</option>
                         <option value="ativo">Ativos</option>
                         <option value="inativo">Inativos</option>
                     </select>
 
-                    <!-- Itens por página -->
+                    <!-- ⚡ NOVO: filtro de exclusão -->
+                    <select id="filtro-exclusao" class="form-select form-select-sm" style="width: 160px;">
+                        <option value="ativos" selected>Ativos</option>
+                        <option value="excluidos">Excluídos</option>
+                        <option value="todos">Todos</option>
+                    </select>
+
                     <select id="itens-por-pagina-curso" class="form-select form-select-sm" style="width: 130px;">
                         <option value="10">10 por página</option>
                         <option value="20" selected>20 por página</option>
@@ -203,7 +211,6 @@
                 </table>
             </div>
 
-            <!-- PAGINAÇÃO -->
             <nav class="d-flex justify-content-center mt-3">
                 <ul class="pagination pagination-sm mb-0" id="paginacao-cursos"></ul>
             </nav>
@@ -225,7 +232,6 @@
                     <form id="formCurso">
                         <input type="hidden" id="cursoId">
 
-                        <!-- BLOCO 1: IDENTIFICAÇÃO -->
                         <div class="card border shadow-sm p-3 mb-3 rounded-3 bg-light bg-opacity-10">
                             <h6 class="fw-bold text-primary mb-3">
                                 <i class="fas fa-info-circle me-2"></i>Identificação
@@ -244,16 +250,13 @@
                                     </label>
                                     <input type="text" class="form-control form-control-sm" id="cursoApelido"
                                         placeholder="Ex: IoT" maxlength="20">
-                                    <div class="form-text" style="font-size: 0.72rem;">
-                                        Nome curto exibido em listas (ex: GPON, NR-35).
-                                    </div>
                                 </div>
                                 <div class="col-md-4">
                                     <label for="cursoCodigo" class="form-label small fw-semibold text-muted mb-1">
                                         Código <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" class="form-control form-control-sm text-uppercase" id="cursoCodigo" required
-                                        placeholder="Ex: TRW-AUT01">
+                                    <input type="text" class="form-control form-control-sm text-uppercase"
+                                        id="cursoCodigo" required placeholder="Ex: TRW-AUT01">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="cursoModalidade" class="form-label small fw-semibold text-muted mb-1">
@@ -277,7 +280,6 @@
                             </div>
                         </div>
 
-                        <!-- BLOCO 2: ESTRUTURA E VALORES -->
                         <div class="card border shadow-sm p-3 mb-3 rounded-3 bg-light bg-opacity-10">
                             <h6 class="fw-bold text-primary mb-3">
                                 <i class="fas fa-sliders-h me-2"></i>Estrutura e Valores
@@ -294,13 +296,12 @@
                                     <label for="cursoValor" class="form-label small fw-semibold text-muted mb-1">
                                         Investimento Base (R$) <span class="text-danger">*</span>
                                     </label>
-                                    <input type="number" step="0.01" class="form-control form-control-sm" id="cursoValor"
-                                        placeholder="Ex: 310" required>
+                                    <input type="number" step="0.01" class="form-control form-control-sm"
+                                        id="cursoValor" placeholder="Ex: 310" required>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- BLOCO 3: PUBLICAÇÃO NO SITE -->
                         <div class="card border shadow-sm p-3 mb-3 rounded-3 bg-light bg-opacity-10">
                             <h6 class="fw-bold text-primary mb-3">
                                 <i class="fas fa-globe me-2"></i>Publicação no Site Público
@@ -319,7 +320,6 @@
                             </div>
                         </div>
 
-                        <!-- BLOCO 4: CONTEÚDO -->
                         <div class="card border shadow-sm p-3 mb-3 rounded-3 bg-light bg-opacity-10">
                             <h6 class="fw-bold text-primary mb-3">
                                 <i class="fas fa-file-alt me-2"></i>Conteúdo
@@ -337,12 +337,11 @@
                                         Ementa / Tópicos (um por linha)
                                     </label>
                                     <textarea class="form-control form-control-sm" id="cursoEmenta" rows="3"
-                                        placeholder="Ex:&#10;Introdução a IoT&#10;Protocolos MQTT&#10;Configuração de dispositivos"></textarea>
+                                        placeholder="Tópicos..."></textarea>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- BLOCO 5: AUDITORIA -->
                         <div class="card border shadow-sm p-3 mb-3 rounded-3 bg-light bg-opacity-10">
                             <h6 class="fw-bold text-primary mb-3">
                                 <i class="fas fa-history me-2"></i>Auditoria
@@ -354,8 +353,10 @@
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
-                            <button type="button" class="btn btn-light px-4 rounded-pill btn-sm" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary px-4 rounded-pill btn-sm" id="btn-salvar-curso">
+                            <button type="button" class="btn btn-light px-4 rounded-pill btn-sm"
+                                data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary px-4 rounded-pill btn-sm"
+                                id="btn-salvar-curso">
                                 <i class="fas fa-save me-1"></i> Guardar Curso
                             </button>
                         </div>
@@ -365,7 +366,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE CONFIRMAÇÃO -->
+    <!-- MODAL DE CONFIRMAÇÃO ESTILIZADO -->
     <div class="modal fade" id="modalConfirmacaoCurso" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
             <div class="modal-content border-0 shadow-lg rounded-4">
@@ -373,19 +374,57 @@
                     <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center px-4 pb-2">
-                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+                    <div id="modalConfirmacaoIcone"
+                        class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
                         style="width: 72px; height: 72px; background: #fee2e2;">
                         <i class="fas fa-trash-alt fa-2x" style="color: #dc2626;"></i>
                     </div>
-                    <h5 class="fw-bold text-dark mb-2">Excluir Curso?</h5>
-                    <p class="text-muted mb-0" style="font-size: 0.95rem; line-height: 1.5;">
-                        Tem a certeza que deseja excluir este curso? A exclusão é lógica (mantém histórico) e o curso desaparecerá da listagem.
+                    <h5 class="fw-bold text-dark mb-2" id="modalConfirmacaoTitulo">
+                        Excluir Curso?
+                    </h5>
+                    <p class="text-muted mb-0" id="modalConfirmacaoMensagem"
+                        style="font-size: 0.95rem; line-height: 1.5;">
+                        Tem a certeza que deseja excluir este curso? A exclusão é lógica (mantém histórico) e o curso
+                        desaparecerá da listagem.
                     </p>
                 </div>
                 <div class="modal-footer border-0 px-4 pb-4 pt-3 d-flex gap-2 justify-content-center">
-                    <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger px-4 rounded-pill fw-semibold" id="btn-confirmar-exclusao-curso">
+                    <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger px-4 rounded-pill fw-semibold"
+                        id="btn-confirmar-exclusao-curso">
                         Excluir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO DE REATIVAR -->
+    <div class="modal fade" id="modalConfirmacaoReativar" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center px-4 pb-2">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+                        style="width: 72px; height: 72px; background: #dcfce7;">
+                        <i class="fas fa-undo fa-2x" style="color: #16a34a;"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">
+                        Reativar Curso?
+                    </h5>
+                    <p class="text-muted mb-0" style="font-size: 0.95rem; line-height: 1.5;">
+                        Deseja reativar este curso? Ele voltará a aparecer na listagem principal.
+                    </p>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-3 d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success px-4 rounded-pill fw-semibold"
+                        id="btn-confirmar-reativar-curso">
+                        Reativar
                     </button>
                 </div>
             </div>
