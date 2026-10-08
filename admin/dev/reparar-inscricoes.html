@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Reparar Inscrições</title>
+</head>
+<body>
+    <h1>Reparar subcoleções de inscrições</h1>
+    <button id="btn" style="padding:1rem;font-size:1rem;">Rodar Reparo</button>
+    <pre id="log" style="background:#f0f0f0;padding:1rem;margin-top:1rem;"></pre>
+
+    <script type="module">
+        import { db } from "./js/firebase-config.js";
+        import { 
+            collection, 
+            getDocs, 
+            doc, 
+            setDoc 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const log = (m) => {
+            const el = document.getElementById("log");
+            el.textContent += m + "\n";
+            console.log(m);
+        };
+
+        document.getElementById("btn").addEventListener("click", async () => {
+            document.getElementById("log").textContent = "";
+            log("🚀 Iniciando reparo...");
+
+            try {
+                // 1. Carrega todas as turmas
+                const snapTurmas = await getDocs(collection(db, "turmas"));
+                const turmas = [];
+                snapTurmas.forEach(d => turmas.push({ id: d.id, ...d.data() }));
+                log(`📊 Turmas encontradas: ${turmas.length}`);
+
+                // 2. Carrega todos os alunos
+                const snapAlunos = await getDocs(collection(db, "alunos"));
+                const alunos = [];
+                snapAlunos.forEach(d => alunos.push({ id: d.id, ...d.data() }));
+                log(`📊 Alunos encontrados: ${alunos.length}`);
+
+                if (turmas.length === 0 || alunos.length === 0) {
+                    log("❌ Precisa ter turmas e alunos no Firestore.");
+                    return;
+                }
+
+                // 3. Distribui alunos nas turmas (3 por turma, round-robin)
+                let totalCriados = 0;
+                for (let i = 0; i < alunos.length; i++) {
+                    const aluno = alunos[i];
+                    const turma = turmas[i % turmas.length];
+
+                    await setDoc(
+                        doc(db, "turmas", turma.id, "inscricoes", aluno.id),
+                        {
+                            aluno_id: aluno.id,
+                            nome_aluno: aluno.nome,
+                            email: aluno.email,
+                            data_matricula: new Date().toISOString(),
+                            status: "Matriculado"
+                        }
+                    );
+                    totalCriados++;
+                    log(`  ✅ ${aluno.id} → ${turma.id}`);
+                }
+
+                log(`═══════════════════════════════`);
+                log(`🎉 ${totalCriados} inscrições criadas em subcoleções!`);
+                log(`═══════════════════════════════`);
+            } catch (e) {
+                log(`❌ ERRO: ${e.code} | ${e.message}`);
+                console.error(e);
+            }
+        });
+    </script>
+</body>
+</html>
