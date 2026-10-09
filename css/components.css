@@ -283,3 +283,73 @@
     display: none !important;
   }
 }
+
+
+/* =========================================================================
+ * UTILITÁRIOS — Adicionados na refatoração C3
+ * ========================================================================= */
+
+/* ── Cores de destaque ── */
+.text-blue { color: var(--blue); }
+.text-orange { color: var(--orange); }
+
+/* ── Logo circular (nav + footer) ── */
+.logo-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.logo-circle-sm {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* ── Ícone WhatsApp flutuante ── */
+.whatsapp-float-icon {
+    width: 60px;
+    height: 60px;
+    vertical-align: middle;
+}
+
+/* ── Espaçamentos utilitários ── */
+.mb-sm { margin-bottom: 1.5rem; }
+.mb-md { margin-bottom: 2rem; }
+.mt-md { margin-top: 2rem; }
+.mt-xs { margin-top: 4px; }
+
+/* ── Labels e textos específicos ── */
+.section-label-center {
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 1rem;
+}
+
+.contact-info-desc {
+    color: var(--gray-light);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    margin-bottom: 2rem;
+}
+
+.form-footer-note {
+    font-size: 0.75rem;
+    color: var(--gray-light);
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.normas-grid {
+    max-width: 1600px;
+}
+
+.mob-link-orange {
+    color: var(--orange);
+}
+
+.nav-logo-footer {
+    margin-bottom: 1rem;
+}
