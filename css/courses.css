@@ -723,3 +723,42 @@
   transform: translateY(-5px);
   box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
 }
+
+/* =========================================================================
+ * NORMA CARDS — Layout robusto (refatoração C3)
+ * =========================================================================
+ * Substitui o Bootstrap Grid por CSS Grid nativo.
+ * Motivo: evitar conflitos de especificidade com CDNs e garantir
+ * layout consistente em todos os tamanhos de tela.
+ * ========================================================================= */
+
+.normas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.normas-grid .nr-card {
+    /* Remove qualquer herança problemática */
+    max-width: 100%;
+    width: 100%;
+}
+
+/* Responsivo — em telas muito grandes, 3 colunas fixas */
+@media (min-width: 1200px) {
+    .normas-grid {
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 1400px;
+    }
+}
+
+/* Mobile — 1 coluna */
+@media (max-width: 767px) {
+    .normas-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
