@@ -98,24 +98,22 @@ function renderizarCardNorma(curso) {
             <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden card-hover-effect">
                 <div class="card-body p-4 d-flex flex-column">
                     <div class="mb-4">
-                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold border border-primary border-opacity-25"
-                              style="font-size: 0.9rem; letter-spacing: 0.5px;">
+                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold border border-primary border-opacity-25 nr-code">
                             ${codigoExibicao}
                         </span>
                     </div>
-                    <h5 class="card-title fw-bold text-dark mb-3" style="font-size: 1.15rem;">
+                    <h5 class="card-title fw-bold text-dark mb-3 nr-title">
                         ${curso.nome}
                     </h5>
-                    <p class="card-text text-secondary mb-4" style="font-size: 0.95rem; line-height: 1.6;">
+                    <p class="card-text text-secondary mb-4 nr-desc">
                         ${curso.descricao}
                     </p>
                     <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-light">
                         <div class="text-start">
-                            <small class="d-block text-muted fw-bold"
-                                   style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <small class="d-block text-muted fw-bold nr-label">
                                 Investimento
                             </small>
-                            <span class="fw-bold text-secondary" style="font-size: 1.15rem;">
+                            <span class="fw-bold text-secondary nr-value">
                                 ${formatarMoeda(curso.valor)}
                             </span>
                         </div>

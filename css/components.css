@@ -1,355 +1,915 @@
-/* ============================================
-   3. COMPONENTES
-   ============================================ */
+/* ============================================================================
+   TRAINING WORK — COMPONENTES
+   ============================================================================
+   Componentes reutilizáveis: cards, botões, formulários, modais.
+   Deve ser o ÚLTIMO CSS a carregar no <head>.
+   ============================================================================ */
+
+
+/* ============================================================================
+   1. PROGRESS BAR (topo da página)
+   ============================================================================ */
 .progress-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--orange), var(--blue-light));
-  z-index: 10000;
-  width: 0%;
-  transition: width 0.1s linear;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--orange), var(--blue-light));
+    z-index: 10000;
+    width: 0%;
+    transition: width 0.1s linear;
 }
 
+
+/* ============================================================================
+   2. MODAIS
+   ============================================================================ */
 .modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.9);
-  z-index: 10001;
-  justify-content: center;
-  align-items: center;
-  opacity: 0;
-  transition: opacity var(--transition-base);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 10001;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 .modal.active {
-  display: flex;
-  opacity: 1;
+    display: flex;
+    opacity: 1;
 }
 
 .modal-content {
-  position: relative;
-  max-width: 90%;
-  max-height: 90%;
-  width: 1000px;
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    width: 1000px;
 }
 
 .modal-close {
-  position: absolute;
-  top: -50px;
-  right: 0;
-  background: none;
-  border: none;
-  color: white;
-  font-size: 40px;
-  cursor: pointer;
-  padding: 8px;
-  transition: transform var(--transition-fast);
+    position: absolute;
+    top: -50px;
+    right: 0;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 40px;
+    cursor: pointer;
+    padding: 8px;
+    transition: transform var(--transition-fast);
 }
 
 .modal-close:hover {
-  transform: scale(1.15) rotate(90deg);
-  color: var(--orange);
+    transform: scale(1.15) rotate(90deg);
+    color: var(--orange);
 }
 
 .modal-body video {
-  width: 100%;
-  max-height: 80vh;
-  border-radius: var(--border-radius-lg);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-height: 80vh;
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
+
+/* ============================================================================
+   3. THEME TOGGLE
+   ============================================================================ */
 .theme-toggle {
-  position: fixed;
-  bottom: 32px;
-  left: 32px;
-  z-index: 999;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  transition: all var(--transition-base);
-  box-shadow: var(--shadow-md);
+    position: fixed;
+    bottom: 32px;
+    left: 32px;
+    z-index: 999;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all var(--transition-base);
+    box-shadow: var(--shadow-md);
 }
 
 .theme-toggle:hover {
-  transform: scale(1.1);
-  border-color: var(--orange);
-  color: var(--orange);
-  box-shadow: var(--shadow-lg);
+    transform: scale(1.1);
+    border-color: var(--orange);
+    color: var(--orange);
+    box-shadow: var(--shadow-lg);
 }
 
+
+/* ============================================================================
+   4. BOTÕES
+   ============================================================================ */
 .btn-primary,
 .btn-secondary,
 .btn-card {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  border-radius: var(--border-radius-sm);
-  transition: all var(--transition-base);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  text-decoration: none;
-  position: relative;
-  overflow: hidden;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
 }
 
 .btn-primary {
-  background: var(--orange);
-  color: #fff;
-  font-size: 1.05rem;
-  padding: 16px 36px;
-  border: none;
-  box-shadow: 0 8px 24px var(--orange-glow);
+    background: var(--orange);
+    color: #fff;
+    font-size: 1.05rem;
+    padding: 16px 36px;
+    border: none;
+    box-shadow: 0 8px 24px var(--orange-glow);
 }
 
 .btn-primary:hover {
-  background: var(--orange-light);
-  transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(255, 123, 0, 0.3);
+    background: var(--orange-light);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(255, 123, 0, 0.3);
 }
 
 .btn-secondary {
-  background: transparent;
-  color: var(--text-primary);
-  font-size: 1.05rem;
-  padding: 14px 34px;
-  border: 2px solid var(--border-color);
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 1.05rem;
+    padding: 14px 34px;
+    border: 2px solid var(--border-color);
 }
 
 .btn-secondary:hover {
-  border-color: var(--orange);
-  color: var(--orange);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px var(--shadow-sm);
+    border-color: var(--orange);
+    color: var(--orange);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px var(--shadow-sm);
 }
 
 .btn-card {
-  background: var(--orange);
-  color: #fff;
-  border: none;
-  font-size: 0.9rem;
-  padding: 10px 20px;
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    font-size: 0.9rem;
+    padding: 10px 20px;
 }
 
 .btn-card:hover {
-  background: var(--orange-light);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px var(--orange-glow);
+    background: var(--orange-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--orange-glow);
 }
 
 .btn-full {
-  width: 100%;
+    width: 100%;
 }
 
 .btn-border-soft {
-  border-color: rgba(255, 255, 255, 0.3);
-  color: #fff;
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
 }
 
 .btn-border-soft:hover {
-  border-color: #fff;
-  color: #fff;
+    border-color: #fff;
+    color: #fff;
 }
 
 .ripple {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.4);
-  transform: scale(0);
-  animation: ripple-animation 0.6s linear;
-  pointer-events: none;
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(0);
+    animation: ripple-animation 0.6s linear;
+    pointer-events: none;
 }
 
+
+/* ============================================================================
+   5. FORMULÁRIOS
+   ============================================================================ */
 .form-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
-  padding: 3rem;
-  box-shadow: var(--shadow-sm);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: 3rem;
+    box-shadow: var(--shadow-sm);
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
 .form-label {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 10px;
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
 }
 
 .form-input,
 .form-select,
 .form-textarea {
-  width: 100%;
-  background: var(--bg-primary);
-  border: 2px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  color: var(--text-primary);
-  font-family: 'Barlow', sans-serif;
-  font-size: 1rem;
-  padding: 14px 18px;
-  outline: none;
-  transition: all var(--transition-fast);
+    width: 100%;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    font-family: 'Barlow', sans-serif;
+    font-size: 1rem;
+    padding: 14px 18px;
+    outline: none;
+    transition: all var(--transition-fast);
 }
 
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
-  border-color: var(--orange);
-  box-shadow: 0 0 0 4px var(--orange-glow);
+    border-color: var(--orange);
+    box-shadow: 0 0 0 4px var(--orange-glow);
 }
 
 .form-textarea {
-  resize: vertical;
-  min-height: 140px;
+    resize: vertical;
+    min-height: 140px;
 }
 
 .form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
 }
 
 .form-input.has-value,
 .form-textarea.has-value {
-  border-color: var(--blue-light);
-}
-
-.whatsapp-float {
-  position: fixed;
-  bottom: 32px;
-  right: 32px;
-  z-index: 999;
-  width: 60px;
-  height: 60px;
-  background: #25D366;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  box-shadow: 0 8px 32px rgba(37, 211, 102, 0.4);
-  transition: all var(--transition-base);
-  animation: floatBounce 3s ease infinite;
-}
-
-.whatsapp-float:hover {
-  transform: scale(1.15);
-  box-shadow: 0 12px 40px rgba(37, 211, 102, 0.6);
+    border-color: var(--blue-light);
 }
 
 @media (max-width: 768px) {
-  .form-card {
-    padding: 1.8rem;
-  }
+    .form-card {
+        padding: 1.8rem;
+    }
 
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
 
-  .btn-primary,
-  .btn-secondary {
-    width: 100%;
-  }
-}
-
-@media print {
-
-  .progress-bar,
-  .whatsapp-float,
-  .theme-toggle {
-    display: none !important;
-  }
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+    }
 }
 
 
-/* =========================================================================
- * UTILITÁRIOS — Adicionados na refatoração C3
- * ========================================================================= */
-
-/* ── Cores de destaque ── */
-.text-blue { color: var(--blue); }
-.text-orange { color: var(--orange); }
-
-/* ── Logo circular (nav + footer) ── */
-.logo-circle {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.logo-circle-sm {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-/* ── Ícone WhatsApp flutuante ── */
-.whatsapp-float-icon {
+/* ============================================================================
+   6. WHATSAPP FLOAT
+   ============================================================================ */
+.whatsapp-float {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    z-index: 999;
     width: 60px;
     height: 60px;
-    vertical-align: middle;
-}
-
-/* ── Espaçamentos utilitários ── */
-.mb-sm { margin-bottom: 1.5rem; }
-.mb-md { margin-bottom: 2rem; }
-.mt-md { margin-top: 2rem; }
-.mt-xs { margin-top: 4px; }
-
-/* ── Labels e textos específicos ── */
-.section-label-center {
+    background: #25D366;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    box-shadow: 0 8px 32px rgba(37, 211, 102, 0.4);
+    transition: all var(--transition-base);
+    animation: floatBounce 3s ease infinite;
+}
+
+.whatsapp-float:hover {
+    transform: scale(1.15);
+    box-shadow: 0 12px 40px rgba(37, 211, 102, 0.6);
+}
+
+
+/* ============================================================================
+   7. COURSE CARDS (grade de treinamentos)
+   ============================================================================ */
+.courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.course-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-xl);
+    overflow: hidden;
+    position: relative;
+    transition: all var(--transition-base);
+    cursor: pointer;
+    display: none;
+    box-shadow: var(--shadow-sm);
+}
+
+.course-card.visible {
+    display: flex;
+    flex-direction: column;
+    animation: fadeInUp 0.6s ease;
+}
+
+.course-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 18% 22%, var(--blue-glow), transparent 20%),
+        radial-gradient(circle at 82% 78%, var(--orange-glow), transparent 20%);
+    opacity: 0.4;
+    pointer-events: none;
+    transition: transform var(--transition-base);
+    z-index: 0;
+}
+
+.course-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--border-radius-xl);
+    box-shadow: inset 0 0 0 1px var(--blue-glow);
+    pointer-events: none;
+    opacity: 0.5;
+    transition: opacity var(--transition-base), box-shadow var(--transition-base);
+    z-index: 0;
+}
+
+.course-card:hover {
+    transform: translateY(-10px);
+    border-color: var(--orange);
+    box-shadow: var(--shadow-lg);
+}
+
+.course-card:hover::before {
+    transform: translate3d(16px, -16px, 0);
+}
+
+.course-card:hover::after {
+    opacity: 1;
+    box-shadow: inset 0 0 0 2px var(--orange);
+}
+
+.course-card-header,
+.course-card-body,
+.course-card-footer {
+    position: relative;
+    z-index: 1;
+}
+
+.course-card-header {
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border-color);
+    z-index: 1;
+}
+
+.course-card-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-repeat: no-repeat;
+    background-image: var(--card-bg-img, none);
+    background-size: 100% auto;
+    background-position: center;
+    opacity: 0.3;
+    z-index: -1;
+    transition: transform var(--transition-base), opacity var(--transition-base);
+}
+
+[data-theme="dark"] .course-card-header::before {
+    opacity: 0.08;
+}
+
+.course-card:hover .course-card-header::before {
+    transform: scale(1.1);
+    opacity: 0.5;
+}
+
+.course-card-header::after {
+    content: '';
+    position: absolute;
+    right: -20px;
+    top: -20px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: var(--orange-glow);
+    z-index: -1;
+}
+
+.course-icon {
+    font-size: 3rem;
     margin-bottom: 1rem;
+    color: var(--blue);
 }
 
-.contact-info-desc {
-    color: var(--gray-light);
-    font-size: 0.9rem;
+.course-nr {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    color: var(--orange);
+    text-transform: uppercase;
+}
+
+.course-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    margin-top: 6px;
+    color: var(--text-primary);
+}
+
+.course-card-body {
+    padding: 2rem;
+    flex: 1;
+}
+
+.course-desc {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
     line-height: 1.7;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
-.form-footer-note {
-    font-size: 0.75rem;
-    color: var(--gray-light);
-    text-align: center;
-    margin-top: 1rem;
+.course-meta {
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
 }
 
-.normas-grid {
-    max-width: 1600px;
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.mob-link-orange {
+.course-card-footer {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-secondary);
+}
+
+.course-price {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
     color: var(--orange);
 }
 
-.nav-logo-footer {
-    margin-bottom: 1rem;
+@media (max-width: 992px) {
+    .courses-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .course-card-header {
+        padding: 1.5rem;
+    }
+
+    .course-card-body {
+        padding: 1.5rem;
+    }
+
+    .course-card-footer {
+        padding: 1.2rem 1.5rem;
+    }
+}
+
+
+/* ============================================================================
+   8. NR CARD (cards de normas)
+   ============================================================================ */
+.card-hover-effect {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card-hover-effect:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+}
+
+.nr-card .nr-code {
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+}
+
+.nr-card .nr-title {
+    font-size: 1.15rem;
+}
+
+.nr-card .nr-desc {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.nr-card .nr-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nr-card .nr-value {
+    font-size: 1.15rem;
+}
+
+
+/* ============================================================================
+   9. ABOUT BADGES
+   ============================================================================ */
+.about-badge {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem 1.5rem;
+    text-align: center;
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.about-badge::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 50%, var(--orange-glow));
+    opacity: 0;
+    transition: opacity var(--transition-base);
+    pointer-events: none;
+}
+
+.about-badge:hover {
+    border-color: var(--orange);
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-md);
+}
+
+.about-badge:hover::before {
+    opacity: 1;
+}
+
+.about-badge-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.8rem;
+}
+
+.about-badge-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 2.2rem;
+    color: var(--orange);
+}
+
+.about-badge-txt {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    font-weight: 500;
+}
+
+.about-badge.featured {
+    grid-column: span 2;
+    background: linear-gradient(135deg, var(--blue-deep), var(--blue));
+    border-color: var(--blue-light);
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    text-align: left;
+}
+
+.about-badge.featured .about-badge-icon {
+    font-size: 3.5rem;
+    flex-shrink: 0;
+}
+
+.about-badge.featured .about-badge-num {
+    color: var(--orange);
+}
+
+.about-badge.featured .about-badge-txt {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+}
+
+
+/* ============================================================================
+   10. METHOD STEPS
+   ============================================================================ */
+.method-step {
+    position: relative;
+    padding: 2.5rem 2rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    transition: all var(--transition-base);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.method-step::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    width: 0;
+    background: var(--orange);
+    transition: width var(--transition-base);
+}
+
+.method-step:hover {
+    border-color: var(--orange);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-6px);
+}
+
+.method-step:hover::after {
+    width: 100%;
+}
+
+.step-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 5rem;
+    color: var(--orange-glow);
+    line-height: 1;
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+}
+
+.step-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.step-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 1.4rem;
+    margin-bottom: 0.8rem;
+    color: var(--text-primary);
+}
+
+.step-desc {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+
+/* ============================================================================
+   11. GALLERY CARDS
+   ============================================================================ */
+.gallery-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--border-radius-xl);
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-base);
+    min-width: 320px;
+    max-width: 400px;
+    flex-shrink: 0;
+    scroll-snap-align: center;
+}
+
+.gallery-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--orange);
+    box-shadow: var(--shadow-lg);
+}
+
+.gallery-image {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    display: block;
+    transition: transform var(--transition-base);
+}
+
+.gallery-card:hover .gallery-image {
+    transform: scale(1.1);
+}
+
+.gallery-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.4) 100%);
+    pointer-events: none;
+    transition: background var(--transition-base);
+}
+
+.gallery-card:hover::after {
+    background: linear-gradient(180deg, transparent 30%, rgba(255, 123, 0, 0.6) 100%);
+}
+
+.gallery-label {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    z-index: 2;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px 16px;
+    border-radius: 999px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: transform var(--transition-base), opacity var(--transition-base);
+}
+
+@media (max-width: 768px) {
+    .gallery-card {
+        min-width: 280px;
+    }
+}
+
+
+/* ============================================================================
+   12. TESTIMONIAL CARDS
+   ============================================================================ */
+.testimonial-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: 2.5rem;
+    min-width: 360px;
+    max-width: 420px;
+    flex-shrink: 0;
+    scroll-snap-align: center;
+    transition: all var(--transition-base);
+}
+
+.testimonial-card:hover {
+    border-color: var(--orange);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+}
+
+.stars {
+    color: var(--orange);
+    font-size: 1.1rem;
+    margin-bottom: 1.2rem;
+    letter-spacing: 2px;
+}
+
+.testimonial-text {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    font-style: italic;
+}
+
+.testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+.author-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange), var(--blue));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.author-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.author-role {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+    .testimonial-card {
+        min-width: 280px;
+    }
+}
+
+
+/* ============================================================================
+   13. COURSE TABS (filtros de categoria)
+   ============================================================================ */
+.course-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 4rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+    width: fit-content;
+    flex-wrap: wrap;
+    background: var(--bg-secondary);
+    box-shadow: var(--shadow-sm);
+}
+
+.course-tab {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 16px 32px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border-right: 1px solid var(--border-color);
+}
+
+.course-tab:last-child {
+    border-right: none;
+}
+
+.course-tab.active {
+    background: var(--orange);
+    color: #fff;
+}
+
+.course-tab:hover:not(.active) {
+    background: var(--orange-glow);
+    color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+    .course-tabs {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .course-tab {
+        flex: 1;
+        text-align: center;
+        padding: 14px 10px;
+        font-size: 0.85rem;
+    }
+}
+
+
+/* ============================================================================
+   14. IMPRESSÃO
+   ============================================================================ */
+@media print {
+
+    .progress-bar,
+    .whatsapp-float,
+    .theme-toggle {
+        display: none !important;
+    }
 }
