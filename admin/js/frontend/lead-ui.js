@@ -1,14 +1,12 @@
 /**
  * =========================================================================
- * TRAINING WORK — UI DE LEADS (lead-ui.js)
+ * TRAINING WORK — UI DE LEADS (lead-ui.js) — CORRIGIDO
  * =========================================================================
  *
- * Responsabilidades:
- *   - Escutar os leads do service (escutarLeads);
- *   - Renderizar tabela (desktop) e cards (mobile);
- *   - Aplicar filtros: busca + prioridade;
- *   - Aplicar paginação;
- *   - Tratar cliques: editar, excluir, contatar.
+ * MUDANÇAS APLICADAS:
+ *   - lead.nome → lead.name
+ *   - lead.curso → lead.curso_interesse_name
+ *   - Ao salvar edição, grava em `name` e `curso_interesse_name`
  * =========================================================================
  */
 
@@ -20,28 +18,32 @@ import {
     excluirLead
 } from "../backend/lead-service.js";
 
-/* ==========================================================================
- * ESTADO GLOBAL DA PÁGINA
- * ========================================================================== */
-
-let listaLeadsCompleta = [];       // todos os leads do Firestore
-let listaLeadsFiltrada = [];       // após aplicar busca + prioridade
-
+/* ====== ESTADO GLOBAL ====== */
+let listaLeadsCompleta = [];
+let listaLeadsFiltrada = [];
 let paginaAtual = 1;
 let itensPorPagina = 20;
 let termoBusca = "";
-
 let editModalInstance = null;
 let excluirModalInstance = null;
 let leadIdParaExcluir = null;
+let timerBusca = null;
 
-let timerBusca = null;             // debounce da busca
+
+/* ====== HELPERS DE CAMPO ======
+ * Como convivemos com leads antigos (que às vezes têm `nome`/`curso`)
+ * e leads novos (que têm `name`/`curso_interesse_name`), centralizamos
+ * a leitura aqui. Assim, se um dia padronizarmos tudo, é 1 lugar só.
+ */
+function getNomeLead(lead) {
+    return lead.name || lead.nome || "";
+}
+function getCursoLead(lead) {
+    return lead.curso_interesse_name || lead.curso || "";
+}
 
 
-/* ==========================================================================
- * INICIALIZAÇÃO
- * ========================================================================== */
-
+/* ====== INICIALIZAÇÃO ====== */
 document.addEventListener("DOMContentLoaded", () => {
     console.log("🚀 [lead-ui] Inicializando...");
 
@@ -56,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
         escutarLeads((leads) => {
             listaLeadsCompleta = leads;
-            paginaAtual = 1;              // reseta ao receber novos dados
+            paginaAtual = 1;
             aplicarFiltrosERenderizar();
         });
     } catch (erro) {
@@ -65,10 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-/* ==========================================================================
- * MODAIS
- * ========================================================================== */
-
+/* ====== MODAIS ====== */
 function configurarModais() {
     const modalEditEl = document.getElementById("editLeadModal");
     if (modalEditEl && window.bootstrap) {
@@ -84,10 +83,8 @@ function configurarModais() {
     if (btnConfirmarExclusao) {
         btnConfirmarExclusao.addEventListener("click", async () => {
             if (!leadIdParaExcluir) return;
-
             btnConfirmarExclusao.disabled = true;
             btnConfirmarExclusao.textContent = "A remover...";
-
             try {
                 await excluirLead(leadIdParaExcluir);
                 if (excluirModalInstance) excluirModalInstance.hide();
@@ -104,10 +101,7 @@ function configurarModais() {
 }
 
 
-/* ==========================================================================
- * FILTROS
- * ========================================================================== */
-
+/* ====== FILTROS ====== */
 function configurarFiltros() {
     const filterPriority = document.getElementById("filter-priority");
     if (filterPriority) {
@@ -119,13 +113,7 @@ function configurarFiltros() {
 }
 
 
-/* ==========================================================================
- * BUSCA COM DEBOUNCE
- * ==========================================================================
- * Debounce = esperar 300ms após a última tecla antes de filtrar.
- * Sem isso, o filtro roda a cada letra digitada, o que trava a UI.
- * ========================================================================== */
-
+/* ====== BUSCA ====== */
 function configurarBusca() {
     const inputBusca = document.getElementById("busca-lead");
     if (!inputBusca) return;
@@ -141,10 +129,7 @@ function configurarBusca() {
 }
 
 
-/* ==========================================================================
- * SELETOR DE ITENS POR PÁGINA
- * ========================================================================== */
-
+/* ====== ITENS POR PÁGINA ====== */
 function configurarSeletorItensPorPagina() {
     const selectItens = document.getElementById("itens-por-pagina");
     if (!selectItens) return;
@@ -157,32 +142,21 @@ function configurarSeletorItensPorPagina() {
 }
 
 
-/* ==========================================================================
- * APLICAR FILTROS + PAGINAÇÃO + RENDERIZAR
- * ==========================================================================
- * Ordem:
- *   1. Filtra por busca (nome, email, curso)
- *   2. Filtra por prioridade
- *   3. Aplica paginação (fatia)
- *   4. Renderiza
- * ========================================================================== */
-
+/* ====== FILTRAR + PAGINAR + RENDERIZAR ====== */
 function aplicarFiltrosERenderizar() {
-    // 1. Busca textual
     let filtrados = [...listaLeadsCompleta];
 
     if (termoBusca) {
         filtrados = filtrados.filter((lead) => {
-            const nome = (lead.nome || "").toLowerCase();
+            const nome = getNomeLead(lead).toLowerCase();
             const email = (lead.email || "").toLowerCase();
-            const curso = (lead.curso || "").toLowerCase();
+            const curso = getCursoLead(lead).toLowerCase();
             return nome.includes(termoBusca)
                 || email.includes(termoBusca)
                 || curso.includes(termoBusca);
         });
     }
 
-    // 2. Filtro de prioridade
     const filterPriority = document.getElementById("filter-priority");
     const filtroPrio = filterPriority ? filterPriority.value : "all";
 
@@ -195,9 +169,7 @@ function aplicarFiltrosERenderizar() {
 
     listaLeadsFiltrada = filtrados;
 
-    // 3. Paginação
     const totalPaginas = Math.max(1, Math.ceil(filtrados.length / itensPorPagina));
-
     if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
     if (paginaAtual < 1) paginaAtual = 1;
 
@@ -205,7 +177,6 @@ function aplicarFiltrosERenderizar() {
     const fim = inicio + itensPorPagina;
     const pagina = filtrados.slice(inicio, fim);
 
-    // 4. Renderiza
     renderizarTabela(pagina, filtrados.length, inicio, fim);
     renderizarContador(filtrados.length, inicio, fim);
     renderizarPaginacao(totalPaginas);
@@ -213,10 +184,7 @@ function aplicarFiltrosERenderizar() {
 }
 
 
-/* ==========================================================================
- * ATUALIZAR KPIs DO TOPO (sempre com base na lista completa)
- * ========================================================================== */
-
+/* ====== KPIs ====== */
 function atualizarKPIs() {
     let alta = 0;
     let emAtendimento = 0;
@@ -238,17 +206,13 @@ function atualizarKPIs() {
 }
 
 
-/* ==========================================================================
- * RENDERIZAR TABELA
- * ========================================================================== */
-
+/* ====== TABELA ====== */
 function renderizarTabela(pagina, totalFiltrados, inicio, fim) {
     const tbody = document.getElementById("leads-tbody");
     const mobileContainer = document.getElementById("leads-mobile-container");
 
     if (!tbody) return;
 
-    // Estado vazio
     if (pagina.length === 0) {
         const msg = listaLeadsCompleta.length === 0
             ? "Nenhuma inscrição encontrada."
@@ -265,7 +229,9 @@ function renderizarTabela(pagina, totalFiltrados, inicio, fim) {
     let htmlMobile = "";
 
     pagina.forEach((lead) => {
-        // ── Badge de prioridade ──
+        const nomeLead = getNomeLead(lead) || "Não informado";
+        const cursoLead = getCursoLead(lead) || "Geral";
+
         const prioridade = lead.prioridade || "Média";
         let badgeClass = "bg-warning text-dark";
         if (prioridade.toLowerCase() === "alta") badgeClass = "bg-danger text-white";
@@ -273,7 +239,6 @@ function renderizarTabela(pagina, totalFiltrados, inicio, fim) {
 
         const prioridadePill = `<span class="badge rounded-pill ${badgeClass} px-3 py-1" style="font-size: 0.8rem; font-weight: 500;">${prioridade}</span>`;
 
-        // ── Badge de status ──
         const status = (lead.status || "novo").toLowerCase();
         let statusStyle = "border: 1px solid #cbd5e1; color: #64748b; background: #f8fafc;";
 
@@ -289,7 +254,6 @@ function renderizarTabela(pagina, totalFiltrados, inicio, fim) {
 
         const statusPill = `<span class="status-pill px-3 py-1 rounded-pill d-inline-flex align-items-center gap-1" style="${statusStyle} font-size: 0.82rem; font-weight: 500;">${lead.status || "Novo"}</span>`;
 
-        // ── Data ──
         let dataFormatada = "Recente";
         if (lead.criado_em) {
             dataFormatada = new Date(lead.criado_em).toLocaleDateString("pt-BR");
@@ -299,7 +263,6 @@ function renderizarTabela(pagina, totalFiltrados, inicio, fim) {
             dataFormatada = new Date(lead.data.seconds * 1000).toLocaleDateString("pt-BR");
         }
 
-        // ── Botões ──
         const acoesBotoes = `
             <div class="actions-group" style="display: inline-flex; gap: 0.4rem; justify-content: center;">
                 <a href="https://wa.me/${lead.telefone || ""}" target="_blank"
@@ -316,15 +279,14 @@ function renderizarTabela(pagina, totalFiltrados, inicio, fim) {
             </div>
         `;
 
-        // ── HTML Desktop ──
         htmlDesktop += `
             <tr>
                 <td>${dataFormatada}</td>
                 <td>
-                    <strong>${lead.nome || "Não informado"}</strong><br>
+                    <strong>${nomeLead}</strong><br>
                     <small style="color: #64748b;">${lead.email || ""}</small>
                 </td>
-                <td>${lead.curso || "Geral"}</td>
+                <td>${cursoLead}</td>
                 <td>${prioridadePill}</td>
                 <td style="max-width: 250px; font-size: 0.8rem; color: #475569; line-height: 1.3;">
                     ${lead.resumo_ia || lead.mensagem || "-"}
@@ -334,18 +296,17 @@ function renderizarTabela(pagina, totalFiltrados, inicio, fim) {
             </tr>
         `;
 
-        // ── HTML Mobile ──
         htmlMobile += `
             <div class="card-lead-item" style="background: white; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
                     <div>
-                        <strong>${lead.nome || "Não informado"}</strong><br>
+                        <strong>${nomeLead}</strong><br>
                         <small style="color: #64748b;">${lead.email || ""}</small>
                     </div>
                     <div>${prioridadePill}</div>
                 </div>
                 <div style="font-size: 0.85rem; color: #475569; margin-bottom: 0.75rem;">
-                    <p style="margin: 0.2rem 0;"><strong>Curso:</strong> ${lead.curso || "Geral"}</p>
+                    <p style="margin: 0.2rem 0;"><strong>Curso:</strong> ${cursoLead}</p>
                     <p style="margin: 0.2rem 0;"><strong>Análise:</strong> ${lead.resumo_ia || lead.mensagem || "-"}</p>
                     <p style="margin: 0.2rem 0;"><strong>Status:</strong> ${statusPill}</p>
                 </div>
@@ -364,10 +325,7 @@ function renderizarTabela(pagina, totalFiltrados, inicio, fim) {
 }
 
 
-/* ==========================================================================
- * CONTADOR "X-Y de Z leads"
- * ========================================================================== */
-
+/* ====== CONTADOR ====== */
 function renderizarContador(totalFiltrado, inicio, fim) {
     const el = document.getElementById("contador-leads");
     if (!el) return;
@@ -382,10 +340,7 @@ function renderizarContador(totalFiltrado, inicio, fim) {
 }
 
 
-/* ==========================================================================
- * PAGINAÇÃO
- * ========================================================================== */
-
+/* ====== PAGINAÇÃO ====== */
 function renderizarPaginacao(totalPaginas) {
     const ul = document.getElementById("paginacao-leads");
     if (!ul) return;
@@ -396,8 +351,6 @@ function renderizarPaginacao(totalPaginas) {
     }
 
     let html = "";
-
-    // Botão anterior
     html += `
         <li class="page-item ${paginaAtual === 1 ? "disabled" : ""}">
             <a class="page-link" href="#" data-page="${paginaAtual - 1}" aria-label="Anterior">
@@ -406,7 +359,6 @@ function renderizarPaginacao(totalPaginas) {
         </li>
     `;
 
-    // Números das páginas (máx 7)
     const paginas = calcularPaginasVisiveis(paginaAtual, totalPaginas);
 
     paginas.forEach((p) => {
@@ -421,7 +373,6 @@ function renderizarPaginacao(totalPaginas) {
         }
     });
 
-    // Botão próximo
     html += `
         <li class="page-item ${paginaAtual === totalPaginas ? "disabled" : ""}">
             <a class="page-link" href="#" data-page="${paginaAtual + 1}" aria-label="Próxima">
@@ -432,7 +383,6 @@ function renderizarPaginacao(totalPaginas) {
 
     ul.innerHTML = html;
 
-    // Eventos dos botões
     ul.querySelectorAll("a.page-link").forEach((link) => {
         link.addEventListener("click", (e) => {
             e.preventDefault();
@@ -446,18 +396,12 @@ function renderizarPaginacao(totalPaginas) {
     });
 }
 
-
-/**
- * Calcula quais números de página mostrar.
- * Se tiver muitas páginas, mostra "..." no meio.
- */
 function calcularPaginasVisiveis(atual, total) {
     if (total <= 7) {
         return Array.from({ length: total }, (_, i) => i + 1);
     }
 
     const paginas = [1];
-
     if (atual > 4) paginas.push("...");
 
     const inicio = Math.max(2, atual - 1);
@@ -466,17 +410,13 @@ function calcularPaginasVisiveis(atual, total) {
     for (let i = inicio; i <= fim; i++) paginas.push(i);
 
     if (atual < total - 3) paginas.push("...");
-
     paginas.push(total);
 
     return paginas;
 }
 
 
-/* ==========================================================================
- * EVENTOS DA TABELA (delegação)
- * ========================================================================== */
-
+/* ====== EVENTOS DA TABELA ====== */
 function configurarEventosTabela() {
     const tbody = document.getElementById("leads-tbody");
     if (!tbody) return;
@@ -516,10 +456,7 @@ function configurarEventosTabela() {
 }
 
 
-/* ==========================================================================
- * MODAL DE EDIÇÃO
- * ========================================================================== */
-
+/* ====== MODAL DE EDIÇÃO ====== */
 async function abrirModalEdicao(id) {
     try {
         const lead = await obterLeadPorId(id);
@@ -547,10 +484,12 @@ function preencherModalEdicao(id, data) {
     };
 
     setVal("edit-lead-id", id);
-    setVal("edit-nome", data.nome || data.candidato || "");
+    // ✅ CORRIGIDO: lê `name` primeiro, cai pra `nome` como fallback
+    setVal("edit-nome", data.name || data.nome || data.candidato || "");
     setVal("edit-email", data.email || "");
     setVal("edit-telefone", data.telefone || "");
-    setVal("edit-curso", data.curso || "");
+    // ✅ CORRIGIDO: lê `curso_interesse_name` primeiro
+    setVal("edit-curso", data.curso_interesse_name || data.curso || "");
     setVal("edit-resumo-ia", data.resumo_ia || data.mensagem || "");
     setVal("edit-status", data.status || "Novo");
     setVal("edit-prioridade", data.prioridade || "Média");
@@ -593,10 +532,7 @@ function preencherModalEdicao(id, data) {
 }
 
 
-/* ==========================================================================
- * FORMULÁRIO DE EDIÇÃO
- * ========================================================================== */
-
+/* ====== FORMULÁRIO DE EDIÇÃO ====== */
 function configurarFormularioEdicao() {
     const editForm = document.getElementById("edit-lead-form");
     if (!editForm) return;
@@ -627,11 +563,12 @@ function configurarFormularioEdicao() {
             return;
         }
 
+        // ✅ CORRIGIDO: grava com o schema do Firestore (name, curso_interesse_name)
         const dados = {
-            nome: getVal("edit-nome"),
+            name: getVal("edit-nome"),
             email: getVal("edit-email"),
             telefone: getVal("edit-telefone"),
-            curso: getVal("edit-curso"),
+            curso_interesse_name: getVal("edit-curso"),
             cpf: cpfValor,
             empresa: getVal("edit-empresa"),
             cargo: getVal("edit-cargo"),
@@ -668,10 +605,7 @@ function configurarFormularioEdicao() {
 }
 
 
-/* ==========================================================================
- * VIACEP
- * ========================================================================== */
-
+/* ====== VIACEP ====== */
 function configurarViaCEP() {
     const cepInput = document.getElementById("edit-cep");
     if (!cepInput) return;
@@ -701,10 +635,7 @@ function configurarViaCEP() {
 }
 
 
-/* ==========================================================================
- * BOTÃO DE CONVERSÃO EM ALUNO (desativado temporariamente)
- * ========================================================================== */
-
+/* ====== BOTÃO DE CONVERSÃO ====== */
 function configurarBotaoConversao() {
     const btn = document.getElementById("btn-executar-matricula");
     const feedback = document.getElementById("feedback-matricula");
