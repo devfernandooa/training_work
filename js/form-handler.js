@@ -1,8 +1,16 @@
 // ============================================================================
-// TRAINING WORK - CAPTURA DE DADOS, MAKE.COM E WHATSAPP AUTOMÁTICO
+// TRAINING WORK - FORMULÁRIO DE CONTATO → FIRESTORE + WHATSAPP ADMIN
 // ============================================================================
+import { db } from './firebase-config.js'; // ajuste o caminho se necessário
+import {
+  collection,
+  addDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-// 1. Aplica máscara automática de telefone com DDD (Ex: (75) 99999-9999)
+// ----------------------------------------------------------------------------
+// 1. Máscara de telefone com DDD
+// ----------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   const telInput = document.getElementById('telefone');
   if (telInput) {
@@ -11,14 +19,27 @@ document.addEventListener('DOMContentLoaded', () => {
       e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
     });
   }
+
+  // Liga o submit do form ao handler (evita recarregar a página)
+  const form = document.getElementById('formContato');
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      window.submitContactForm(e.submitter || form.querySelector('button[type="submit"]'));
+    });
+  }
 });
 
-// 2. Rola suavemente até a seção de contato ao clicar em "Inscrever-se" nos cards
-window.scrollToContact = () => document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' });
+// ----------------------------------------------------------------------------
+// 2. Rola suavemente até a seção de contato
+// ----------------------------------------------------------------------------
+window.scrollToContact = () =>
+  document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' });
 
-// 3. Função acionada ao clicar no botão de envio
+// ----------------------------------------------------------------------------
+// 3. Envio do formulário
+// ----------------------------------------------------------------------------
 window.submitContactForm = async function (button) {
-  // Captura os elementos do formulário
   const fields = {
     nome: document.getElementById('nome'),
     telefone: document.getElementById('telefone'),
@@ -27,71 +48,71 @@ window.submitContactForm = async function (button) {
     mensagem: document.getElementById('mensagem')
   };
 
-  // Coleta os valores digitados pelo usuário
   const data = {
     nome: fields.nome?.value.trim() || '',
     telefone: fields.telefone?.value.trim() || '',
     email: fields.email?.value.trim() || '',
-    curso: fields.curso?.value || 'Não selecionado',
+    cursoId: fields.curso?.value || '',
+    cursoNome:
+      fields.curso?.selectedOptions?.[0]?.textContent?.trim() || 'Não selecionado',
     mensagem: fields.mensagem?.value.trim() || 'Sem observações adicionais.'
   };
 
-  // Validação básica de campos obrigatórios
+  // Validação
   if (!data.nome || !data.email || data.telefone.length < 14) {
-    alert("Por favor, preencha todos os campos obrigatórios (*)");
+    alert('Por favor, preencha todos os campos obrigatórios (*)');
     return;
   }
 
-  // Feedback visual no botão enquanto processa s
-  const originalText = button.innerHTML;
-  button.disabled = true;
-  button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Registrando agendamento...`;
-
-  //  URL DO WEBHOOK GERADA NO MAKE.COM
-  const makeWebhookUrl = "https://hook.us2.make.com/1k6vhopd7va11whfuhoi7eyjn0gpm2ik";
-
-  //NÚMERO DO WHATSAPP (com DDI 55 + DDD + Número sem traços)
-  const numeroWhatsApp = "5575992849369";
-
-  // Mensagem institucional estruturada para o WhatsApp
-  const textoWhatsApp = `*🚀 INSCRIÇÃO CONFIRMADA - TRAINING WORK*
-
-Olá, ${data.nome}!
-A Training Work agradece o seu contato!
-
-Recebemos a sua inscrição com sucesso. Em breve, a confirmação da sua participação no curso será enviada para o WhatsApp e para o e-mail informados no momento do cadastro.
-
-Agradecemos pela confiança e desejamos muito sucesso em sua jornada de aprendizado!
-
----------------------------------------
-*📋 RESUMO DOS DADOS ENVIADOS:*
-*Curso:* ${data.curso}
-*WhatsApp:* ${data.telefone}
-*E-mail:* ${data.email}
-*Observações:* ${data.mensagem}`;
-
-  const urlWhatsApp = `https://w.app/ktg5dj${numeroWhatsApp}&text=${encodeURIComponent(textoWhatsApp)}`;
+  const originalText = button ? button.innerHTML : '';
+  if (button) {
+    button.disabled = true;
+    button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Registrando...`;
+  }
 
   try {
-    // Dispara os dados em formato JSON diretamente para o Webhook do Make.com
-    await fetch(makeWebhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
+    // ── 1) Grava no Firestore ────────────────────────────────────────────
+    await addDoc(collection(db, 'leads'), {
+      name: data.nome,
+      email: data.email,
+      telefone: data.telefone,
+      curso_interesse_id: data.cursoId,
+      curso_interesse_name: data.cursoNome,
+      mensagem: data.mensagem,
+      origem: 'Site / Formulário',
+      status: 'Novo',
+      excluido: false,
+      criado_em: serverTimestamp(),
+      atualizado_em: serverTimestamp()
     });
 
-    // Limpa os campos do formulário após envio bem-sucedido
-    Object.values(fields).forEach(f => { if (f) f.value = ''; });
+    // ── 2) Notifica o admin no WhatsApp ─────────────────────────────────
+    const numeroAdmin = '5575992849369';
+    const msgAdmin = `🔔 *NOVO LEAD CADASTRADO - TRAINING WORK*
 
-    // Redireciona o usuário para o WhatsApp com a mensagem pronta
+*Nome:* ${data.nome}
+*Curso:* ${data.cursoNome}
+*WhatsApp:* ${data.telefone}
+*E-mail:* ${data.email}
+*Mensagem:* ${data.mensagem}
+
+👉 Acesse o painel para tratar este lead.`;
+
+    const urlWhatsApp = `https://wa.me/${numeroAdmin}?text=${encodeURIComponent(msgAdmin)}`;
     window.open(urlWhatsApp, '_blank');
+
+    // ── 3) Limpa o formulário ───────────────────────────────────────────
+    Object.values(fields).forEach((f) => {
+      if (f) f.value = '';
+    });
+
   } catch (error) {
-    console.error("Erro ao enviar para o Make.com:", error);
-    // Redireciona para o WhatsApp mesmo em caso de oscilação de rede para não perder o lead
-    window.open(urlWhatsApp, '_blank');
+    console.error('Erro ao registrar lead:', error);
+    alert('Não foi possível registrar seu contato. Tente novamente em instantes.');
   } finally {
-    // Restaura o botão ao estado normal
-    button.disabled = false;
-    button.innerHTML = originalText;
+    if (button) {
+      button.disabled = false;
+      button.innerHTML = originalText;
+    }
   }
 };
