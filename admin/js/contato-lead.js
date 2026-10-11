@@ -3,12 +3,12 @@
  * TRAINING WORK — CONTATO/LEAD PÚBLICO (contato-lead.js)
  * =========================================================================
  *
- * Fluxo:
- *   1. Carrega cursos no <select>
- *   2. Aplica máscara de telefone
+ * Responsabilidades:
+ *   1. Popular o <select id="curso"> com cursos do Firestore
+ *   2. Aplicar máscara de telefone
  *   3. Ao enviar:
  *        - Grava lead no Firestore (com aceita_whatsapp)
- *        - Dispara e-mail via EmailJS pro admin
+ *        - Dispara e-mail de notificação via EmailJS
  *        - Mostra confirmação
  * =========================================================================
  */
@@ -23,13 +23,13 @@ import {
 /* ==========================================================================
  * ⚙️ CONFIGURAÇÃO DO EMAILJS
  * ==========================================================================
- * Substitua os valores abaixo pelos do seu painel EmailJS.
+ * Substitua os valores pelos do seu painel EmailJS.
  */
-const EMAILJS_PUBLIC_KEY  = "SUA_PUBLIC_KEY_AQUI";
-const EMAILJS_SERVICE_ID  = "SEU_SERVICE_ID_AQUI";
-const EMAILJS_TEMPLATE_ID = "SEU_TEMPLATE_ID_AQUI";
+const EMAILJS_PUBLIC_KEY = "Fg-rRL1eurjzwgTIE";
+const EMAILJS_SERVICE_ID = "service_lif41td";
+const EMAILJS_TEMPLATE_ID = "template_7ttj50m";
 
-// Número do WhatsApp do admin (pro botão no e-mail)
+// Número do WhatsApp do admin (caso queira usar em algum lugar)
 const NUMERO_ADMIN = "5575992849369";
 
 
@@ -42,13 +42,18 @@ async function carregarCursosNoSelect() {
 
   try {
     const snapshot = await getDocs(collection(db, "cursos"));
-    if (snapshot.empty) return;
+    if (snapshot.empty) {
+      console.warn("⚠️ Coleção 'cursos' vazia.");
+      return;
+    }
 
     selectCurso.innerHTML = '<option value="">Selecione um curso...</option>';
 
     const cursos = [];
     snapshot.forEach((docSnap) => {
       const curso = docSnap.data();
+
+      // Ignora cursos excluídos ou inativos
       if (curso.excluido === true) return;
       if (curso.ativo === false) return;
 
@@ -58,6 +63,7 @@ async function carregarCursosNoSelect() {
       });
     });
 
+    // Ordena alfabeticamente
     cursos.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
     cursos.forEach(({ id, nome }) => {
@@ -67,6 +73,8 @@ async function carregarCursosNoSelect() {
       option.dataset.nome = nome;
       selectCurso.appendChild(option);
     });
+
+    console.log(`✅ ${cursos.length} cursos carregados.`);
   } catch (erro) {
     console.error("❌ Erro ao carregar cursos:", erro);
   }
@@ -74,7 +82,7 @@ async function carregarCursosNoSelect() {
 
 
 /* ==========================================================================
- * 2. MÁSCARA DE TELEFONE
+ * 2. MÁSCARA DE TELEFONE (75) 99999-9999
  * ========================================================================== */
 function aplicarMascaraTelefone() {
   const telInput = document.getElementById("telefone");
@@ -93,23 +101,25 @@ function aplicarMascaraTelefone() {
 
 
 /* ==========================================================================
- * 3. ENVIA O E-MAIL VIA EMAILJS
- * ==========================================================================
- * Essa função é separada pra facilitar debug e reuso.
- */
+ * 3. ENVIO DE E-MAIL VIA EMAILJS
+ * ========================================================================== */
 async function enviarEmailNotificacao(dados) {
-  // EmailJS precisa ser carregado globalmente no HTML via <script>
   if (!window.emailjs) {
-    console.warn("⚠️ EmailJS não carregado. Pulando notificação por e-mail.");
+    console.warn("⚠️ EmailJS não carregado.");
     return false;
   }
+
+  // Gera link do WhatsApp do cliente (pra colocar no e-mail)
+  const numeroLimpo = "55" + dados.telefone.replace(/\D/g, "");
+  const textoWhats = `Olá ${dados.nome}, recebemos seu contato sobre o curso "${dados.cursoNome}". Podemos conversar?`;
+  const whatsappLink = `https://wa.me/${numeroLimpo}?text=${encodeURIComponent(textoWhats)}`;
 
   try {
     await window.emailjs.send(
       EMAILJS_SERVICE_ID,
       EMAILJS_TEMPLATE_ID,
       {
-        // Variáveis disponíveis no template (use {{nome}} no HTML do EmailJS):
+        // Estas variáveis devem bater com as {{tags}} do template EmailJS
         nome: dados.nome,
         email: dados.email,
         telefone: dados.telefone,
@@ -117,12 +127,11 @@ async function enviarEmailNotificacao(dados) {
         mensagem: dados.mensagem,
         aceita_whatsapp: dados.aceitaWhatsapp ? "Sim ✅" : "Não",
         data_envio: new Date().toLocaleString("pt-BR"),
-        // Link do WhatsApp do cliente (já formatado pra uso direto no template)
-        whatsapp_link: `https://wa.me/55${dados.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(`Olá ${dados.nome}, recebemos seu contato sobre o curso "${dados.cursoNome}". Podemos conversar?`)}`,
-        whatsapp_numero_limpo: `55${dados.telefone.replace(/\D/g, "")}`
+        whatsapp_link: whatsappLink
       },
       EMAILJS_PUBLIC_KEY
     );
+
     console.log("✅ E-mail de notificação enviado!");
     return true;
   } catch (erro) {
@@ -137,23 +146,27 @@ async function enviarEmailNotificacao(dados) {
  * ========================================================================== */
 function ligarSubmitFormulario() {
   const form = document.getElementById("formContato");
-  if (!form) return;
+  if (!form) {
+    console.warn("⚠️ #formContato não encontrado.");
+    return;
+  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const btn = e.submitter || form.querySelector('button[type="submit"]');
 
-    const nome      = document.getElementById("nome")?.value.trim()     || "";
-    const telefone  = document.getElementById("telefone")?.value.trim() || "";
-    const email     = document.getElementById("email")?.value.trim()    || "";
+    // Coleta dados
+    const nome = document.getElementById("nome")?.value.trim() || "";
+    const telefone = document.getElementById("telefone")?.value.trim() || "";
+    const email = document.getElementById("email")?.value.trim() || "";
     const selectCurso = document.getElementById("curso");
-    const cursoId   = selectCurso?.value || "";
+    const cursoId = selectCurso?.value || "";
     const cursoNome = selectCurso?.selectedOptions?.[0]?.dataset?.nome
-                    || selectCurso?.selectedOptions?.[0]?.textContent?.trim()
-                    || "Não selecionado";
-    const mensagem  = document.getElementById("mensagem")?.value.trim()
-                    || "Sem observações adicionais.";
+      || selectCurso?.selectedOptions?.[0]?.textContent?.trim()
+      || "Não selecionado";
+    const mensagem = document.getElementById("mensagem")?.value.trim()
+      || "Sem observações adicionais.";
     const aceitaWhatsapp = document.getElementById("aceita_whatsapp")?.checked || false;
 
     // Validação
@@ -166,6 +179,7 @@ function ligarSubmitFormulario() {
       return;
     }
 
+    // Feedback visual
     const originalText = btn ? btn.innerHTML : "";
     if (btn) {
       btn.disabled = true;
@@ -175,7 +189,7 @@ function ligarSubmitFormulario() {
     const dados = { nome, telefone, email, cursoId, cursoNome, mensagem, aceitaWhatsapp };
 
     try {
-      // ── 1) Grava o lead no Firestore ────────────────────────────────
+      // ── 1) Grava no Firestore ───────────────────────────────────────
       const agora = new Date().toISOString();
 
       await addDoc(collection(db, "leads"), {
@@ -185,7 +199,7 @@ function ligarSubmitFormulario() {
         curso_interesse_id: cursoId,
         curso_interesse_name: cursoNome,
         mensagem: mensagem,
-        aceita_whatsapp: aceitaWhatsapp,      // ← novo campo
+        aceita_whatsapp: aceitaWhatsapp,
         origem: "Site / Formulário",
         status: "Novo",
         prioridade: "Média",
@@ -195,13 +209,15 @@ function ligarSubmitFormulario() {
         atualizado_por: "Site / Formulário"
       });
 
-      // ── 2) Dispara o e-mail pro admin (não bloqueia se falhar) ──────
+      console.log("✅ Lead gravado no Firestore.");
+
+      // ── 2) Dispara e-mail (não bloqueia se falhar) ──────────────────
       await enviarEmailNotificacao(dados);
 
-      // ── 3) Limpa o formulário ───────────────────────────────────────
+      // ── 3) Limpa o form ─────────────────────────────────────────────
       form.reset();
 
-      // ── 4) Feedback pro cliente ─────────────────────────────────────
+      // ── 4) Confirma pro cliente ─────────────────────────────────────
       alert("✅ Recebemos seu contato! Em breve nossa equipe entrará em contato.");
 
     } catch (erro) {

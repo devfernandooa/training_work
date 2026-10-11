@@ -216,8 +216,15 @@ function renderizarTabelaLeads() {
 
     let html = "";
     ultimos.forEach((l) => {
-        const nome = l.nome || "Sem nome";
-        const curso = l.curso_interesse_nome || l.curso || "—";
+        // ✅ CORRIGIDO: prioriza `name`, cai pra `nome` (retrocompatível)
+        const nome = l.name || l.nome || "Sem nome";
+
+        // ✅ Blindado: aceita os dois padrões de campo
+        const curso = l.curso_interesse_name
+            || l.curso_interesse_nome
+            || l.curso
+            || "—";
+
         const status = l.status || "Novo";
 
         // Cor do badge por status
