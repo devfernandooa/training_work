@@ -36,6 +36,14 @@ let _matriculasOk = false;
 
 let _uiConfigurada = false;
 
+let modalConfirmStatusInstance = null;
+let turmaIdParaAlterarStatus = null;
+let novoStatusTurma = null;
+
+let paginaAtualTurmas = 1;
+let itensPorPagina = 10;
+let listaTurmasFiltrada = [];
+
 /* =========================================================================
  * SEÇÃO 2: HELPERS
  * ========================================================================= */
@@ -295,41 +303,57 @@ function atualizarInterfaceTurmas(turmas) {
 function atualizarKPIsTopo() {
     try {
         let totalAtivas = 0;
+        let totalInativas = 0;
         let totalAlunos = 0;
         let capacidade = 0;
 
         listaTurmasGlobal.forEach((t) => {
             const st = (t.status ? String(t.status).toLowerCase() : "ativo");
-            if (st !== "ativo" && st !== "ativa") return;
 
-            totalAtivas++;
-
-            const inscritos = obterInscritos(t).length;
-            const vagasMax = normalizarVagas(t);
-
-            totalAlunos += inscritos;
-            capacidade += vagasMax;
+            if (st === "ativo" || st === "ativa") {
+                totalAtivas++;
+                const inscritos = obterInscritos(t).length;
+                totalAlunos += inscritos;
+                capacidade += normalizarVagas(t);
+            } else {
+                totalInativas++;
+            }
         });
 
         const taxa = capacidade > 0 ? Math.round((totalAlunos / capacidade) * 100) : 0;
 
         const elT = getEl("kpi-turmas-ativas-reais");
+        const elI = getEl("kpi-turmas-inativas");
         const elA = getEl("kpi-total-alunos-matriculados");
         const elO = getEl("kpi-taxa-ocupacao");
 
         if (elT) elT.textContent = totalAtivas;
+        if (elI) elI.textContent = totalInativas;
         if (elA) elA.textContent = totalAlunos;
         if (elO) elO.textContent = `${taxa}%`;
     } catch (err) {
         console.error("❌ Erro ao atualizar KPIs:", err);
     }
 }
-
 /* =========================================================================
  * SEÇÃO 6: TABELA PRINCIPAL
  * ========================================================================= */
 
 function renderizarTabelaGestao(turmas) {
+    listaTurmasFiltrada = turmas || [];
+
+    const totalPaginas = Math.max(1, Math.ceil(listaTurmasFiltrada.length / itensPorPagina));
+    if (paginaAtualTurmas > totalPaginas) paginaAtualTurmas = totalPaginas;
+
+    const inicio = (paginaAtualTurmas - 1) * itensPorPagina;
+    const fim = inicio + itensPorPagina;
+    const pagina = listaTurmasFiltrada.slice(inicio, fim);
+
+    renderizarLinhasTabela(pagina);
+    renderizarPaginacaoTurmas(totalPaginas);
+}
+
+function renderizarLinhasTabela(turmas) {
     const tbody = getEl("tabela-turmas-tbody");
     if (!tbody) return;
 
@@ -343,8 +367,10 @@ function renderizarTabelaGestao(turmas) {
 
     let html = "";
     turmas.forEach((t, index) => {
-        const st = (t.status || "Ativo").toLowerCase();
+        // Índice global (pra paginação)
+        const indexGlobal = (paginaAtualTurmas - 1) * itensPorPagina + index;
 
+        const st = (t.status || "Ativo").toLowerCase();
         let statusStyle = "border:1px solid #22c55e;color:#15803d;background:#f0fdf4;";
         if (st === "inativo") statusStyle = "border:1px solid #94a3b8;color:#475569;background:#f1f5f9;";
         const badgeStatus = `<span class="px-3 py-1 rounded-pill d-inline-flex align-items-center gap-1" style="${statusStyle}font-size:.82rem;font-weight:500;">${st === "ativo" ? "Ativo" : "Inativo"}</span>`;
@@ -354,15 +380,14 @@ function renderizarTabelaGestao(turmas) {
             ? '<span class="badge bg-warning text-dark me-1" style="font-size:.72rem;">⚡ Normas Regulamentadoras</span>'
             : '<span class="badge bg-info text-dark me-1" style="font-size:.72rem;">⚡ Grade de Treinamentos</span>';
 
-        const { codTurma, codEmenta } = calcularCodigoTurma(t, index);
-
+        const { codTurma, codEmenta } = calcularCodigoTurma(t, indexGlobal);
         const inscritosCount = obterInscritos(t).length;
         const vagasMax = normalizarVagas(t);
         const vagasRestantes = Math.max(0, vagasMax - inscritosCount);
 
         const acoes = `
             <div style="display:inline-flex;gap:.38rem;justify-content:center;">
-                <button class="btn-icon btn-acao-alunos" data-id="${t.id}" data-index="${index}" title="Alunos Matriculados" style="color:#0284c7;background:#e0f2fe;"><i class="fas fa-users"></i></button>
+                <button class="btn-icon btn-acao-alunos" data-id="${t.id}" data-index="${indexGlobal}" title="Alunos Matriculados" style="color:#0284c7;background:#e0f2fe;"><i class="fas fa-users"></i></button>
                 <button class="btn-icon btn-acao-presenca" data-id="${t.id}" title="Controle de Presença" style="color:#16a34a;background:#dcfce7;"><i class="fas fa-clipboard-check"></i></button>
                 <button class="btn-icon btn-icon-edit btn-acao-editar" data-id="${t.id}" title="Editar Turma"><i class="fas fa-pen"></i></button>
                 <button class="btn-icon btn-icon-delete btn-acao-inativar" data-id="${t.id}" data-nome="${t.curso_nome || t.nome_turma || t.nome || ""}" data-status="${t.status || "Ativo"}" title="${st === "ativo" ? "Inativar" : "Ativar"} Turma"><i class="fas ${st === "ativo" ? "fa-ban" : "fa-check-circle"}"></i></button>
@@ -371,19 +396,20 @@ function renderizarTabelaGestao(turmas) {
 
         html += `
             <tr>
-                <td style="max-width:220px;">
+                <td style="max-width:280px;">
                     <strong class="text-dark d-block text-truncate" title="${t.curso_nome || t.nome_turma || t.nome || ""}">${t.curso_nome || t.nome_turma || t.nome || "Turma sem nome"}</strong>
                     <div class="my-1">${badgeCategoria}</div>
+                    ${t.descricao ? `<div class="text-muted small text-truncate" title="${t.descricao}" style="max-width:260px; font-size:0.72rem;">${t.descricao}</div>` : ""}
                     <small class="text-muted">Carga: ${t.carga_horaria || "0"}h | R$ ${(Number(t.valor || t.preco || 0)).toFixed(2)}</small>
                 </td>
-                <td style="max-width:180px;">
+                <td style="max-width:180px;" class="col-codigo">
                     <span class="fw-bold text-dark font-monospace text-truncate d-block">${codTurma}</span>
                     <small class="badge bg-light text-muted border font-monospace mt-1">${codEmenta}</small>
                 </td>
-                <td style="max-width:150px;">
+                <td style="max-width:150px;" class="col-instrutor">
                     <small class="text-dark text-truncate d-block"><i class="fas fa-user-tie text-muted me-1"></i>${t.instrutor || "A definir"}</small>
                 </td>
-                <td>
+                <td class="col-dias">
                     <div class="fw-bold text-dark" style="font-size:.85rem;"><i class="fas fa-calendar-alt text-muted me-1"></i>${t.dias_semana || "Dias a definir"}</div>
                     <small class="text-muted" style="font-size:.78rem;"><i class="fas fa-clock text-muted me-1"></i>${t.horario || "Horário flexível"} (${t.modalidade || "Presencial"})</small>
                 </td>
@@ -408,6 +434,37 @@ function configurarEventosUI() {
     if (_uiConfigurada) return;
     _uiConfigurada = true;
 
+
+    // Inicializa modal de confirmação de status
+    const modalConfirmEl = getEl("modalConfirmarStatusTurma");
+    if (modalConfirmEl && window.bootstrap) {
+        modalConfirmStatusInstance = new bootstrap.Modal(modalConfirmEl);
+    }
+
+    // Botão de confirmar do modal
+    const btnConfirmarStatus = getEl("btnConfirmarStatusTurma");
+    if (btnConfirmarStatus) {
+        btnConfirmarStatus.addEventListener("click", async () => {
+            if (!turmaIdParaAlterarStatus || !novoStatusTurma) return;
+
+            const textoOriginal = btnConfirmarStatus.innerHTML;
+            btnConfirmarStatus.disabled = true;
+            btnConfirmarStatus.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> A processar...`;
+
+            try {
+                await alternarStatusTurmaBackend(turmaIdParaAlterarStatus, novoStatusTurma);
+                if (modalConfirmStatusInstance) modalConfirmStatusInstance.hide();
+            } catch (err) {
+                console.error("❌ Erro ao alterar status:", err);
+                alert("Erro ao alterar status da turma.");
+            } finally {
+                btnConfirmarStatus.disabled = false;
+                btnConfirmarStatus.innerHTML = textoOriginal;
+                turmaIdParaAlterarStatus = null;
+                novoStatusTurma = null;
+            }
+        });
+    }
     // Busca
     const inputBusca = getEl("busca-turma");
     if (inputBusca) {
@@ -588,8 +645,52 @@ function configurarEventosUI() {
             const st = btnInativar.getAttribute("data-status") || "Ativo";
             const novo = st.toLowerCase() === "ativo" ? "Inativo" : "Ativo";
 
-            if (confirm(`Deseja alterar o status da turma "${nome}" para ${novo}?`)) {
-                await alternarStatusTurmaBackend(id, novo);
+            turmaIdParaAlterarStatus = id;
+            novoStatusTurma = novo;
+
+            // Atualiza conteúdo do modal
+            const iconeWrap = getEl("confirmStatusIconeWrap");
+            const icone = getEl("confirmStatusIcone");
+            const titulo = getEl("confirmStatusTitulo");
+            const texto = getEl("confirmStatusTexto");
+            const nomeTurma = getEl("confirmStatusNomeTurma");
+            const btnConfirm = getEl("btnConfirmarStatusTurma");
+
+            if (novo === "Inativo") {
+                // 🔴 Vermelho
+                if (iconeWrap) iconeWrap.style.background = "#fee2e2";
+                if (iconeWrap) iconeWrap.style.color = "#dc2626";
+                if (icone) icone.className = "fas fa-ban fa-2x";
+                if (titulo) {
+                    titulo.textContent = "Inativar Turma?";
+                    titulo.style.color = "#0f172a";
+                }
+                if (texto) texto.textContent = "Deseja realmente inativar esta turma? Alunos matriculados não serão removidos.";
+                if (btnConfirm) {
+                    btnConfirm.textContent = "Inativar Turma";
+                    btnConfirm.style.background = "#dc2626";
+                }
+            } else {
+                // 🟢 Verde
+                if (iconeWrap) iconeWrap.style.background = "#dcfce7";
+                if (iconeWrap) iconeWrap.style.color = "#16a34a";
+                if (icone) icone.className = "fas fa-check-circle fa-2x";
+                if (titulo) {
+                    titulo.textContent = "Reativar Turma?";
+                    titulo.style.color = "#0f172a";
+                }
+                if (texto) texto.textContent = "Deseja reativar esta turma? Ela voltará a aparecer como ativa no painel.";
+                if (btnConfirm) {
+                    btnConfirm.textContent = "Reativar Turma";
+                    btnConfirm.style.background = "#16a34a";
+                }
+            }
+
+            if (nomeTurma) nomeTurma.textContent = nome;
+
+            // Abre o modal
+            if (modalConfirmStatusInstance) {
+                modalConfirmStatusInstance.show();
             }
             return;
         }
@@ -714,6 +815,15 @@ function configurarEventosUI() {
             });
         }
     }
+
+    const selectItens = getEl("itens-por-pagina-turmas");
+    if (selectItens) {
+        selectItens.addEventListener("change", (e) => {
+            itensPorPagina = parseInt(e.target.value, 10) || 10;
+            paginaAtualTurmas = 1;
+            renderizarTabelaGestao(listaTurmasFiltrada);
+        });
+    }
 }
 
 /* =========================================================================
@@ -775,7 +885,6 @@ function renderizarTabelaModalAlunos(turma) {
 
     tbody.innerHTML = html;
 }
-
 async function executarMatricula() {
     if (!turmaAtualGestao) {
         alert("Nenhuma turma selecionada.");
@@ -799,7 +908,6 @@ async function executarMatricula() {
 
     const form = getEl("formMatricularAlunoTurma");
     const btn = form?.querySelector('button[type="submit"], button');
-
     const textoOriginal = btn ? btn.innerHTML : "";
 
     try {
@@ -808,79 +916,32 @@ async function executarMatricula() {
             btn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> A matricular...`;
         }
 
+        // ⚡ 1) CHAMA O SERVICE
         await matricularAlunoNaTurmaBackend(turmaAtualGestao.id, aluno);
-        async function executarMatricula() {
-            if (!turmaAtualGestao) {
-                alert("Nenhuma turma selecionada.");
-                return;
-            }
 
-            const select = getEl("selectAlunoParaMatricular");
-            const alunoId = select?.value;
-            if (!alunoId) {
-                alert("Selecione um aluno para matricular.");
-                return;
-            }
-
-            const aluno = listaAlunosSistemaGlobal.find(
-                (a) => (a.id || a.aluno_id) === alunoId
-            );
-            if (!aluno) {
-                alert("Aluno não encontrado no sistema.");
-                return;
-            }
-
-            const form = getEl("formMatricularAlunoTurma");
-            const btn = form?.querySelector('button[type="submit"], button');
-            const textoOriginal = btn ? btn.innerHTML : "";
-
-            try {
-                if (btn) {
-                    btn.disabled = true;
-                    btn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> A matricular...`;
-                }
-
-                // 1. Grava no Firestore
-                await matricularAlunoNaTurmaBackend(turmaAtualGestao.id, aluno);
-
-                // 2. ⚡ UPDATE OTIMISTA — reflete na UI antes do onSnapshot chegar
-                if (!Array.isArray(turmaAtualGestao.alunos_matriculados)) {
-                    turmaAtualGestao.alunos_matriculados = [];
-                }
-
-                const jaEstaNaLista = turmaAtualGestao.alunos_matriculados.some(
-                    (m) => (m.aluno_id || m.id) === alunoId
-                );
-
-                if (!jaEstaNaLista) {
-                    turmaAtualGestao.alunos_matriculados.push({
-                        aluno_id: alunoId,
-                        data_matricula: new Date().toISOString(),
-                        status: "Matriculado"
-                    });
-                }
-
-                // 3. Re-renderiza modal + select
-                renderizarTabelaModalAlunos(turmaAtualGestao);
-                popularSelectAlunosModal(listaAlunosSistemaGlobal);
-
-                // 4. Limpa o select
-                if (select) select.value = "";
-
-            } catch (err) {
-                console.error("❌ Erro ao matricular:", err);
-                alert("Erro ao matricular: " + err.message);
-            } finally {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = textoOriginal;
-                }
-            }
+        // ⚡ 2) UPDATE OTIMISTA (UI responde na hora)
+        if (!Array.isArray(turmaAtualGestao.alunos_matriculados)) {
+            turmaAtualGestao.alunos_matriculados = [];
         }
-        // Limpa o select — modal permanece aberto
+
+        const jaEstaNaLista = turmaAtualGestao.alunos_matriculados.some(
+            (m) => (m.aluno_id || m.id) === alunoId
+        );
+
+        if (!jaEstaNaLista) {
+            turmaAtualGestao.alunos_matriculados.push({
+                aluno_id: alunoId,
+                data_matricula: new Date().toISOString(),
+                status: "Matriculado"
+            });
+        }
+
+        renderizarTabelaModalAlunos(turmaAtualGestao);
+        popularSelectAlunosModal(listaAlunosSistemaGlobal);
+
         if (select) select.value = "";
 
-        console.log(`✅ Aluno ${alunoId} matriculado. Modal permanece aberto.`);
+        console.log(`✅ Aluno ${alunoId} matriculado.`);
 
     } catch (err) {
         console.error("❌ Erro ao matricular:", err);
@@ -891,6 +952,70 @@ async function executarMatricula() {
             btn.innerHTML = textoOriginal;
         }
     }
+}
+
+function renderizarPaginacaoTurmas(totalPaginas) {
+    const ul = getEl("paginacao-turmas");
+    if (!ul) return;
+
+    if (totalPaginas <= 1) {
+        ul.innerHTML = "";
+        return;
+    }
+
+    let html = `
+        <li class="page-item ${paginaAtualTurmas === 1 ? "disabled" : ""}">
+            <a class="page-link" href="#" data-page="${paginaAtualTurmas - 1}" aria-label="Anterior">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        </li>
+    `;
+
+    // Mostra no máximo 7 páginas
+    const paginas = [];
+    if (totalPaginas <= 7) {
+        for (let i = 1; i <= totalPaginas; i++) paginas.push(i);
+    } else {
+        paginas.push(1);
+        if (paginaAtualTurmas > 4) paginas.push("...");
+        for (let i = Math.max(2, paginaAtualTurmas - 1); i <= Math.min(totalPaginas - 1, paginaAtualTurmas + 1); i++) paginas.push(i);
+        if (paginaAtualTurmas < totalPaginas - 3) paginas.push("...");
+        paginas.push(totalPaginas);
+    }
+
+    paginas.forEach((p) => {
+        if (p === "...") {
+            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        } else {
+            html += `
+                <li class="page-item ${p === paginaAtualTurmas ? "active" : ""}">
+                    <a class="page-link" href="#" data-page="${p}">${p}</a>
+                </li>
+            `;
+        }
+    });
+
+    html += `
+        <li class="page-item ${paginaAtualTurmas === totalPaginas ? "disabled" : ""}">
+            <a class="page-link" href="#" data-page="${paginaAtualTurmas + 1}" aria-label="Próxima">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </li>
+    `;
+
+    ul.innerHTML = html;
+
+    ul.querySelectorAll("a.page-link").forEach((link) => {
+        link.addEventListener("click", (e) => {
+            e.preventDefault();
+            const p = parseInt(link.getAttribute("data-page"), 10);
+            if (!isNaN(p) && p >= 1 && p <= totalPaginas && p !== paginaAtualTurmas) {
+                paginaAtualTurmas = p;
+                renderizarTabelaGestao(listaTurmasFiltrada);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+        });
+    });
 }
 /* =========================================================================
  * EXPOR DEBUG
