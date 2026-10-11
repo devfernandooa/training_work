@@ -53,7 +53,7 @@
                 <i class="fas fa-sign-out-alt"></i>
             </button>
         </div>
-      <ul class="sidebar-menu">
+        <ul class="sidebar-menu">
             <li>
                 <a href="dashboard.html" class="sidebar-link">
                     <i class="fas fa-chart-pie"></i> <span>Dashboard</span>
@@ -106,7 +106,8 @@
                 <h1 class="page-title">
                     <i class="fas fa-laptop-code text-primary"></i> Turmas & Cursos em Andamento
                 </h1>
-                <p class="page-subtitle">Gerencie turmas ativas, ementas, professores e acompanhe o estado operacional.</p>
+                <p class="page-subtitle">Gerencie turmas ativas, ementas, professores e acompanhe o estado operacional.
+                </p>
             </div>
             <div class="header-status-badge">
                 <span class="status-dot"></span>
@@ -123,7 +124,8 @@
                         <i class="fas fa-layer-group fa-lg"></i>
                     </div>
                     <div>
-                        <small class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.72rem;">Turmas Ativas</small>
+                        <small class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.72rem;">Turmas
+                            Ativas</small>
                         <h3 class="mb-0 fw-bold text-dark" id="kpi-turmas-ativas-reais">0</h3>
                     </div>
                 </div>
@@ -136,7 +138,8 @@
                         <i class="fas fa-user-graduate fa-lg"></i>
                     </div>
                     <div>
-                        <small class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.72rem;">Alunos Matriculados</small>
+                        <small class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.72rem;">Alunos
+                            Matriculados</small>
                         <h3 class="mb-0 fw-bold text-dark" id="kpi-total-alunos-matriculados">0</h3>
                     </div>
                 </div>
@@ -149,8 +152,23 @@
                         <i class="fas fa-chart-line fa-lg"></i>
                     </div>
                     <div>
-                        <small class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.72rem;">Taxa de Ocupação</small>
+                        <small class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.72rem;">Taxa de
+                            Ocupação</small>
                         <h3 class="mb-0 fw-bold text-dark" id="kpi-taxa-ocupacao">0%</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="kpi-card p-3 rounded-3 border-0 bg-white shadow-sm d-flex align-items-center">
+                    <div class="kpi-icon me-3 p-3 rounded-3 d-flex align-items-center justify-content-center"
+                        style="background-color: #f1f5f9; color: #64748b; width: 48px; height: 48px;">
+                        <i class="fas fa-archive fa-lg"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.72rem;">Turmas
+                            Inativas</small>
+                        <h3 class="mb-0 fw-bold text-dark" id="kpi-turmas-inativas">0</h3>
                     </div>
                 </div>
             </div>
@@ -188,7 +206,7 @@
                             <i class="fas fa-list text-primary me-2"></i>Turmas Ativas e Operacionais
                         </h5>
 
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
                             <div class="input-group input-group-sm" style="width: 250px;">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="fas fa-search text-muted"></i>
@@ -196,6 +214,14 @@
                                 <input type="text" id="busca-turma" class="form-control border-start-0 ps-0"
                                     placeholder="Pesquisar turma ou instrutor...">
                             </div>
+
+                            <select id="itens-por-pagina-turmas" class="form-select form-select-sm"
+                                style="width: auto;">
+                                <option value="10" selected>10 por página</option>
+                                <option value="20">20 por página</option>
+                                <option value="30">30 por página</option>
+                            </select>
+
                             <button class="btn btn-sm btn-outline-secondary px-3 rounded-pill" id="btnVerInativos">
                                 Ver Inativos
                             </button>
@@ -209,14 +235,14 @@
 
                 <section class="card table-container border-0 shadow-sm">
                     <div class="card-leads-container">
-                        <div class="view-desktop">
-                            <table class="tabela-leads">
-                                <thead>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="tabela-turmas">
+                                <thead class="table-light">
                                     <tr>
                                         <th>Turma / Curso</th>
-                                        <th>Código / Turma</th>
-                                        <th>Instrutor</th>
-                                        <th>Dias / Horário</th>
+                                        <th class="col-codigo">Código / Turma</th>
+                                        <th class="col-instrutor">Instrutor</th>
+                                        <th class="col-dias">Dias / Horário</th>
                                         <th>Lotação (Vagas)</th>
                                         <th>Status</th>
                                         <th style="text-align: center;">Ações</th>
@@ -231,6 +257,12 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                    <!-- Rodapé: só paginação, centralizada -->
+                    <div class="d-flex justify-content-center mt-3">
+                        <nav aria-label="Paginação de turmas">
+                            <ul class="pagination pagination-sm m-0" id="paginacao-turmas"></ul>
+                        </nav>
                     </div>
                 </section>
             </div>
@@ -254,7 +286,8 @@
                             </div>
 
                             <div class="mb-2">
-                                <label class="form-label small fw-semibold text-muted mb-1">Filtrar por Professor</label>
+                                <label class="form-label small fw-semibold text-muted mb-1">Filtrar por
+                                    Professor</label>
                                 <input type="text" class="form-control form-control-sm" id="filtroProfessorCronograma"
                                     placeholder="Nome do professor...">
                             </div>
@@ -301,13 +334,15 @@
                                         <label class="form-label small fw-semibold text-muted mb-1">
                                             Hora Início <span class="text-danger">*</span>
                                         </label>
-                                        <input type="time" class="form-control form-control-sm" id="aulaHoraInicioInput" required>
+                                        <input type="time" class="form-control form-control-sm" id="aulaHoraInicioInput"
+                                            required>
                                     </div>
                                     <div class="col-6">
                                         <label class="form-label small fw-semibold text-muted mb-1">
                                             Hora Término <span class="text-danger">*</span>
                                         </label>
-                                        <input type="time" class="form-control form-control-sm" id="aulaHoraFimInput" required>
+                                        <input type="time" class="form-control form-control-sm" id="aulaHoraFimInput"
+                                            required>
                                     </div>
                                 </div>
 
@@ -373,7 +408,8 @@
             <div class="tab-pane fade" id="frequencia-pane" role="tabpanel">
                 <div class="card border-0 shadow-sm p-4 bg-white">
                     <h6 class="fw-bold text-dark mb-2">Controle de Presença</h6>
-                    <p class="text-muted small mb-0">Selecione uma turma para registrar e gerenciar a presença dos alunos.</p>
+                    <p class="text-muted small mb-0">Selecione uma turma para registrar e gerenciar a presença dos
+                        alunos.</p>
                 </div>
             </div>
         </div>
@@ -397,7 +433,8 @@
                             <input type="hidden" id="editAulaId">
 
                             <div class="mb-3">
-                                <label class="form-label small fw-semibold text-muted mb-1">Professor / Instrutor</label>
+                                <label class="form-label small fw-semibold text-muted mb-1">Professor /
+                                    Instrutor</label>
                                 <input type="text" class="form-control form-control-sm" id="editAulaInstrutor" required>
                             </div>
 
@@ -409,11 +446,13 @@
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
                                     <label class="form-label small fw-semibold text-muted mb-1">Hora Início</label>
-                                    <input type="time" class="form-control form-control-sm" id="editAulaHoraInicio" required>
+                                    <input type="time" class="form-control form-control-sm" id="editAulaHoraInicio"
+                                        required>
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label small fw-semibold text-muted mb-1">Hora Término</label>
-                                    <input type="time" class="form-control form-control-sm" id="editAulaHoraFim" required>
+                                    <input type="time" class="form-control form-control-sm" id="editAulaHoraFim"
+                                        required>
                                 </div>
                             </div>
 
@@ -425,7 +464,8 @@
                             <div class="p-3 bg-light rounded-3 border">
                                 <div class="form-check form-switch m-0">
                                     <input class="form-check-input" type="checkbox" id="checkNotificarAlunos" checked>
-                                    <label class="form-check-label fw-semibold text-dark small ms-2" for="checkNotificarAlunos">
+                                    <label class="form-check-label fw-semibold text-dark small ms-2"
+                                        for="checkNotificarAlunos">
                                         Notificar alunos por e-mail/notificação sobre o reagendamento
                                     </label>
                                 </div>
@@ -433,7 +473,8 @@
                         </div>
 
                         <div class="modal-footer bg-light px-4 py-3 border-top">
-                            <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill"
+                                data-bs-dismiss="modal">Cancelar</button>
                             <button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm">
                                 <i class="fas fa-save me-1"></i> Guardar Alterações
                             </button>
@@ -451,16 +492,19 @@
                         <h5 class="modal-title fw-bold m-0">
                             <i class="fas fa-calendar-day me-2"></i> Detalhes da Aula
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Fechar"></button>
                     </div>
 
                     <div class="modal-body p-4 bg-light bg-opacity-25">
                         <div class="card border shadow-sm p-3 mb-3 bg-white rounded-3">
-                            <small class="text-muted text-uppercase fw-bold d-block mb-1" style="font-size: 0.72rem;">Curso / Treinamento</small>
+                            <small class="text-muted text-uppercase fw-bold d-block mb-1"
+                                style="font-size: 0.72rem;">Curso / Treinamento</small>
                             <h6 class="fw-bold text-dark m-0 mb-2" id="detalheAulaCursoNome">-</h6>
                             <div class="d-flex align-items-center gap-2">
                                 <span class="badge bg-primary font-monospace" id="detalheAulaCodTurma">-</span>
-                                <span class="badge bg-light text-dark border font-monospace" id="detalheAulaCodEmenta">-</span>
+                                <span class="badge bg-light text-dark border font-monospace"
+                                    id="detalheAulaCodEmenta">-</span>
                             </div>
                         </div>
 
@@ -477,7 +521,8 @@
                                     <small class="text-muted d-block" style="font-size: 0.75rem;">
                                         <i class="far fa-clock text-primary me-1"></i> Horário
                                     </small>
-                                    <strong class="text-primary font-monospace d-block" id="detalheAulaHorario">-</strong>
+                                    <strong class="text-primary font-monospace d-block"
+                                        id="detalheAulaHorario">-</strong>
                                 </div>
                                 <div class="col-6">
                                     <small class="text-muted d-block" style="font-size: 0.75rem;">
@@ -496,14 +541,16 @@
                     </div>
 
                     <div class="modal-footer bg-light px-4 py-3 border-top">
-                        <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Fechar</button>
+                        <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill"
+                            data-bs-dismiss="modal">Fechar</button>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- 3. MODAL DE REGISTRAR / EDITAR TURMA -->
-        <div class="modal fade" id="modalEditarTurma" tabindex="-1" aria-labelledby="modalEditarTurmaLabel" aria-hidden="true">
+        <div class="modal fade" id="modalEditarTurma" tabindex="-1" aria-labelledby="modalEditarTurmaLabel"
+            aria-hidden="true">
             <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg rounded-4">
                     <div class="modal-header border-0 pb-2">
@@ -523,10 +570,12 @@
                                 </h6>
                                 <div class="row g-2 mb-2">
                                     <div class="col-md-8">
-                                        <label for="selectCursoBase" class="form-label fw-semibold text-dark mb-1 small">
+                                        <label for="selectCursoBase"
+                                            class="form-label fw-semibold text-dark mb-1 small">
                                             Curso Base / Treinamento <span class="text-danger">*</span>
                                         </label>
-                                        <select class="form-select form-select-sm" id="selectCursoBase" name="selectCursoBase" required>
+                                        <select class="form-select form-select-sm" id="selectCursoBase"
+                                            name="selectCursoBase" required>
                                             <option value="">Selecione um curso do catálogo...</option>
                                         </select>
                                     </div>
@@ -535,7 +584,8 @@
                                         <label for="turmaCodigoNr" class="form-label fw-semibold text-dark mb-1 small">
                                             Código do Curso (Ementa) <span class="text-danger">*</span>
                                         </label>
-                                        <input type="text" class="form-control form-control-sm bg-light" id="turmaCodigoNr" name="turmaCodigoNr" readonly placeholder="Ex: NR05-05">
+                                        <input type="text" class="form-control form-control-sm bg-light"
+                                            id="turmaCodigoNr" name="turmaCodigoNr" readonly placeholder="Ex: NR05-05">
                                     </div>
 
                                     <div class="col-md-8">
@@ -543,8 +593,11 @@
                                             Identificador / Código da Turma <span class="text-danger">*</span>
                                         </label>
                                         <div class="input-group input-group-sm">
-                                            <input type="text" class="form-control form-control-sm bg-light" id="turmaNome" name="turmaNome" required disabled placeholder="Ex: CIPA-TESTE">
-                                            <button class="btn btn-outline-warning btn-sm" type="button" id="btnDesbloquearCodigoTurma" title="Desbloquear Edição do Código">
+                                            <input type="text" class="form-control form-control-sm bg-light"
+                                                id="turmaNome" name="turmaNome" required disabled
+                                                placeholder="Ex: CIPA-TESTE">
+                                            <button class="btn btn-outline-warning btn-sm" type="button"
+                                                id="btnDesbloquearCodigoTurma" title="Desbloquear Edição do Código">
                                                 <i class="fas fa-lock" id="iconeCadeadoCodigoTurma"></i>
                                             </button>
                                         </div>
@@ -561,14 +614,18 @@
                                         <label for="turmaCarga" class="form-label small fw-semibold text-muted mb-1">
                                             Carga Horária (horas) <span class="text-danger">*</span>
                                         </label>
-                                        <input type="number" class="form-control form-control-sm" id="turmaCarga" placeholder="48" required>
+                                        <input type="number" class="form-control form-control-sm" id="turmaCarga"
+                                            placeholder="48" required>
                                     </div>
                                     <div class="col-md-3">
-                                        <label for="turmaPreco" class="form-label small fw-semibold text-muted mb-1">Valor Base (R$)</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm bg-white" id="turmaPreco" placeholder="480.00" readonly>
+                                        <label for="turmaPreco"
+                                            class="form-label small fw-semibold text-muted mb-1">Valor Base (R$)</label>
+                                        <input type="number" step="0.01" class="form-control form-control-sm bg-white"
+                                            id="turmaPreco" placeholder="480.00" readonly>
                                     </div>
                                     <div class="col-md-3">
-                                        <label for="turmaModalidade" class="form-label small fw-semibold text-muted mb-1">
+                                        <label for="turmaModalidade"
+                                            class="form-label small fw-semibold text-muted mb-1">
                                             Modalidade <span class="text-danger">*</span>
                                         </label>
                                         <select class="form-select form-select-sm" id="turmaModalidade" required>
@@ -581,25 +638,30 @@
                                         <label for="turmaVagas" class="form-label small fw-semibold text-muted mb-1">
                                             Vagas Máximas <span class="text-danger">*</span>
                                         </label>
-                                        <input type="number" class="form-control form-control-sm" id="turmaVagas" placeholder="20" required>
+                                        <input type="number" class="form-control form-control-sm" id="turmaVagas"
+                                            placeholder="20" required>
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="turmaInstrutor" class="form-label small fw-semibold text-muted mb-1">
+                                        <label for="turmaInstrutor"
+                                            class="form-label small fw-semibold text-muted mb-1">
                                             Professor / Instrutor Responsável
                                         </label>
-                                        <input type="text" class="form-control form-control-sm" id="turmaInstrutor" placeholder="Ex: Eng. Carlos Eduardo Silva">
+                                        <input type="text" class="form-control form-control-sm" id="turmaInstrutor"
+                                            placeholder="Ex: Eng. Carlos Eduardo Silva">
                                     </div>
                                     <div class="col-md-3">
                                         <label for="turmaDias" class="form-label small fw-semibold text-muted mb-1">
                                             Dias da Semana <span class="text-danger">*</span>
                                         </label>
-                                        <input type="text" class="form-control form-control-sm" id="turmaDias" placeholder="Ex: Terças e Quintas" required>
+                                        <input type="text" class="form-control form-control-sm" id="turmaDias"
+                                            placeholder="Ex: Terças e Quintas" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label for="turmaHorario" class="form-label small fw-semibold text-muted mb-1">
                                             Horário das Aulas <span class="text-danger">*</span>
                                         </label>
-                                        <input type="text" class="form-control form-control-sm" id="turmaHorario" placeholder="Ex: 19:00 - 22:00" required>
+                                        <input type="text" class="form-control form-control-sm" id="turmaHorario"
+                                            placeholder="Ex: 19:00 - 22:00" required>
                                     </div>
                                 </div>
                             </div>
@@ -610,17 +672,21 @@
                                 </h6>
                                 <div class="row g-3">
                                     <div class="col-12">
-                                        <label for="turmaDescricao" class="form-label small fw-semibold text-muted mb-1">
+                                        <label for="turmaDescricao"
+                                            class="form-label small fw-semibold text-muted mb-1">
                                             Resumo Informativo / Observações Internas
                                         </label>
-                                        <textarea class="form-control form-control-sm" id="turmaDescricao" rows="2" placeholder="Informações específicas sobre o local, sala ou pré-requisitos..."></textarea>
+                                        <textarea class="form-control form-control-sm" id="turmaDescricao" rows="2"
+                                            placeholder="Informações específicas sobre o local, sala ou pré-requisitos..."></textarea>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
-                                <button type="button" class="btn btn-light px-4 rounded-pill btn-sm" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="submit" class="btn btn-primary px-4 rounded-pill btn-sm">Guardar Turma</button>
+                                <button type="button" class="btn btn-light px-4 rounded-pill btn-sm"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary px-4 rounded-pill btn-sm">Guardar
+                                    Turma</button>
                             </div>
                         </form>
                     </div>
@@ -634,12 +700,14 @@
                 <div class="modal-content border-0 shadow-lg rounded-4">
                     <div class="modal-header border-bottom px-4 py-3 bg-white">
                         <div>
-                            <h5 class="modal-title fw-bold text-dark m-0 d-flex align-items-center gap-2" id="modalAlunosTurmaTitle">
+                            <h5 class="modal-title fw-bold text-dark m-0 d-flex align-items-center gap-2"
+                                id="modalAlunosTurmaTitle">
                                 <i class="fas fa-users text-primary"></i> Alunos Matriculados
                             </h5>
                             <div class="mt-2 d-flex align-items-center gap-2" id="modalAlunosTurmaBadges">
                                 <span class="badge bg-primary font-monospace" id="modalBadgeCodTurma">-</span>
-                                <span class="badge bg-light text-dark border font-monospace" id="modalBadgeCodEmenta">-</span>
+                                <span class="badge bg-light text-dark border font-monospace"
+                                    id="modalBadgeCodEmenta">-</span>
                             </div>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
@@ -676,7 +744,8 @@
                             </h6>
                             <form id="formMatricularAlunoTurma" class="row g-2 align-items-end">
                                 <div class="col-md-8">
-                                    <label for="selectAlunoParaMatricular" class="form-label small fw-semibold text-muted mb-1">
+                                    <label for="selectAlunoParaMatricular"
+                                        class="form-label small fw-semibold text-muted mb-1">
                                         Selecione o Aluno registrado no sistema
                                     </label>
                                     <select class="form-select form-select-sm" id="selectAlunoParaMatricular" required>
@@ -692,9 +761,11 @@
                         </div>
 
                         <div class="card border shadow-sm rounded-3 bg-white overflow-hidden mb-4">
-                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                            <div
+                                class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
                                 <h6 class="fw-bold text-dark m-0">
-                                    <i class="fas fa-list text-muted me-2"></i>Alunos Inscritos (<span id="totalAlunosInscritosCount">0</span>)
+                                    <i class="fas fa-list text-muted me-2"></i>Alunos Inscritos (<span
+                                        id="totalAlunosInscritosCount">0</span>)
                                 </h6>
                             </div>
                             <div class="table-responsive">
@@ -710,7 +781,8 @@
                                     </thead>
                                     <tbody id="modalTabelaAlunosTbody">
                                         <tr>
-                                            <td colspan="5" class="text-center text-muted py-4">A carregar lista de alunos...</td>
+                                            <td colspan="5" class="text-center text-muted py-4">A carregar lista de
+                                                alunos...</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -721,15 +793,19 @@
                             <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.85rem;">
                                 <i class="fas fa-history me-2"></i>Log de Auditoria da Turma
                             </h6>
-                            <div id="modalLogsAuditoriaTurma" class="small text-muted" style="max-height: 120px; overflow-y: auto; font-size: 0.78rem;">
+                            <div id="modalLogsAuditoriaTurma" class="small text-muted"
+                                style="max-height: 120px; overflow-y: auto; font-size: 0.78rem;">
                                 <em>Sem alterações recentes registradas.</em>
                             </div>
                         </div>
                     </div>
 
-                    <div class="modal-footer border-top bg-light px-4 py-3 d-flex justify-content-between align-items-center">
-                        <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Fechar</button>
-                        <button type="button" class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm" id="btnSalvarModalAlunosTurma">
+                    <div
+                        class="modal-footer border-top bg-light px-4 py-3 d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill"
+                            data-bs-dismiss="modal">Fechar</button>
+                        <button type="button" class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm"
+                            id="btnSalvarModalAlunosTurma">
                             <i class="fas fa-save me-1"></i> Salvar
                         </button>
                     </div>
@@ -780,14 +856,66 @@
                             <div class="col-4">
                                 <div class="p-2 border rounded bg-white">
                                     <small class="text-muted d-block">Vagas Livres</small>
-                                    <span class="fw-bold text-success h6 m-0 d-block" id="detalheVagasRestantes">0</span>
+                                    <span class="fw-bold text-success h6 m-0 d-block"
+                                        id="detalheVagasRestantes">0</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="modal-footer bg-light px-4 py-3 border-top">
-                        <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Fechar</button>
+                        <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill"
+                            data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. MODAL DE CONFIRMAÇÃO: ATIVAR/INATIVAR TURMA -->
+        <div class="modal fade" id="modalConfirmarStatusTurma" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-body text-center p-4 p-md-5">
+                        <button type="button" class="btn-close position-absolute end-0 top-0 m-3"
+                            data-bs-dismiss="modal" aria-label="Fechar"></button>
+
+                        <!-- Ícone circular dinâmico -->
+                        <div id="confirmStatusIconeWrap"
+                            class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+                            style="width: 72px; height: 72px; background: #fee2e2; color: #dc2626; transition: all 0.2s;">
+                            <i class="fas fa-ban fa-2x" id="confirmStatusIcone"></i>
+                        </div>
+
+                        <!-- Título dinâmico -->
+                        <h4 class="fw-bold mb-2" id="confirmStatusTitulo" style="color: #0f172a;">
+                            Inativar Turma?
+                        </h4>
+
+                        <!-- Texto dinâmico -->
+                        <p class="text-muted mb-4" id="confirmStatusTexto"
+                            style="font-size: 0.95rem; line-height: 1.5;">
+                            Deseja realmente inativar esta turma? Alunos matriculados não serão removidos.
+                        </p>
+
+                        <!-- Nome da turma destacado -->
+                        <div class="p-3 rounded-3 mb-4" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                            <small class="text-muted d-block mb-1"
+                                style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Turma</small>
+                            <strong class="text-dark d-block" id="confirmStatusNomeTurma"
+                                style="font-size: 0.95rem;">—</strong>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold"
+                                data-bs-dismiss="modal">
+                                Cancelar
+                            </button>
+                            <button type="button" class="btn px-4 rounded-pill fw-semibold text-white"
+                                id="btnConfirmarStatusTurma" style="background: #dc2626;">
+                                Inativar Turma
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -795,8 +923,11 @@
     </main>
 
     <!-- SCRIPTS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
     <script type="module" src="js/auth/auth-guard.js"></script>
+    <script type="module" src="js/frontend/turmas-ui.js"></script>
     <script type="module" src="js/auth/sidebar.js"></script>
 </body>
+
 </html>
