@@ -406,10 +406,168 @@
 
             <!-- ABA 3: CONTROLE DE PRESENÇA -->
             <div class="tab-pane fade" id="frequencia-pane" role="tabpanel">
-                <div class="card border-0 shadow-sm p-4 bg-white">
-                    <h6 class="fw-bold text-dark mb-2">Controle de Presença</h6>
-                    <p class="text-muted small mb-0">Selecione uma turma para registrar e gerenciar a presença dos
-                        alunos.</p>
+
+                <!-- KPIs no topo -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="kpi-card p-3 rounded-3 border-0 bg-white shadow-sm d-flex align-items-center">
+                            <div class="kpi-icon me-3 p-3 rounded-3 d-flex align-items-center justify-content-center"
+                                style="background-color: #e0f2fe; color: #0284c7; width: 48px; height: 48px;">
+                                <i class="fas fa-chalkboard-teacher fa-lg"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted text-uppercase fw-semibold d-block"
+                                    style="font-size: 0.72rem;">Turmas com Aulas</small>
+                                <h3 class="mb-0 fw-bold text-dark" id="kpi-presenca-turmas">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="kpi-card p-3 rounded-3 border-0 bg-white shadow-sm d-flex align-items-center">
+                            <div class="kpi-icon me-3 p-3 rounded-3 d-flex align-items-center justify-content-center"
+                                style="background-color: #fef3c7; color: #d97706; width: 48px; height: 48px;">
+                                <i class="fas fa-calendar-check fa-lg"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted text-uppercase fw-semibold d-block"
+                                    style="font-size: 0.72rem;">Aulas Registradas</small>
+                                <h3 class="mb-0 fw-bold text-dark" id="kpi-presenca-aulas">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="kpi-card p-3 rounded-3 border-0 bg-white shadow-sm d-flex align-items-center">
+                            <div class="kpi-icon me-3 p-3 rounded-3 d-flex align-items-center justify-content-center"
+                                style="background-color: #dcfce7; color: #16a34a; width: 48px; height: 48px;">
+                                <i class="fas fa-user-check fa-lg"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted text-uppercase fw-semibold d-block"
+                                    style="font-size: 0.72rem;">Presenças Totais</small>
+                                <h3 class="mb-0 fw-bold text-dark" id="kpi-presenca-total">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros compactos -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body py-2">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-auto">
+                                <div class="input-group input-group-sm" style="width: 240px;">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                    <input type="text" id="presencaBusca" class="form-control border-start-0 ps-0"
+                                        placeholder="Buscar turma ou instrutor...">
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <select class="form-select form-select-sm" id="presencaFiltro" style="width: 180px;">
+                                    <option value="todas">Todas as turmas</option>
+                                    <option value="com-aulas">Com aulas agendadas</option>
+                                    <option value="com-matriculas">Com alunos matriculados</option>
+                                </select>
+                            </div>
+                            <div class="col text-end">
+                                <span class="text-muted small" id="presencaContador">0 turmas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grid de cards de turmas -->
+                <div id="presencaCardsContainer" class="row g-3"></div>
+
+                <!-- Estado vazio (só aparece se NÃO houver turmas com aulas) -->
+                <div id="presencaEstadoVazio" class="card border-0 shadow-sm d-none">
+                    <div class="card-body text-center py-5">
+                        <div class="mx-auto mb-4 d-flex align-items-center justify-content-center rounded-circle"
+                            style="width: 100px; height: 100px; background: #f1f5f9; color: #94a3b8;">
+                            <i class="fas fa-clipboard-check fa-3x"></i>
+                        </div>
+
+                        <h4 class="fw-bold text-dark mb-2">Nenhuma turma com aulas agendadas</h4>
+                        <p class="text-muted mb-4 mx-auto" style="max-width: 460px; line-height: 1.6;">
+                            Agende aulas no calendário para começar a registrar presença. Assim que houver aulas,
+                            as turmas aparecerão aqui com seus relatórios de frequência.
+                        </p>
+
+                        <div class="d-flex gap-2 justify-content-center flex-wrap">
+                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-4"
+                                onclick="document.getElementById('calendario-tab').click()">
+                                <i class="fas fa-calendar-alt me-1"></i> Ir para o Calendário
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-4"
+                                onclick="document.getElementById('gestao-tab').click()">
+                                <i class="fas fa-chalkboard-teacher me-1"></i> Ver Turmas
+                            </button>
+                        </div>
+
+                        <div class="alert alert-light border mt-4 mx-auto text-start"
+                            style="max-width: 500px; font-size: 0.82rem;">
+                            <div class="fw-semibold text-dark mb-2">
+                                <i class="fas fa-lightbulb text-warning me-1"></i> Como registrar presenças?
+                            </div>
+                            <ol class="mb-0 ps-3 text-muted">
+                                <li>Vá para a aba <strong>Calendário de Aulas</strong></li>
+                                <li>Localize a aula desejada</li>
+                                <li>Clique no ícone <i class="fas fa-clipboard-check text-success"></i>
+                                    <strong>Presença</strong></li>
+                                <li>Marque os alunos presentes e salve</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- MODAL DE FREQUÊNCIA DA TURMA -->
+            <div class="modal fade" id="modalFrequenciaTurma" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-header border-bottom px-4 py-3">
+                            <div>
+                                <h5 class="modal-title fw-bold text-dark m-0">
+                                    <i class="fas fa-chart-bar text-primary me-2"></i>
+                                    Frequência por Aluno
+                                </h5>
+                                <div class="mt-2">
+                                    <span class="badge bg-primary font-monospace" id="freqModalBadgeTurma">—</span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Fechar"></button>
+                        </div>
+
+                        <div class="modal-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th>Aluno</th>
+                                            <th class="text-center" style="width: 90px;">Aulas</th>
+                                            <th class="text-center" style="width: 100px;">Presenças</th>
+                                            <th class="text-center" style="width: 100px;">Ausências</th>
+                                            <th class="text-center" style="width: 110px;">Justificadas</th>
+                                            <th class="text-center" style="width: 120px;">Frequência</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="freqModalTbody">
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-4">A carregar...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer bg-light px-4 py-3 border-top">
+                            <button type="button" class="btn btn-light px-4 rounded-pill"
+                                data-bs-dismiss="modal">Fechar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1099,13 +1257,103 @@
                 </div>
             </div>
         </div>
+
+        <!-- 10. MODAL DE REGISTRAR PRESENÇA -->
+        <div class="modal fade" id="modalRegistrarPresenca" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header border-bottom px-4 py-3">
+                        <div>
+                            <h5 class="modal-title fw-bold text-dark m-0">
+                                <i class="fas fa-clipboard-check text-primary me-2"></i>
+                                Registrar Presença
+                            </h5>
+                            <div class="mt-2 d-flex flex-wrap gap-2">
+                                <span class="badge bg-primary font-monospace" id="presencaTurmaNome">—</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+
+                    <div class="modal-body p-4">
+                        <!-- Info da aula -->
+                        <div class="row g-3 mb-4 p-3 rounded-3" style="background: #f8fafc;">
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Data</small>
+                                <strong class="text-dark" id="presencaData">—</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Horário</small>
+                                <strong class="text-dark font-monospace" id="presencaAulaInfo">—</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Professor</small>
+                                <strong class="text-dark" id="presencaProfessor">—</strong>
+                            </div>
+                        </div>
+
+                        <!-- Botão marcar todos -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted fw-semibold">Alunos Matriculados</small>
+                            <button type="button" class="btn btn-sm btn-outline-success" id="btnTodosPresentes">
+                                <i class="fas fa-check-double me-1"></i> Marcar todos como presente
+                            </button>
+                        </div>
+
+                        <!-- Lista de alunos -->
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Aluno</th>
+                                        <th class="text-center" style="width: 320px;">Presença</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="presencaTbody">
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted py-4">A carregar alunos...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div
+                        class="modal-footer bg-light px-4 py-3 border-top d-flex justify-content-between align-items-center">
+                        <div class="d-flex gap-3">
+                            <small class="text-muted">
+                                <i class="fas fa-check-circle text-success"></i> <span id="resumoPresentes">0</span>
+                            </small>
+                            <small class="text-muted">
+                                <i class="fas fa-times-circle text-danger"></i> <span id="resumoAusentes">0</span>
+                            </small>
+                            <small class="text-muted">
+                                <i class="fas fa-file-alt text-warning"></i> <span id="resumoJustificados">0</span>
+                            </small>
+                            <small class="text-muted fw-bold">
+                                Taxa: <span id="resumoTaxa">0%</span>
+                            </small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-light px-4 rounded-pill"
+                                data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary px-4 rounded-pill" id="btnSalvarPresencas">
+                                <i class="fas fa-save me-1"></i> Salvar Presenças
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         crossorigin="anonymous"></script>
+    <script type="module" src="js/auth/auth-guard.js"></script>
     <script type="module" src="js/frontend/turmas-ui.js"></script>
-    <script type="module" src="js/frontend/calendario-aulas-ui.js"></script> <!-- ✅ ADICIONAR -->
+    <script type="module" src="js/frontend/calendario-aulas-ui.js"></script>
+    <script type="module" src="js/frontend/presenca-ui.js"></script> <!-- ✅ NOVO -->
     <script type="module" src="js/auth/sidebar.js"></script>
 </body>
 
