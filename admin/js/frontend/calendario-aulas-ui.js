@@ -1,5 +1,5 @@
 // admin/js/frontend/calendario-aulas-ui.js
-
+import { notificar } from "../modules/notificacao.js";
 import { escutarTurmas, nomeExibicaoTurma } from "../backend/turmas-service.js";  // ← ADICIONADO nomeExibicaoTurma
 import { escutarCursosService } from "../backend/cursos-service.js";
 import {
@@ -14,6 +14,14 @@ let listaTurmasGlobal = [];
 let listaCursosGlobal = [];
 let cursoSelecionadoId = "";
 let aulaParaEditar = null;
+
+let modalConfirmAgendamentoInstance = null;
+let dadosAulaParaConfirmar = null;
+
+let modalConfirmEdicaoInstance = null;
+let modalConfirmExclusaoInstance = null;
+let dadosEdicaoParaConfirmar = null;
+let dadosExclusaoParaConfirmar = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     configurarEventosUI();
@@ -88,6 +96,126 @@ function configurarEventosUI() {
     const formAula = document.getElementById("formAdicionarAula");
     const formEditar = document.getElementById("formEditarAula");
 
+    // Modais de confirmação
+    const modalConfirmEdicaoEl = document.getElementById("modalConfirmarEdicaoAula");
+    if (modalConfirmEdicaoEl && window.bootstrap) {
+        modalConfirmEdicaoInstance = new bootstrap.Modal(modalConfirmEdicaoEl);
+    }
+
+    const modalConfirmExclusaoEl = document.getElementById("modalConfirmarExclusaoAula");
+    if (modalConfirmExclusaoEl && window.bootstrap) {
+        modalConfirmExclusaoInstance = new bootstrap.Modal(modalConfirmExclusaoEl);
+    }
+
+    // Botão confirmar edição
+    const btnConfirmarEdicao = document.getElementById("btnConfirmarEdicaoAula");
+    if (btnConfirmarEdicao) {
+        btnConfirmarEdicao.addEventListener("click", async () => {
+            if (!dadosEdicaoParaConfirmar) return;
+            const { turmaId, aulaAntiga, dadosNovos } = dadosEdicaoParaConfirmar;
+            const txt = btnConfirmarEdicao.innerHTML;
+            btnConfirmarEdicao.disabled = true;
+            btnConfirmarEdicao.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Salvando...`;
+
+            try {
+                await atualizarAulaBackend(turmaId, aulaAntiga, dadosNovos);
+
+                if (modalConfirmEdicaoInstance) modalConfirmEdicaoInstance.hide();
+                // Fecha o modal de edição principal também
+                const modalEdicaoEl = document.getElementById("modalEditarAula");
+                if (modalEdicaoEl && window.bootstrap) {
+                    const m = bootstrap.Modal.getInstance(modalEdicaoEl);
+                    if (m) m.hide();
+                }
+
+                notificar("Aula atualizada com sucesso!", "sucesso");
+            } catch (err) {
+                console.error("Erro ao atualizar aula:", err);
+                notificar("Erro ao atualizar a aula.", "erro");
+            } finally {
+                btnConfirmarEdicao.disabled = false;
+                btnConfirmarEdicao.innerHTML = txt;
+                dadosEdicaoParaConfirmar = null;
+            }
+        });
+    }
+
+    // Botão confirmar exclusão
+    const btnConfirmarExclusao = document.getElementById("btnConfirmarExclusaoAula");
+    if (btnConfirmarExclusao) {
+        btnConfirmarExclusao.addEventListener("click", async () => {
+            if (!dadosExclusaoParaConfirmar) return;
+            const { turmaId, aula } = dadosExclusaoParaConfirmar;
+            const txt = btnConfirmarExclusao.innerHTML;
+            btnConfirmarExclusao.disabled = true;
+            btnConfirmarExclusao.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Removendo...`;
+
+            try {
+                await removerAulaBackend(turmaId, aula);
+                if (modalConfirmExclusaoInstance) modalConfirmExclusaoInstance.hide();
+                notificar("Aula removida com sucesso!", "sucesso");
+            } catch (err) {
+                console.error("Erro ao remover aula:", err);
+                notificar("Erro ao remover a aula.", "erro");
+            } finally {
+                btnConfirmarExclusao.disabled = false;
+                btnConfirmarExclusao.innerHTML = txt;
+                dadosExclusaoParaConfirmar = null;
+            }
+        });
+    }
+
+    // Inicializa modal de confirmação de agendamento
+    const modalConfirmEl = document.getElementById("modalConfirmarAgendamento");
+    if (modalConfirmEl && window.bootstrap) {
+        modalConfirmAgendamentoInstance = new bootstrap.Modal(modalConfirmEl);
+    }
+
+    // Handler do botão "Confirmar Agendamento"
+    const btnConfirmarAgendamento = document.getElementById("btnConfirmarAgendamento");
+    if (btnConfirmarAgendamento) {
+        btnConfirmarAgendamento.addEventListener("click", async () => {
+            if (!dadosAulaParaConfirmar) return;
+
+            const textoOriginal = btnConfirmarAgendamento.innerHTML;
+            btnConfirmarAgendamento.disabled = true;
+            btnConfirmarAgendamento.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> A guardar...`;
+
+            try {
+                await salvarAulaBackend(dadosAulaParaConfirmar.turmaId, {
+                    instrutor: dadosAulaParaConfirmar.professor,
+                    data: dadosAulaParaConfirmar.data,
+                    hora_inicio: dadosAulaParaConfirmar.horaInicio,
+                    hora_fim: dadosAulaParaConfirmar.horaFim,
+                    sala: dadosAulaParaConfirmar.sala
+                });
+
+                // Fecha o modal
+                if (modalConfirmAgendamentoInstance) modalConfirmAgendamentoInstance.hide();
+
+                // Limpa o formulário
+                document.getElementById("aulaDataInput").value = "";
+                document.getElementById("aulaHoraInicioInput").value = "";
+                document.getElementById("aulaHoraFimInput").value = "";
+                document.getElementById("aulaSalaInput").value = "";
+
+                // Fecha o modal
+                esconderAlertaConflito();
+
+                // (opcional) Aviso de sucesso
+                notificar("Aula agendada com sucesso!", "sucesso");
+
+            } catch (err) {
+                console.error("Erro ao salvar aula:", err);
+                notificar("Erro ao salvar a aula.", "erro");
+            } finally {
+                btnConfirmarAgendamento.disabled = false;
+                btnConfirmarAgendamento.innerHTML = textoOriginal;
+                dadosAulaParaConfirmar = null;
+            }
+        });
+    }
+
     if (selectCurso) {
         selectCurso.addEventListener("change", (e) => {
             cursoSelecionadoId = e.target.value;
@@ -140,7 +268,7 @@ function configurarEventosUI() {
             e.preventDefault();
 
             if (!cursoSelecionadoId) {
-                alert("Por favor, selecione primeiro uma turma no painel de filtros acima para agendar a aula.");
+                notificar("Por favor, selecione primeiro uma turma no painel de filtros acima para agendar a aula.", "aviso");
                 return;
             }
 
@@ -150,50 +278,35 @@ function configurarEventosUI() {
             const horaFim = document.getElementById("aulaHoraFimInput")?.value;
             const sala = document.getElementById("aulaSalaInput")?.value.trim() || "";
 
-            if (horaInicio >= horaFim) {
-                alert("O horário de término deve ser posterior ao horário de início.");
+            // Validações básicas
+            if (!professor || !data || !horaInicio || !horaFim) {
+                notificar("Preencha todos os campos obrigatórios (*).", "aviso");
                 return;
             }
 
+            if (horaInicio >= horaFim) {
+                notificar("O horário de término deve ser posterior ao horário de início.", "aviso");
+                return;
+            }
+
+            // Verifica conflito de professor
             const fonteDados = listaTurmasGlobal.length > 0 ? listaTurmasGlobal : listaCursosGlobal;
             const conflito = verificarConflitoProfessorMemoria(fonteDados, professor, data, horaInicio, horaFim, cursoSelecionadoId);
 
             if (conflito) {
-                exibirAlertaConflito(`🚫 <strong>Agendamento Bloqueado:</strong> O professor <strong>${professor}</strong> já possui aula marcada das <strong>${conflito.horario}</strong> no curso/turma <strong>${conflito.cursoNome}</strong>.`);
+                exibirAlertaConflito(`🚫 <strong>Agendamento Bloqueado:</strong> O professor <strong>${professor}</strong> já possui aula marcada das <strong>${conflito.horario}</strong> em <strong>${conflito.cursoNome}</strong>.`);
                 return;
             }
 
-            const btnSubmit = document.getElementById("btnSalvarAulaCronograma");
-
-            try {
-                if (btnSubmit) {
-                    btnSubmit.disabled = true;
-                    btnSubmit.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> A guardar...`;
-                }
-
-                await salvarAulaBackend(cursoSelecionadoId, {
-                    instrutor: professor,
-                    data,
-                    hora_inicio: horaInicio,
-                    hora_fim: horaFim,
-                    sala
-                });
-
-                document.getElementById("aulaDataInput").value = "";
-                document.getElementById("aulaHoraInicioInput").value = "";
-                document.getElementById("aulaHoraFimInput").value = "";
-                document.getElementById("aulaSalaInput").value = "";
-                esconderAlertaConflito();
-
-            } catch (err) {
-                console.error("Erro ao salvar aula no cronograma:", err);
-                alert("Erro ao guardar a aula no Firestore.");
-            } finally {
-                if (btnSubmit) {
-                    btnSubmit.disabled = false;
-                    btnSubmit.innerHTML = `<i class="fas fa-calendar-plus me-1"></i> Guardar Aula`;
-                }
-            }
+            // ✅ Abre o MODAL em vez de salvar direto
+            abrirModalConfirmacaoAgendamento({
+                turmaId: cursoSelecionadoId,
+                professor,
+                data,
+                horaInicio,
+                horaFim,
+                sala
+            });
         });
     }
 
@@ -207,32 +320,33 @@ function configurarEventosUI() {
             const hInicio = document.getElementById("editAulaHoraInicio").value;
             const hFim = document.getElementById("editAulaHoraFim").value;
             const sala = document.getElementById("editAulaSala").value.trim();
-            const notificar = document.getElementById("checkNotificarAlunos").checked;
 
-            const fonteDados = listaTurmasGlobal.length > 0 ? listaTurmasGlobal : listaCursosGlobal;
-            const conflito = verificarConflitoProfessorMemoria(fonteDados, prof, data, hInicio, hFim, cId, aulaParaEditar.id);
-
-            if (conflito) {
-                alert(`Conflito de horário! O professor ${prof} já possui aula das ${conflito.horario} em ${conflito.cursoNome}.`);
+            // Validações
+            if (!prof || !data || !hInicio || !hFim) {
+                notificar("Preencha todos os campos obrigatórios.", "aviso");
+                return;
+            }
+            if (hInicio >= hFim) {
+                notificar("Horário de término inválido.", "aviso");
                 return;
             }
 
-            try {
-                await atualizarAulaBackend(cId, aulaParaEditar, { instrutor: prof, data, hora_inicio: hInicio, hora_fim: hFim, sala });
-
-                if (notificar) {
-                    alert(`✅ Aula reagendada com sucesso! Notificação enviada para os alunos da turma.`);
-                }
-
-                const modalEl = document.getElementById("modalEditarAula");
-                if (modalEl && window.bootstrap) {
-                    const m = bootstrap.Modal.getInstance(modalEl);
-                    if (m) m.hide();
-                }
-            } catch (err) {
-                console.error("Erro ao reagendar aula:", err);
-                alert("Erro ao reagendar aula no Firestore.");
+            // Conflito
+            const fonteDados = listaTurmasGlobal.length > 0 ? listaTurmasGlobal : listaCursosGlobal;
+            const conflito = verificarConflitoProfessorMemoria(fonteDados, prof, data, hInicio, hFim, cId, aulaParaEditar.id);
+            if (conflito) {
+                notificar(`Conflito: professor já tem aula das ${conflito.horario}.`, "erro");
+                return;
             }
+
+            // ✅ Abre modal de confirmação
+            dadosEdicaoParaConfirmar = {
+                turmaId: cId,
+                aulaAntiga: aulaParaEditar,
+                dadosNovos: { instrutor: prof, data, hora_inicio: hInicio, hora_fim: hFim, sala }
+            };
+
+            if (modalConfirmEdicaoInstance) modalConfirmEdicaoInstance.show();
         });
     }
 
@@ -312,6 +426,7 @@ function configurarEventosUI() {
         }
 
         // 🗑️ 3. REMOVER AULA
+        // 🗑️ 3. REMOVER AULA
         const btnRem = e.target.closest(".btn-remover-aula-cronograma");
         if (btnRem) {
             const cId = btnRem.getAttribute("data-curso-id");
@@ -324,9 +439,22 @@ function configurarEventosUI() {
             const aula = (elementoObj.cronograma || []).find(a => a.id === aId);
             if (!aula) return;
 
-            if (confirm(`Tem certeza de que deseja remover a aula do dia ${aula.data}?`)) {
-                await removerAulaBackend(cId, aula);
+            // ✅ Preenche o modal de exclusão
+            const infoEl = document.getElementById("confirmExclusaoAulaInfo");
+            if (infoEl) {
+                let dataFmt = aula.data;
+                if (aula.data && aula.data.includes("-")) {
+                    const p = aula.data.split("-");
+                    dataFmt = `${p[2]}/${p[1]}/${p[0]}`;
+                }
+                infoEl.textContent = `${dataFmt} · ${aula.hora_inicio} às ${aula.hora_fim}`;
             }
+
+            dadosExclusaoParaConfirmar = { turmaId: cId, aula };
+
+            // ✅ Abre modal de confirmação
+            if (modalConfirmExclusaoInstance) modalConfirmExclusaoInstance.show();
+            return;
         }
     });
 }
@@ -340,6 +468,9 @@ function renderizarTabelaGeralCronograma() {
     const selectCursoVal = document.getElementById("selectCursoCronograma")?.value || "";
     const filtroProfVal = (document.getElementById("filtroProfessorCronograma")?.value || "").toLowerCase().trim();
     const filtroDataVal = document.getElementById("filtroDataCronograma")?.value || "";
+
+    document.getElementById("filtroDataCronograma").value = "";
+    document.getElementById("filtroDataCronograma").dispatchEvent(new Event("change"));
 
     const fonteDados = listaTurmasGlobal.length > 0 ? listaTurmasGlobal : listaCursosGlobal;
     let todasAulas = [];
@@ -522,3 +653,62 @@ function esconderAlertaConflito() {
         alerta.classList.remove("d-flex");
     }
 }
+
+function abrirModalConfirmacaoAgendamento(dados) {
+    dadosAulaParaConfirmar = dados;
+
+    // Descobre a turma selecionada
+    const turma = listaTurmasGlobal.find(t => t.id === dados.turmaId);
+
+    // Formata a data
+    let dataFmt = dados.data;
+    let diaSemanaFmt = "";
+    if (dados.data) {
+        const partes = dados.data.split("-");
+        if (partes.length === 3) {
+            dataFmt = `${partes[2]}/${partes[1]}/${partes[0]}`;
+            const dt = new Date(partes[0], partes[1] - 1, partes[2]);
+            const dias = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+            diaSemanaFmt = dias[dt.getDay()] || "";
+        }
+    }
+
+    // Preenche o modal
+    const elTurma = document.getElementById("confirmAulaTurma");
+    const elCodTurma = document.getElementById("confirmAulaCodTurma");
+    const elData = document.getElementById("confirmAulaData");
+    const elDiaSemana = document.getElementById("confirmAulaDiaSemana");
+    const elHorario = document.getElementById("confirmAulaHorario");
+    const elProfessor = document.getElementById("confirmAulaProfessor");
+    const elSala = document.getElementById("confirmAulaSala");
+
+    if (elTurma && turma) {
+        elTurma.textContent = nomeExibicaoTurma(turma);
+    }
+    if (elCodTurma && turma) {
+        elCodTurma.textContent = turma.codigo_turma || turma.curso_codigo || "S/C";
+    }
+    if (elData) elData.textContent = dataFmt;
+    if (elDiaSemana) elDiaSemana.textContent = diaSemanaFmt;
+    if (elHorario) elHorario.textContent = `${dados.horaInicio} às ${dados.horaFim}`;
+    if (elProfessor) elProfessor.textContent = dados.professor;
+    if (elSala) elSala.textContent = dados.sala || "Auditório Principal";
+
+    // Abre o modal
+    if (modalConfirmAgendamentoInstance) {
+        modalConfirmAgendamentoInstance.show();
+    }
+}
+
+
+// =========================================================================
+// DEBUG
+// =========================================================================
+window.__cronogramaDebug = {
+    get turmas() { return listaTurmasGlobal; },
+    get cursos() { return listaCursosGlobal; },
+    get selecionado() { return cursoSelecionadoId; },
+    refresh: () => renderizarTabelaGeralCronograma()
+};
+
+console.log("✅ calendario-aulas-ui.js carregado. Use __cronogramaDebug no console.");
