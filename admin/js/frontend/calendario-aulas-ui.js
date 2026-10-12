@@ -1,6 +1,6 @@
 // admin/js/frontend/calendario-aulas-ui.js
 import { notificar } from "../modules/notificacao.js";
-import { escutarTurmas, nomeExibicaoTurma } from "../backend/turmas-service.js";  // ← ADICIONADO nomeExibicaoTurma
+import { escutarTurmas, nomeExibicaoTurma } from "../backend/turmas-service.js";
 import { escutarCursosService } from "../backend/cursos-service.js";
 import {
     verificarConflitoProfessorMemoria,
@@ -54,13 +54,12 @@ function inicializarCarregamentoDados() {
 }
 
 /* ==========================================================================
- * ✅ CORRIGIDO: usa nomeExibicaoTurma() para mostrar "GPON (TRW-GPN01-2026/001)"
+ * Dropdown de turmas
  * ========================================================================== */
 function atualizarDropdownTurmas() {
     const select = document.getElementById("selectCursoCronograma");
     if (!select) return;
 
-    // 🔒 Só usa turmas — nunca mais cai em cursos
     const fonteDados = listaTurmasGlobal.length > 0 ? listaTurmasGlobal : [];
 
     let html = '<option value="">Todas as Turmas (Visão Geral)</option>';
@@ -73,7 +72,6 @@ function atualizarDropdownTurmas() {
         const instrutor = t.instrutor || t.professor || "";
         const horario = t.horario || "";
 
-        // ✅ Usa o helper para gerar o nome de exibição
         const nomeExibicao = nomeExibicaoTurma(t);
 
         html += `<option
@@ -121,7 +119,6 @@ function configurarEventosUI() {
                 await atualizarAulaBackend(turmaId, aulaAntiga, dadosNovos);
 
                 if (modalConfirmEdicaoInstance) modalConfirmEdicaoInstance.hide();
-                // Fecha o modal de edição principal também
                 const modalEdicaoEl = document.getElementById("modalEditarAula");
                 if (modalEdicaoEl && window.bootstrap) {
                     const m = bootstrap.Modal.getInstance(modalEdicaoEl);
@@ -165,13 +162,13 @@ function configurarEventosUI() {
         });
     }
 
-    // Inicializa modal de confirmação de agendamento
+    // Modal de confirmação de agendamento
     const modalConfirmEl = document.getElementById("modalConfirmarAgendamento");
     if (modalConfirmEl && window.bootstrap) {
         modalConfirmAgendamentoInstance = new bootstrap.Modal(modalConfirmEl);
     }
 
-    // Handler do botão "Confirmar Agendamento"
+    // Botão confirmar agendamento
     const btnConfirmarAgendamento = document.getElementById("btnConfirmarAgendamento");
     if (btnConfirmarAgendamento) {
         btnConfirmarAgendamento.addEventListener("click", async () => {
@@ -190,19 +187,15 @@ function configurarEventosUI() {
                     sala: dadosAulaParaConfirmar.sala
                 });
 
-                // Fecha o modal
                 if (modalConfirmAgendamentoInstance) modalConfirmAgendamentoInstance.hide();
 
-                // Limpa o formulário
                 document.getElementById("aulaDataInput").value = "";
                 document.getElementById("aulaHoraInicioInput").value = "";
                 document.getElementById("aulaHoraFimInput").value = "";
                 document.getElementById("aulaSalaInput").value = "";
 
-                // Fecha o modal
                 esconderAlertaConflito();
 
-                // (opcional) Aviso de sucesso
                 notificar("Aula agendada com sucesso!", "sucesso");
 
             } catch (err) {
@@ -216,6 +209,7 @@ function configurarEventosUI() {
         });
     }
 
+    // Select de turma
     if (selectCurso) {
         selectCurso.addEventListener("change", (e) => {
             cursoSelecionadoId = e.target.value;
@@ -263,6 +257,7 @@ function configurarEventosUI() {
         }
     });
 
+    // Form: agendar aula
     if (formAula) {
         formAula.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -278,7 +273,6 @@ function configurarEventosUI() {
             const horaFim = document.getElementById("aulaHoraFimInput")?.value;
             const sala = document.getElementById("aulaSalaInput")?.value.trim() || "";
 
-            // Validações básicas
             if (!professor || !data || !horaInicio || !horaFim) {
                 notificar("Preencha todos os campos obrigatórios (*).", "aviso");
                 return;
@@ -289,7 +283,6 @@ function configurarEventosUI() {
                 return;
             }
 
-            // Verifica conflito de professor
             const fonteDados = listaTurmasGlobal.length > 0 ? listaTurmasGlobal : listaCursosGlobal;
             const conflito = verificarConflitoProfessorMemoria(fonteDados, professor, data, horaInicio, horaFim, cursoSelecionadoId);
 
@@ -298,7 +291,6 @@ function configurarEventosUI() {
                 return;
             }
 
-            // ✅ Abre o MODAL em vez de salvar direto
             abrirModalConfirmacaoAgendamento({
                 turmaId: cursoSelecionadoId,
                 professor,
@@ -310,6 +302,7 @@ function configurarEventosUI() {
         });
     }
 
+    // Form: editar aula
     if (formEditar) {
         formEditar.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -321,7 +314,6 @@ function configurarEventosUI() {
             const hFim = document.getElementById("editAulaHoraFim").value;
             const sala = document.getElementById("editAulaSala").value.trim();
 
-            // Validações
             if (!prof || !data || !hInicio || !hFim) {
                 notificar("Preencha todos os campos obrigatórios.", "aviso");
                 return;
@@ -331,7 +323,6 @@ function configurarEventosUI() {
                 return;
             }
 
-            // Conflito
             const fonteDados = listaTurmasGlobal.length > 0 ? listaTurmasGlobal : listaCursosGlobal;
             const conflito = verificarConflitoProfessorMemoria(fonteDados, prof, data, hInicio, hFim, cId, aulaParaEditar.id);
             if (conflito) {
@@ -339,7 +330,6 @@ function configurarEventosUI() {
                 return;
             }
 
-            // ✅ Abre modal de confirmação
             dadosEdicaoParaConfirmar = {
                 turmaId: cId,
                 aulaAntiga: aulaParaEditar,
@@ -350,7 +340,9 @@ function configurarEventosUI() {
         });
     }
 
-    // Cliques na Tabela (Ver, Editar e Remover)
+    // ========================================================================
+    // Delegação de cliques (ações nas linhas)
+    // ========================================================================
     document.addEventListener("click", async (e) => {
 
         // 👁️ 1. VER DETALHES DA AULA
@@ -378,7 +370,6 @@ function configurarEventosUI() {
                 }
             }
 
-            // ✅ Usa nomeExibicaoTurma() também aqui
             document.getElementById("detalheAulaCursoNome").textContent = nomeExibicaoTurma(elementoObj);
             document.getElementById("detalheAulaCodTurma").textContent = elementoObj.codigo_turma || "S/C";
             document.getElementById("detalheAulaCodEmenta").textContent = elementoObj.curso_codigo || elementoObj.codigo_nr || elementoObj.codigo_curso || elementoObj.codigo || "S/C";
@@ -396,7 +387,24 @@ function configurarEventosUI() {
             return;
         }
 
-        // ✏️ 2. EDITAR / REAGENDAR
+        // 📋 2. REGISTRAR PRESENÇA  ← AQUI, FORA DO if (btnVer)!
+        const btnPresenca = e.target.closest(".btn-presenca-aula");
+        if (btnPresenca) {
+            const turmaId = btnPresenca.getAttribute("data-curso-id");
+            const aulaId = btnPresenca.getAttribute("data-aula-id");
+
+            console.log("📋 Abrindo presença:", { turmaId, aulaId });
+
+            if (typeof window.abrirModalPresenca === "function") {
+                window.abrirModalPresenca(turmaId, aulaId);
+            } else {
+                console.warn("⚠️ Módulo de presença não carregado.");
+                notificar("Módulo de presença não disponível.", "erro");
+            }
+            return;
+        }
+
+        // ✏️ 3. EDITAR / REAGENDAR
         const btnEdit = e.target.closest(".btn-editar-aula");
         if (btnEdit) {
             const cId = btnEdit.getAttribute("data-curso-id");
@@ -425,8 +433,7 @@ function configurarEventosUI() {
             return;
         }
 
-        // 🗑️ 3. REMOVER AULA
-        // 🗑️ 3. REMOVER AULA
+        // 🗑️ 4. REMOVER AULA
         const btnRem = e.target.closest(".btn-remover-aula-cronograma");
         if (btnRem) {
             const cId = btnRem.getAttribute("data-curso-id");
@@ -439,7 +446,6 @@ function configurarEventosUI() {
             const aula = (elementoObj.cronograma || []).find(a => a.id === aId);
             if (!aula) return;
 
-            // ✅ Preenche o modal de exclusão
             const infoEl = document.getElementById("confirmExclusaoAulaInfo");
             if (infoEl) {
                 let dataFmt = aula.data;
@@ -452,13 +458,15 @@ function configurarEventosUI() {
 
             dadosExclusaoParaConfirmar = { turmaId: cId, aula };
 
-            // ✅ Abre modal de confirmação
             if (modalConfirmExclusaoInstance) modalConfirmExclusaoInstance.show();
             return;
         }
     });
 }
 
+/* ==========================================================================
+ * Renderização da tabela de aulas
+ * ========================================================================== */
 function renderizarTabelaGeralCronograma() {
     const tbody = document.getElementById("tabelaCronogramaAulasTbody");
     const containerMobile = document.getElementById("cardsCronogramaMobile");
@@ -469,9 +477,6 @@ function renderizarTabelaGeralCronograma() {
     const filtroProfVal = (document.getElementById("filtroProfessorCronograma")?.value || "").toLowerCase().trim();
     const filtroDataVal = document.getElementById("filtroDataCronograma")?.value || "";
 
-    document.getElementById("filtroDataCronograma").value = "";
-    document.getElementById("filtroDataCronograma").dispatchEvent(new Event("change"));
-
     const fonteDados = listaTurmasGlobal.length > 0 ? listaTurmasGlobal : listaCursosGlobal;
     let todasAulas = [];
 
@@ -480,7 +485,6 @@ function renderizarTabelaGeralCronograma() {
 
         const cronograma = item.cronograma || [];
         cronograma.forEach(aula => {
-            // ✅ Usa nomeExibicaoTurma() no lugar do nome bruto
             const nomeExibicao = nomeExibicaoTurma(item);
             const codTurma = item.codigo_turma || "";
             const codEmenta = item.curso_codigo || item.codigo_nr || item.codigo_curso || item.codigo || "";
@@ -537,7 +541,7 @@ function renderizarTabelaGeralCronograma() {
             ? `<span class="badge bg-light text-dark border font-monospace" style="font-size: 0.72rem;">${a.codigoEmenta}</span>`
             : '';
 
-        // 💻 1. HTML PARA DESKTOP (Tabela)
+        // 💻 DESKTOP
         htmlDesktop += `
             <tr>
                 <td class="text-nowrap" style="width: 100px;">
@@ -572,12 +576,15 @@ function renderizarTabelaGeralCronograma() {
                         <span>${a.sala || 'Auditório'}</span>
                     </div>
                 </td>
-                <td class="text-end text-nowrap" style="width: 100px;">
+                <td class="text-end text-nowrap" style="width: 130px;">
                     <button class="btn btn-sm btn-light border p-1 px-2 me-1 btn-ver-aula" data-curso-id="${a.cursoId}" data-aula-id="${a.id}" title="Ver Detalhes">
                         <i class="fas fa-eye text-info fa-xs"></i>
                     </button>
                     <button class="btn btn-sm btn-light border p-1 px-2 me-1 btn-editar-aula" data-curso-id="${a.cursoId}" data-aula-id="${a.id}" title="Reagendar">
                         <i class="fas fa-pen text-primary fa-xs"></i>
+                    </button>
+                    <button class="btn btn-sm btn-light border p-1 px-2 me-1 btn-presenca-aula" data-curso-id="${a.cursoId}" data-aula-id="${a.id}" title="Registrar Presença">
+                        <i class="fas fa-clipboard-check text-success fa-xs"></i>
                     </button>
                     <button class="btn btn-sm btn-light border p-1 px-2 btn-remover-aula-cronograma" data-curso-id="${a.cursoId}" data-aula-id="${a.id}" title="Remover">
                         <i class="fas fa-trash-alt text-danger fa-xs"></i>
@@ -586,7 +593,7 @@ function renderizarTabelaGeralCronograma() {
             </tr>
         `;
 
-        // 📱 2. HTML PARA MOBILE (Cards)
+        // 📱 MOBILE
         htmlMobile += `
             <div class="card border shadow-sm mb-3 rounded-3 bg-white p-3">
                 <div class="d-flex justify-content-between align-items-start mb-2 border-bottom pb-2">
@@ -624,6 +631,9 @@ function renderizarTabelaGeralCronograma() {
                     <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 btn-editar-aula" data-curso-id="${a.cursoId}" data-aula-id="${a.id}">
                         <i class="fas fa-pen me-1"></i> Editar
                     </button>
+                    <button class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 btn-presenca-aula" data-curso-id="${a.cursoId}" data-aula-id="${a.id}">
+                        <i class="fas fa-clipboard-check me-1"></i> Presença
+                    </button>
                     <button class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 btn-remover-aula-cronograma" data-curso-id="${a.cursoId}" data-aula-id="${a.id}">
                         <i class="fas fa-trash-alt me-1"></i> Excluir
                     </button>
@@ -657,10 +667,8 @@ function esconderAlertaConflito() {
 function abrirModalConfirmacaoAgendamento(dados) {
     dadosAulaParaConfirmar = dados;
 
-    // Descobre a turma selecionada
     const turma = listaTurmasGlobal.find(t => t.id === dados.turmaId);
 
-    // Formata a data
     let dataFmt = dados.data;
     let diaSemanaFmt = "";
     if (dados.data) {
@@ -673,7 +681,6 @@ function abrirModalConfirmacaoAgendamento(dados) {
         }
     }
 
-    // Preenche o modal
     const elTurma = document.getElementById("confirmAulaTurma");
     const elCodTurma = document.getElementById("confirmAulaCodTurma");
     const elData = document.getElementById("confirmAulaData");
@@ -694,12 +701,10 @@ function abrirModalConfirmacaoAgendamento(dados) {
     if (elProfessor) elProfessor.textContent = dados.professor;
     if (elSala) elSala.textContent = dados.sala || "Auditório Principal";
 
-    // Abre o modal
     if (modalConfirmAgendamentoInstance) {
         modalConfirmAgendamentoInstance.show();
     }
 }
-
 
 // =========================================================================
 // DEBUG
