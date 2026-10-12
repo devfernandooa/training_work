@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Migrar Matrículas — DEV</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-light p-4">
+
+<div class="container" style="max-width: 900px;">
+    <div class="card border-0 shadow-lg rounded-4">
+        <div class="card-body p-4">
+
+            <h3 class="fw-bold text-dark mb-1">
+                <i class="fas fa-database text-warning me-2"></i>
+                Migração de Matrículas — DEV
+            </h3>
+            <p class="text-muted small mb-4">
+                ⚠️ Este script migra matrículas de <code>/matriculas</code> (top-level)
+                e <code>/turmas/*/matriculas</code> (subcoleção antiga) para
+                <code>/alunos/{id}/matriculas</code> (nova estrutura).
+                <strong>Roda 1 vez só.</strong>
+            </p>
+
+            <div class="alert alert-warning small">
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                <strong>Antes de rodar:</strong> garanta que o Firestore tem permissão de escrita
+                pra <code>/alunos/*/matriculas/*</code>. Se der erro <code>PERMISSION_DENIED</code>,
+                ajusta as regras primeiro.
+            </div>
+
+            <div class="mb-4">
+                <button class="btn btn-primary" id="btnAnalisar">
+                    <i class="fas fa-search me-1"></i> 1. Analisar dados existentes
+                </button>
+                <button class="btn btn-success ms-2" id="btnMigrar" disabled>
+                    <i class="fas fa-play me-1"></i> 2. Rodar migração
+                </button>
+                <button class="btn btn-outline-secondary ms-2" id="btnLimpar" disabled>
+                    <i class="fas fa-eraser me-1"></i> 3. Limpar dados antigos
+                </button>
+            </div>
+
+            <div class="card bg-dark text-light p-3 rounded-3" style="font-family: monospace; font-size: 0.85rem;">
+                <div id="log" style="max-height: 500px; overflow-y: auto;">
+                    <div class="text-muted">// Aguardando...</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script type="module">
+import { auth, db } from "../js/firebase-config.js";
+import {
+    collection,
+    collectionGroup,
+    getDocs,
+    doc,
+    getDoc,
+    setDoc,
+    writeBatch,
+    query,
+    where,
+    deleteDoc
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+/* ============================================================
+ * ESTADO
+ * ============================================================ */
+let matriculasTopLevel = [];
+let matriculasSubcolecoes = [];
+let matriculasParaMigrar = [];
+let alunosCache = {};
+
+/* ============================================================
+ * HELPERS
+ * ============================================================ */
+function log(msg, tipo = "info") {
+    const el = document.getElementById("log");
+    const cores = {
+        info: "text-info",
+        sucesso: "text-success",
+        erro: "text-danger",
+        aviso: "text-warning"
+    };
+    const div = document.createElement("div");
+    div.className = cores[tipo] || "text-light";
+    div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+}
+
+function limparLog() {
+    document.getElementById("log").innerHTML = "";
+}
+
+/* ============================================================
+ * AUTENTICAÇÃO
+ * ============================================================ */
+onAuthStateChanged(auth, (user) => {
+    if (!user) {
+        log("❌ Faça login em /admin/login.html primeiro.", "erro");
+        document.getElementById("btnAnalisar").disabled = true;
+        return;
+    }
+    log(`✅ Autenticado como ${user.email}`, "sucesso");
+});
+
+/* ============================================================
+ * 1. ANALISAR
+ * ============================================================ */
+document.getElementById("btnAnalisar").addEventListener("click", async () => {
+    limparLog();
+    log("🔍 Analisando dados existentes...");
+
+    try {
+        // 1. Carrega alunos (para validar existência)
+        log("📥 Carregando alunos...");
+        const alunosSnap = await getDocs(collection(db, "alunos"));
+        alunosSnap.forEach(d => {
+            alunosCache[d.id] = d.data();
+        });
+        log(`   → ${Object.keys(alunosCache).length} alunos carregados`, "sucesso");
+
+        // 2. Matrículas top-level
+        log("📥 Carregando matrículas top-level (/matriculas)...");
+        const topSnap = await getDocs(collection(db, "matriculas"));
+        matriculasTopLevel = [];
+        topSnap.forEach(d => {
+            const data = d.data();
+            if (data.excluido === true) return;
+            matriculasTopLevel.push({ id: d.id, origem: "top-level", ...data });
+        });
+        log(`   → ${matriculasTopLevel.length} matrículas top-level`, "sucesso");
+
+        // 3. Matrículas em subcoleções /turmas/*/matriculas
+        log("📥 Carregando matrículas em subcoleções (/turmas/*/matriculas)...");
+        const groupSnap = await getDocs(collectionGroup(db, "matriculas"));
+        matriculasSubcolecoes = [];
+        groupSnap.forEach(d => {
+            const turmaId = d.ref.parent.parent?.id;
+            if (!turmaId) return;
+            matriculasSubcolecoes.push({
+                id: d.id,
+                origem: "subcolecao-turma",
+                turma_id: turmaId,
+                ...d.data()
+            });
+        });
+        log(`   → ${matriculasSubcolecoes.length} matrículas em subcoleções`, "sucesso");
+
+        // 4. Combina e desduplica
+        const todas = [...matriculasTopLevel, ...matriculasSubcolecoes];
+        const mapaUnico = {};
+
+        todas.forEach(m => {
+            const alunoId = m.aluno_id;
+            if (!alunoId) {
+                log(`⚠️ Matrícula ${m.id} sem aluno_id — ignorada`, "aviso");
+                return;
+            }
+
+            // Chave única = aluno + turma
+            const turmaId = m.turma_id || m.turmaId || "";
+            const chave = `${alunoId}__${turmaId}`;
+
+            if (!mapaUnico[chave]) {
+                mapaUnico[chave] = m;
+            } else {
+                // Mescla dados (mantém o mais completo)
+                mapaUnico[chave] = { ...mapaUnico[chave], ...m };
+            }
+        });
+
+        matriculasParaMigrar = Object.values(mapaUnico);
+        log(`🔀 Desduplicação: ${todas.length} → ${matriculasParaMigrar.length}`, "info");
+
+        // 5. Valida alunos
+        let semAluno = 0;
+        matriculasParaMigrar.forEach(m => {
+            if (!alunosCache[m.aluno_id]) semAluno++;
+        });
+        if (semAluno > 0) {
+            log(`⚠️ ${semAluno} matrículas referenciam alunos que não existem`, "aviso");
+        }
+
+        // Libera botão de migração
+        document.getElementById("btnMigrar").disabled = false;
+        log("✅ Análise concluída. Pronto para migrar.", "sucesso");
+
+    } catch (err) {
+        console.error(err);
+        log(`❌ Erro na análise: ${err.message}`, "erro");
+    }
+});
+
+/* ============================================================
+ * 2. MIGRAR
+ * ============================================================ */
+document.getElementById("btnMigrar").addEventListener("click", async () => {
+    if (matriculasParaMigrar.length === 0) {
+        log("⚠️ Nada para migrar. Rode a análise primeiro.", "aviso");
+        return;
+    }
+
+    if (!confirm(`Migrar ${matriculasParaMigrar.length} matrículas para /alunos/{id}/matriculas?`)) return;
+
+    limparLog();
+    log("🚀 Iniciando migração...", "info");
+
+    let sucesso = 0;
+    let erro = 0;
+
+    // Processa em lotes de 20 pra não estourar o limite do Firestore
+    const LOTE = 20;
+    const lotes = [];
+    for (let i = 0; i < matriculasParaMigrar.length; i += LOTE) {
+        lotes.push(matriculasParaMigrar.slice(i, i + LOTE));
+    }
+
+    for (let i = 0; i < lotes.length; i++) {
+        const lote = lotes[i];
+        log(`📦 Processando lote ${i + 1}/${lotes.length} (${lote.length} itens)...`);
+
+        const batch = writeBatch(db);
+
+        for (const m of lote) {
+            try {
+                const alunoId = m.aluno_id;
+                const turmaId = m.turma_id || m.turmaId || "";
+
+                // Chave do documento na subcoleção (ID único)
+                const matId = m.id || `mat_${alunoId}_${turmaId}`.replace(/\W/g, "_");
+
+                // Monta documento novo
+                const novaMatricula = {
+                    // Referências
+                    aluno_id: alunoId,
+                    turma_id: turmaId,
+                    origem_migracao: m.origem || "desconhecida",
+
+                    // Dados do aluno (desnormalizados pra performance)
+                    aluno_nome: m.aluno_nome || alunosCache[alunoId]?.nome || "",
+                    aluno_email: m.aluno_email || alunosCache[alunoId]?.email || "",
+                    aluno_cpf: alunosCache[alunoId]?.cpf || "",
+
+                    // Dados do curso/turma
+                    curso_nome: m.curso_nome || m.turma_nome || "",
+                    turma_codigo: m.turma_codigo || "",
+
+                    // Financeiro
+                    valor: Number(m.valor || 0),
+                    forma_pagamento: m.forma_pagamento || "Pix",
+                    status_pagamento: m.status_pagamento || "Aguardando pagamento",
+
+                    // Status da matrícula
+                    status: m.status_matricula || m.status || "cursando",
+
+                    // Datas
+                    data_matricula: m.data_matricula || m.ultima_alteracao_em || new Date().toISOString(),
+                    criado_em: m.criado_em || new Date().toISOString(),
+                    atualizado_em: new Date().toISOString(),
+
+                    // Certificado (a ser preenchido depois)
+                    frequencia_final: null,
+                    total_aulas: null,
+                    presencas: null,
+                    ausencias: null,
+                    justificadas: null,
+                    apto_certificado: false,
+                    concluido_em: null,
+                    concluido_por: null,
+                    certificado_emitido: false,
+                    certificado_codigo: null,
+                    certificado_url: null,
+                    certificado_emitido_em: null,
+                    certificado_emitido_por: null,
+                    certificado_reemissoes: [],
+
+                    excluido: false
+                };
+
+                const ref = doc(db, "alunos", alunoId, "matriculas", matId);
+                batch.set(ref, novaMatricula, { merge: true });
+
+                sucesso++;
+            } catch (err) {
+                log(`   ❌ Erro em ${m.id}: ${err.message}`, "erro");
+                erro++;
+            }
+        }
+
+        try {
+            await batch.commit();
+            log(`   ✅ Lote ${i + 1} commitado (${lote.length} docs)`, "sucesso");
+        } catch (err) {
+            log(`   ❌ Erro no commit do lote ${i + 1}: ${err.message}`, "erro");
+            erro += lote.length;
+        }
+    }
+
+    log("", "info");
+    log(`🎉 Migração concluída!`, "sucesso");
+    log(`   Sucesso: ${sucesso}`, "sucesso");
+    log(`   Erros:   ${erro}`, erro > 0 ? "erro" : "info");
+    log(`   Total:   ${sucesso + erro}`, "info");
+
+    document.getElementById("btnLimpar").disabled = erro > 0;
+});
+
+/* ============================================================
+ * 3. LIMPAR DADOS ANTIGOS (só roda se não houver erros)
+ * ============================================================ */
+document.getElementById("btnLimpar").addEventListener("click", async () => {
+    const confirma1 = confirm("⚠️ ATENÇÃO: Isso vai APAGAR as matrículas das coleções antigas (/matriculas e /turmas/*/matriculas).\n\nTem certeza?");
+    if (!confirma1) return;
+
+    const confirma2 = prompt("Digite APAGAR para confirmar:");
+    if (confirma2 !== "APAGAR") {
+        log("❌ Confirmação inválida. Limpeza cancelada.", "erro");
+        return;
+    }
+
+    limparLog();
+    log("🧹 Limpando dados antigos...", "aviso");
+
+    try {
+        // 1. Apaga /matriculas top-level
+        log("🗑️ Apagando /matriculas...");
+        const topSnap = await getDocs(collection(db, "matriculas"));
+        let apagados = 0;
+        for (const d of topSnap.docs) {
+            await deleteDoc(d.ref);
+            apagados++;
+        }
+        log(`   → ${apagados} apagados do top-level`, "sucesso");
+
+        // 2. Apaga /turmas/*/matriculas
+        log("🗑️ Apagando /turmas/*/matriculas...");
+        const groupSnap = await getDocs(collectionGroup(db, "matriculas"));
+        let apagadosSub = 0;
+        for (const d of groupSnap.docs) {
+            await deleteDoc(d.ref);
+            apagadosSub++;
+        }
+        log(`   → ${apagadosSub} apagados das subcoleções`, "sucesso");
+
+        log("✅ Limpeza concluída.", "sucesso");
+        log("⚠️ Lembre-se de limpar também o array turma.alunos_matriculados[] manualmente se necessário.", "aviso");
+
+    } catch (err) {
+        log(`❌ Erro na limpeza: ${err.message}`, "erro");
+    }
+});
+</script>
+
+</body>
+</html>
