@@ -8,6 +8,32 @@ import {
     limit
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
+/* ==========================================================================
+ * RÓTULOS AMIGÁVEIS PARA CAMPOS DE AUDITORIA
+ * ========================================================================== */
+const ROTULOS_CAMPOS = {
+    "nome": "Nome",
+    "email": "E-mail",
+    "cpf": "CPF",
+    "telefone": "Telefone",
+    "nascimento": "Data de Nascimento",
+    "status": "Status",
+    "observacoes": "Observações",
+    "endereco.cep": "CEP",
+    "endereco.logradouro": "Logradouro",
+    "endereco.numero": "Número",
+    "endereco.bairro": "Bairro",
+    "endereco.cidade": "Cidade",
+    "endereco.estado": "Estado (UF)",
+    "valor": "Valor do Curso",
+    "status_pagamento": "Status de Pagamento",
+    "modalidade_pagamento": "Forma de Pagamento"
+};
+
+export function obterRotuloCampo(campo) {
+    return ROTULOS_CAMPOS[campo] || campo;
+}
+
 console.log("✅ auditoria-service.js carregado");
 
 export function compararAlteracoes(antes = {}, depois = {}) {
@@ -19,9 +45,12 @@ export function compararAlteracoes(antes = {}, depois = {}) {
         if (campo === "endereco") return;
         const a = antes[campo];
         const b = depois[campo];
-        if (JSON.stringify(a) !== JSON.stringify(b)) {
-            alteracoes.push({ campo, valor_anterior: a ?? null, valor_novo: b ?? null });
-        }
+        alteracoes.push({
+            campo,
+            rotulo: obterRotuloCampo(campo),   // ✅ NOVO
+            valor_anterior: a ?? null,
+            valor_novo: b ?? null
+        });
     });
 
     if (depois.endereco) {
@@ -30,6 +59,7 @@ export function compararAlteracoes(antes = {}, depois = {}) {
             if (JSON.stringify(ea[k]) !== JSON.stringify(depois.endereco[k])) {
                 alteracoes.push({
                     campo: `endereco.${k}`,
+                    rotulo: obterRotuloCampo(`endereco.${k}`),   // ✅ NOVO
                     valor_anterior: ea[k] ?? null,
                     valor_novo: depois.endereco[k] ?? null
                 });

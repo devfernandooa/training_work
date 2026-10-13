@@ -361,9 +361,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
 
-/* ==========================================================================
- * FORM EDITAR ALUNO → ABRE MODAL DE CONFIRMAÇÃO
- * ========================================================================== */
+    /* ==========================================================================
+     * FORM EDITAR ALUNO → ABRE MODAL DE CONFIRMAÇÃO
+     * ========================================================================== */
 
 });
 document.addEventListener("DOMContentLoaded", () => {
@@ -406,7 +406,7 @@ document.addEventListener("DOMContentLoaded", () => {
         window.__alteracoesPendentes = { alunoId, dadosAtualizados, alteracoes };
 
         // Preenche o modal de confirmação
-        document.getElementById("confirmAlteracoesAlunoNome").textContent = antes.nome || "Aluno";
+        document.getElementById("confirmAlteracoesAlunoNome").textContent = antes.nome || "Aluno(a)";
 
         const listaEl = document.getElementById("confirmAlteracoesLista");
         if (alteracoes.length === 0) {
@@ -422,7 +422,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <tbody>
                             ${alteracoes.map(a => `
                                 <tr>
-                                    <td><strong>${a.campo}</strong></td>
+                                    <td><strong>${a.rotulo || a.campo}</strong></td>
                                     <td class="text-muted">${a.valor_anterior !== null && a.valor_anterior !== "" ? String(a.valor_anterior) : "—"}</td>
                                     <td class="text-success">${a.valor_novo !== null && a.valor_novo !== "" ? String(a.valor_novo) : "—"}</td>
                                 </tr>
@@ -495,6 +495,64 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    /* ==========================================================================
+ * VIACEP — Autopreenchimento de endereço
+ * ========================================================================== */
+    (function configurarViaCEP() {
+        const cepInput = document.getElementById("editCepAluno");
+        if (!cepInput) return;
+
+        // Máscara enquanto digita
+        cepInput.addEventListener("input", (e) => {
+            let v = e.target.value.replace(/\D/g, "").substring(0, 8);
+            if (v.length > 5) v = v.replace(/^(\d{5})(\d{0,3})/, "$1-$2");
+            e.target.value = v;
+        });
+
+        // Busca ao sair do campo
+        cepInput.addEventListener("blur", async (e) => {
+            const cep = e.target.value.replace(/\D/g, "");
+            if (cep.length !== 8) return;
+
+            // Feedback visual
+            const elLogradouro = document.getElementById("editLogradouroAluno");
+            if (elLogradouro) elLogradouro.placeholder = "Buscando...";
+
+            try {
+                const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const data = await res.json();
+
+                if (data.erro) {
+                    notificar("CEP não encontrado.", "aviso");
+                    if (elLogradouro) elLogradouro.placeholder = "Rua, Avenida...";
+                    return;
+                }
+
+                // Preenche os campos
+                const setVal = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = val || "";
+                };
+
+                setVal("editLogradouroAluno", data.logradouro);
+                setVal("editBairroAluno", data.bairro);
+                setVal("editCidadeAluno", data.localidade);
+                setVal("editEstadoAluno", data.uf);
+
+                // Foca no número (próximo campo a preencher)
+                document.getElementById("editNumeroAluno")?.focus();
+
+                notificar("Endereço preenchido automaticamente.", "sucesso");
+
+            } catch (err) {
+                console.error("Erro ViaCEP:", err);
+                notificar("Erro ao buscar CEP.", "erro");
+            } finally {
+                if (elLogradouro) elLogradouro.placeholder = "Rua, Avenida...";
+            }
+        });
+    })();
 });
 
 console.log("✅ [alunos-ui] listeners registrados");
