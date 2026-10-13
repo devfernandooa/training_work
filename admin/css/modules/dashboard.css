@@ -478,3 +478,24 @@ table.tabela-leads td.col-analise {
 #editLeadModal .p-3 {
   padding: 0.75rem !important;
 }
+
+/* ============================================================
+ * FIX — Modal de Ficha do Aluno
+ * ============================================================ */
+#modalFichaAluno.show {
+    display: block !important;
+    opacity: 1 !important;
+    z-index: 9999 !important;
+}
+#modalFichaAluno .modal-dialog {
+    transform: none !important;
+}
+#modalFichaAluno .modal-content {
+    min-height: 400px;
+    opacity: 1 !important;
+}
+#fichaConteudo {
+    width: 100% !important;
+    min-height: 200px;
+    display: block !important;
+}
