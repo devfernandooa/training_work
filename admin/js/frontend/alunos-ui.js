@@ -20,6 +20,7 @@ console.log("✅ [alunos-ui] carregado");
 let listaAlunos = [];
 let matriculasPorAluno = {};
 let iniciou = false;
+let filtroInativos = false;
 
 /* ==========================================================================
  * AUTH
@@ -88,17 +89,32 @@ function renderizar() {
         if (s === "debito") debitos++;
     });
 
+    // Atualiza título da seção
+    const titulo = document.getElementById("titulo-secao-alunos");
+    if (titulo) {
+        titulo.textContent = filtroInativos ? "Alunos Inativos" : "Alunos Ativos";
+    }
+
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     set("metric-total-alunos", listaAlunos.length);
     set("metric-alunos-ativos", ativos);
     set("metric-alunos-inativos", inativos);
     set("metric-alunos-debitos", debitos);
 
-    // Filtro
-    const filtrados = listaAlunos.filter(a =>
-        (a.nome || "").toLowerCase().includes(termo) ||
-        (a.email || "").toLowerCase().includes(termo)
-    );
+    // Filtro (sem redeclarar filtroInativos!)
+    const filtrados = listaAlunos.filter(a => {
+        const status = (a.status || "ativo").toLowerCase();
+        if (filtroInativos && status !== "inativo") return false;
+        if (!filtroInativos && status === "inativo") return false;
+
+        if (termo) {
+            const nome = (a.nome || "").toLowerCase();
+            const email = (a.email || "").toLowerCase();
+            if (!nome.includes(termo) && !email.includes(termo)) return false;
+        }
+
+        return true;
+    });
 
     if (filtrados.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">Nenhum aluno encontrado.</td></tr>`;
@@ -496,63 +512,188 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    /* ==========================================================================
- * VIACEP — Autopreenchimento de endereço
+  
+});
+
+/* ==========================================================================
+ * BOTÃO "VER INATIVOS" / "VER ATIVOS"
  * ========================================================================== */
-    (function configurarViaCEP() {
-        const cepInput = document.getElementById("editCepAluno");
-        if (!cepInput) return;
+const btnVerInativos = document.getElementById("btn-alternar-alunos-inativos");
+if (btnVerInativos) {
+    btnVerInativos.addEventListener("click", () => {
+        filtroInativos = !filtroInativos;
 
-        // Máscara enquanto digita
-        cepInput.addEventListener("input", (e) => {
-            let v = e.target.value.replace(/\D/g, "").substring(0, 8);
-            if (v.length > 5) v = v.replace(/^(\d{5})(\d{0,3})/, "$1-$2");
-            e.target.value = v;
-        });
+        btnVerInativos.innerHTML = filtroInativos
+            ? `<i class="fas fa-eye me-1"></i> Ver Ativos`
+            : `<i class="fas fa-eye-slash me-1"></i> Ver Inativos`;
 
-        // Busca ao sair do campo
-        cepInput.addEventListener("blur", async (e) => {
-            const cep = e.target.value.replace(/\D/g, "");
-            if (cep.length !== 8) return;
+        renderizar();
+    });
+}
 
-            // Feedback visual
-            const elLogradouro = document.getElementById("editLogradouroAluno");
-            if (elLogradouro) elLogradouro.placeholder = "Buscando...";
+/* ==========================================================================
+ * FORM NOVO ALUNO
+ * ========================================================================== */
+const formNovoAluno = document.getElementById("formNovoAluno");
+if (formNovoAluno) {
+    formNovoAluno.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-            try {
-                const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-                const data = await res.json();
-
-                if (data.erro) {
-                    notificar("CEP não encontrado.", "aviso");
-                    if (elLogradouro) elLogradouro.placeholder = "Rua, Avenida...";
-                    return;
-                }
-
-                // Preenche os campos
-                const setVal = (id, val) => {
-                    const el = document.getElementById(id);
-                    if (el) el.value = val || "";
-                };
-
-                setVal("editLogradouroAluno", data.logradouro);
-                setVal("editBairroAluno", data.bairro);
-                setVal("editCidadeAluno", data.localidade);
-                setVal("editEstadoAluno", data.uf);
-
-                // Foca no número (próximo campo a preencher)
-                document.getElementById("editNumeroAluno")?.focus();
-
-                notificar("Endereço preenchido automaticamente.", "sucesso");
-
-            } catch (err) {
-                console.error("Erro ViaCEP:", err);
-                notificar("Erro ao buscar CEP.", "erro");
-            } finally {
-                if (elLogradouro) elLogradouro.placeholder = "Rua, Avenida...";
+        const dados = {
+            nome: document.getElementById("nomeAluno")?.value.trim() || "",
+            email: document.getElementById("emailAluno")?.value.trim() || "",
+            cpf: document.getElementById("cpfAluno")?.value.trim() || "",
+            telefone: document.getElementById("telefoneAluno")?.value.trim() || "",
+            nascimento: document.getElementById("nascimentoAluno")?.value || "",
+            status: document.getElementById("statusAluno")?.value || "ativo",
+            observacoes: document.getElementById("observacoesAluno")?.value.trim() || "",
+            endereco: {
+                cep: document.getElementById("cepAluno")?.value.trim() || "",
+                logradouro: document.getElementById("enderecoLogradouro")?.value.trim() || "",
+                numero: document.getElementById("enderecoNumero")?.value.trim() || "",
+                bairro: document.getElementById("enderecoBairro")?.value.trim() || "",
+                cidade: document.getElementById("enderecoCidade")?.value.trim() || "",
+                estado: document.getElementById("enderecoEstado")?.value.trim() || ""
             }
-        });
-    })();
+        };
+
+        if (!dados.nome || !dados.email) {
+            notificar("Preencha nome e e-mail.", "aviso");
+            return;
+        }
+
+        const btnSubmit = formNovoAluno.querySelector('button[type="submit"]');
+        const txt = btnSubmit ? btnSubmit.innerHTML : "";
+        if (btnSubmit) {
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Salvando...`;
+        }
+
+        try {
+            await addDoc(collection(db, "alunos"), {
+                ...dados,
+                criado_em: new Date().toISOString(),
+                atualizado_em: new Date().toISOString()
+            });
+
+            const modalEl = document.getElementById("modalNovoAluno");
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) modalInstance.hide();
+
+            formNovoAluno.reset();
+            notificar("Aluno cadastrado com sucesso.", "sucesso");
+        } catch (error) {
+            console.error("Erro ao cadastrar aluno:", error);
+            notificar("Erro ao cadastrar o aluno.", "erro");
+        } finally {
+            if (btnSubmit) {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = txt;
+            }
+        }
+    });
+}
+
+
+
+/* ==========================================================================
+ * VIACEP — Autopreenchimento genérico de endereço
+ * ==========================================================================
+ * Uso:
+ *   configurarViaCEP({
+ *       inputCepId: "editCepAluno",
+ *       mapaCampos: {
+ *           logradouro: "editLogradouroAluno",
+ *           bairro: "editBairroAluno",
+ *           cidade: "editCidadeAluno",
+ *           estado: "editEstadoAluno"
+ *       },
+ *       campoFocoId: "editNumeroAluno"
+ *   });
+ * ========================================================================== */
+function configurarViaCEP({ inputCepId, mapaCampos = {}, campoFocoId = null }) {
+    const cepInput = document.getElementById(inputCepId);
+    if (!cepInput) return;
+
+    // Máscara enquanto digita
+    cepInput.addEventListener("input", (e) => {
+        let v = e.target.value.replace(/\D/g, "").substring(0, 8);
+        if (v.length > 5) v = v.replace(/^(\d{5})(\d{0,3})/, "$1-$2");
+        e.target.value = v;
+    });
+
+    // Busca ao sair do campo
+    cepInput.addEventListener("blur", async (e) => {
+        const cep = e.target.value.replace(/\D/g, "");
+        if (cep.length !== 8) return;
+
+        const elLogradouro = mapaCampos.logradouro
+            ? document.getElementById(mapaCampos.logradouro)
+            : null;
+        const placeholderOriginal = elLogradouro?.placeholder || "";
+        if (elLogradouro) elLogradouro.placeholder = "Buscando...";
+
+        try {
+            const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+            const data = await res.json();
+
+            if (data.erro) {
+                notificar("CEP não encontrado.", "aviso");
+                if (elLogradouro) elLogradouro.placeholder = placeholderOriginal;
+                return;
+            }
+
+            // Preenche os campos mapeados
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val || "";
+            };
+
+            setVal(mapaCampos.logradouro, data.logradouro);
+            setVal(mapaCampos.bairro, data.bairro);
+            setVal(mapaCampos.cidade, data.localidade);
+            setVal(mapaCampos.estado, data.uf);
+
+            // Foco no próximo campo
+            if (campoFocoId) document.getElementById(campoFocoId)?.focus();
+
+            notificar("Endereço preenchido automaticamente.", "sucesso");
+
+        } catch (err) {
+            console.error("Erro ViaCEP:", err);
+            notificar("Erro ao buscar CEP.", "erro");
+        } finally {
+            if (elLogradouro) elLogradouro.placeholder = placeholderOriginal;
+        }
+    });
+}
+
+/* ==========================================================================
+ * REGISTRA O VIACEP NOS DOIS MODAIS
+ * ========================================================================== */
+
+// Modal de Edição de Aluno
+configurarViaCEP({
+    inputCepId: "editCepAluno",
+    mapaCampos: {
+        logradouro: "editLogradouroAluno",
+        bairro: "editBairroAluno",
+        cidade: "editCidadeAluno",
+        estado: "editEstadoAluno"
+    },
+    campoFocoId: "editNumeroAluno"
+});
+
+// Modal de Novo Aluno
+configurarViaCEP({
+    inputCepId: "cepAluno",
+    mapaCampos: {
+        logradouro: "enderecoLogradouro",
+        bairro: "enderecoBairro",
+        cidade: "enderecoCidade",
+        estado: "enderecoEstado"
+    },
+    campoFocoId: "enderecoNumero"
 });
 
 console.log("✅ [alunos-ui] listeners registrados");
