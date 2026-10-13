@@ -1,7 +1,7 @@
 // ==========================================================================
 // TRAINING WORK — UI: FICHA DO ALUNO (com abas)
 // ==========================================================================
-
+import { listarAuditoriaAluno } from "../backend/auditoria-service.js";
 import { notificar } from "../modules/notificacao.js";
 import { obterFichaCompleta } from "../backend/aluno-ficha-service.js";
 
@@ -58,6 +58,7 @@ window.abrirFichaAluno = async function (alunoId) {
         renderizarAbaPessoais(ficha);
         renderizarAbaMatriculas(ficha);
         renderizarAbaFinanceiro(ficha);
+        renderizarAbaHistorico(alunoId);
         console.log("🔵 [ficha] Abas renderizadas");
 
         // 8. Mostra o modal
@@ -271,4 +272,95 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+/* ==========================================================================
+ * ABA 4 — HISTÓRICO
+ * ========================================================================== */
+async function renderizarAbaHistorico(alunoId) {
+    const container = document.getElementById("fichaHistoricoContainer");
+    if (!container) return;
+
+    try {
+        const logs = await listarAuditoriaAluno(alunoId, 50);
+
+        if (logs.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-history fa-3x text-muted opacity-50 mb-3"></i>
+                    <p class="text-muted">Nenhuma alteração registrada ainda.</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `<div class="timeline">`;
+
+        logs.forEach(log => {
+            const data = log.criado_em ? new Date(log.criado_em) : null;
+            const dataFmt = data
+                ? `${data.toLocaleDateString("pt-BR")} às ${data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+                : "—";
+
+            let icone = "fa-edit", cor = "#0284c7", bg = "#e0f2fe";
+            if (log.tipo === "criacao") { icone = "fa-plus"; cor = "#16a34a"; bg = "#dcfce7"; }
+            else if (log.tipo === "exclusao") { icone = "fa-trash"; cor = "#dc2626"; bg = "#fee2e2"; }
+            else if (log.tipo === "status") { icone = "fa-toggle-on"; cor = "#d97706"; bg = "#fef3c7"; }
+
+            const campos = log.campos_alterados || [];
+            let camposHtml = "";
+            if (campos.length > 0) {
+                camposHtml = `<div class="mt-2">
+                    <table class="table table-sm table-borderless mb-0" style="font-size: 0.82rem;">
+                        <tbody>
+                            ${campos.map(c => `
+                                <tr>
+                                    <td class="text-muted" style="width: 30%;"><strong>${c.campo}</strong></td>
+                                    <td>
+                                        <span class="badge bg-danger bg-opacity-10 text-danger">${formatarValor(c.valor_anterior)}</span>
+                                        <i class="fas fa-arrow-right mx-1 text-muted"></i>
+                                        <span class="badge bg-success bg-opacity-10 text-success">${formatarValor(c.valor_novo)}</span>
+                                    </td>
+                                </tr>
+                            `).join("")}
+                        </tbody>
+                    </table>
+                </div>`;
+            }
+
+            html += `
+                <div class="card border-0 shadow-sm mb-3 rounded-3">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                style="width: 40px; height: 40px; background: ${bg}; color: ${cor};">
+                                <i class="fas ${icone}"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                                    <div>
+                                        <strong class="text-dark d-block">${log.descricao || "Alteração"}</strong>
+                                        <small class="text-muted"><i class="fas fa-user me-1"></i>${log.admin_email || "Sistema"}</small>
+                                    </div>
+                                    <small class="text-muted"><i class="far fa-clock me-1"></i>${dataFmt}</small>
+                                </div>
+                                ${camposHtml}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+        container.innerHTML = html;
+
+    } catch (err) {
+        console.error("Erro ao carregar histórico:", err);
+        container.innerHTML = `<p class="text-muted text-center py-4">Erro ao carregar histórico.</p>`;
+    }
+}
+
+function formatarValor(v) {
+    if (v === null || v === undefined || v === "") return "—";
+    return String(v);
+}
 console.log("✅ aluno-ficha-ui.js carregado.");
