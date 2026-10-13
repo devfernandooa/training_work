@@ -313,7 +313,7 @@ async function renderizarAbaHistorico(alunoId) {
                         <tbody>
                             ${campos.map(c => `
                                 <tr>
-                                    <td class="text-muted" style="width: 30%;"><strong>${c.campo}</strong></td>
+                                    <td class="text-muted" style="width: 30%;"><strong>${c.rotulo || c.campo}</strong></td>
                                     <td>
                                         <span class="badge bg-danger bg-opacity-10 text-danger">${formatarValor(c.valor_anterior)}</span>
                                         <i class="fas fa-arrow-right mx-1 text-muted"></i>
