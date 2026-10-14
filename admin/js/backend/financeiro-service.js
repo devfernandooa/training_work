@@ -9,7 +9,7 @@
  * Coleção: /financeiro
  * =========================================================================
  */
-
+import { registrarAuditoriaGenerica, compararAlteracoes } from "./auditoria-service.js";
 import { auth, db } from "../firebase-config.js";
 import {
     collection,
@@ -193,6 +193,16 @@ export async function atualizarStatusFinanceiro(id, novoStatus, formaPagamento) 
 
 export async function editarTransacaoFinanceira(id, dados) {
     try {
+        // 1. Busca o estado ANTES (para comparar depois)
+        const transacaoRef = doc(db, NOME_COLECAO, id);
+        const snapAntes = await getDoc(transacaoRef);
+
+        if (!snapAntes.exists()) {
+            throw new Error("Transação não encontrada.");
+        }
+
+        const dadosAntes = snapAntes.data();
+
         const batch = writeBatch(db);
         const agora = new Date().toISOString();
         const usuario = auth.currentUser?.email || "Sistema";
@@ -200,9 +210,8 @@ export async function editarTransacaoFinanceira(id, dados) {
         const statusNorm = normalizarStatus(dados.status);
         const valorNum = parseFloat(dados.valor) || 0;
 
-        // 1. Atualiza a transação
-        const transacaoRef = doc(db, NOME_COLECAO, id);
-        batch.update(transacaoRef, {
+        // 2. Monta o payload do novo estado
+        const dadosDepois = {
             alunoNome: dados.alunoNome || "",
             valor: valorNum,
             status: statusNorm,
@@ -211,38 +220,57 @@ export async function editarTransacaoFinanceira(id, dados) {
             auditoriaFinanceira: dados.observacoes || "",
             ultimaAlteracaoEm: agora,
             ultimaAlteracaoPor: usuario
-        });
+        };
 
-        // 2. Propaga em cascata
-        const snap = await getDoc(transacaoRef);
-        if (snap.exists()) {
-            const dadosOriginais = snap.data();
-            const alunoId = dadosOriginais.alunoId || dadosOriginais.aluno_id;
+        // 3. Detecta alterações (antes vs depois)
+        const alteracoes = enriquecerComRotulos(compararAlteracoes(dadosAntes, dadosDepois));
 
-            if (alunoId) {
-                const alunoRef = doc(db, "alunos", alunoId);
-                batch.update(alunoRef, {
-                    nome: dados.alunoNome || "",
+        // 4. Atualiza a transação
+        batch.update(transacaoRef, dadosDepois);
+
+        // 5. Propaga em cascata
+        const alunoId = dadosAntes.alunoId || dadosAntes.aluno_id;
+
+        if (alunoId) {
+            const alunoRef = doc(db, "alunos", alunoId);
+            batch.update(alunoRef, {
+                nome: dados.alunoNome || "",
+                status_pagamento: statusNorm,
+                modalidade_pagamento: dados.formaPagamento || "Pix",
+                atualizado_em: agora
+            });
+
+            const q = query(collection(db, "matriculas"), where("aluno_id", "==", alunoId));
+            const snapMat = await getDocs(q);
+            snapMat.forEach((d) => {
+                batch.update(d.ref, {
+                    aluno_nome: dados.alunoNome || "",
                     status_pagamento: statusNorm,
-                    modalidade_pagamento: dados.formaPagamento || "Pix",
+                    forma_pagamento: dados.formaPagamento || "Pix",
                     atualizado_em: agora
                 });
-
-                const q = query(collection(db, "matriculas"), where("aluno_id", "==", alunoId));
-                const snapMat = await getDocs(q);
-                snapMat.forEach((d) => {
-                    batch.update(d.ref, {
-                        aluno_nome: dados.alunoNome || "",
-                        status_pagamento: statusNorm,
-                        forma_pagamento: dados.formaPagamento || "Pix",
-                        atualizado_em: agora
-                    });
-                });
-            }
+            });
         }
 
         await batch.commit();
-        console.log("✅ Transação editada");
+
+        // 6. Registra auditoria (só se houver mudanças reais)
+        if (alteracoes.length > 0) {
+            try {
+                await registrarAuditoriaGenerica("financeiro", id, {
+                    tipo: "alteracao",
+                    entidade: "financeiro",
+                    descricao: `${alteracoes.length} campo(s) alterado(s)`,
+                    campos_alterados: alteracoes
+                });
+            } catch (errAud) {
+                // Não falha a transação principal por causa da auditoria
+                console.warn("⚠️ Falha ao registrar auditoria:", errAud);
+            }
+        }
+
+        console.log(`✅ Transação ${id} editada — ${alteracoes.length} campo(s) alterado(s)`);
+
     } catch (erro) {
         console.error("❌ Erro ao editar transação:", erro);
         throw erro;
@@ -266,4 +294,24 @@ export async function excluirTransacaoFinanceira(id) {
         console.error("❌ Erro ao excluir transação:", erro);
         throw erro;
     }
+}
+
+/* ==========================================================================
+ * RÓTULOS AMIGÁVEIS PARA AUDITORIA
+ * ========================================================================== */
+const ROTULOS_FINANCEIRO = {
+    "alunoNome": "Nome do Aluno",
+    "valor": "Valor",
+    "status": "Status",
+    "formaPagamento": "Forma de Pagamento",
+    "dataPagamento": "Data de Pagamento",
+    "auditoriaFinanceira": "Observações"
+};
+
+// Helper para adicionar rótulo nas alterações
+function enriquecerComRotulos(alteracoes) {
+    return alteracoes.map(a => ({
+        ...a,
+        rotulo: ROTULOS_FINANCEIRO[a.campo] || a.campo
+    }));
 }
