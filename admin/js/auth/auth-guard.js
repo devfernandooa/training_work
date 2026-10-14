@@ -4,7 +4,13 @@
  * =========================================================================
  */
 
-import { escutarSessao, obterAdminLogado, logout } from "./auth-service.js";
+import {
+    escutarSessao,
+    obterAdminLogado,
+    logout,
+    iniciarMonitorInatividade,
+    pararMonitorInatividade
+} from "./auth-service.js";
 
 let jaVimosUsuarioLogado = false;
 let timerDecisao = null;
@@ -14,7 +20,7 @@ export function checkAuth(callbackOnSuccess) {
     escutarSessao(async (user) => {
 
         // ─────────────────────────────────────────────────────────────
-        // USER EXISTE
+        // USER EXISTE (logado)
         // ─────────────────────────────────────────────────────────────
         if (user) {
             jaVimosUsuarioLogado = true;
@@ -29,10 +35,14 @@ export function checkAuth(callbackOnSuccess) {
 
                 if (!adminData || adminData.ativo !== true) {
                     console.warn("[auth-guard] admin não encontrado ou inativo");
+                    pararMonitorInatividade();
                     await logout();
                     window.location.replace("login.html");
                     return;
                 }
+
+                // ✅ Ativa o monitor (sem parâmetro)
+                iniciarMonitorInatividade();
 
                 if (!callbackExecutado && typeof callbackOnSuccess === "function") {
                     callbackExecutado = true;
@@ -40,14 +50,15 @@ export function checkAuth(callbackOnSuccess) {
                 }
             } catch (erro) {
                 console.error("[auth-guard] erro:", erro);
-                // Não desloga por erro de rede
             }
             return;
         }
 
         // ─────────────────────────────────────────────────────────────
-        // USER NULL
+        // USER NULL (deslogado)
         // ─────────────────────────────────────────────────────────────
+
+        pararMonitorInatividade();
 
         if (jaVimosUsuarioLogado) {
             window.location.replace("login.html");

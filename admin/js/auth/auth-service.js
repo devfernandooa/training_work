@@ -23,39 +23,28 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 /* =========================================================================
- * HELPER — ESPERAR TOKEN (SEM FORÇAR REFRESH DE REDE)
- * =========================================================================
- * O `getIdToken(true)` faz uma requisição de rede e pode demorar 5-30s
- * (ou travar). O `getIdToken()` usa o cache local e é instantâneo.
- * =========================================================================
- */
+ * HELPER — ESPERAR TOKEN
+ * ========================================================================= */
 async function aguardarTokenPronto(user) {
     if (!user) return;
     try {
-        await user.getIdToken();   // usa cache, é instantâneo
+        await user.getIdToken();
     } catch (e) {
         console.warn("Aviso ao obter token:", e);
     }
-    // Delay mínimo (era 100ms, agora 20ms)
     await new Promise((resolve) => setTimeout(resolve, 20));
 }
 
 /* =========================================================================
  * LOGIN
  * ========================================================================= */
-
 export async function login(email, senha) {
-    // 1. Autentica
     const credencial = await signInWithEmailAndPassword(auth, email, senha);
     const user = credencial.user;
 
-    // 2. Espera o token estar pronto
     await user.getIdToken();
-
-    // 3.  Pequena pausa para o token propagar
     await new Promise((r) => setTimeout(r, 200));
 
-    // 4. Busca o doc do admin
     const adminRef = doc(db, "administradores", user.uid);
     const adminSnap = await getDoc(adminRef);
 
@@ -83,7 +72,6 @@ export async function login(email, senha) {
 /* =========================================================================
  * LOGOUT
  * ========================================================================= */
-
 export async function logout() {
     await signOut(auth);
 }
@@ -91,7 +79,6 @@ export async function logout() {
 /* =========================================================================
  * RESET DE SENHA
  * ========================================================================= */
-
 export async function resetarSenha(email) {
     await sendPasswordResetEmail(auth, email);
 }
@@ -99,25 +86,18 @@ export async function resetarSenha(email) {
 /* =========================================================================
  * ESCUTAR SESSÃO
  * ========================================================================= */
-
 export function escutarSessao(callback) {
     return onAuthStateChanged(auth, callback);
 }
 
 /* =========================================================================
  * OBTER ADMIN LOGADO — COM RETRY
- * =========================================================================
- * Tenta até 3 vezes. Se der permission-denied, espera 500ms e tenta
- * de novo. Isso resolve o timing entre o login e a propagação do token.
- * =========================================================================
- */
-
+ * ========================================================================= */
 export async function obterAdminLogado(user) {
     if (!user) return null;
 
     await aguardarTokenPronto(user);
 
-    // Tenta 3x com espera de 300ms (era 500ms)
     for (let tentativa = 0; tentativa < 3; tentativa++) {
         try {
             const adminRef = doc(db, "administradores", user.uid);
@@ -128,11 +108,90 @@ export async function obterAdminLogado(user) {
         } catch (e) {
             if (e.code === "permission-denied" && tentativa < 2) {
                 console.warn(`[auth] retry ${tentativa + 1}/3`);
-                await new Promise((r) => setTimeout(r, 300));   // ← 300ms
+                await new Promise((r) => setTimeout(r, 300));
                 continue;
             }
             throw e;
         }
     }
     return null;
+}
+
+/* ==========================================================================
+ * TIMEOUT DE INATIVIDADE
+ * ==========================================================================
+ * Se o admin não interagir por X minutos, faz logout automático.
+ * Padrão: 30 minutos.
+ * ========================================================================== */
+
+const TIMEOUT_INATIVIDADE_MS = 30 * 60 * 1000; // 30 minutos
+
+let _timerInatividade = null;
+let _estaEscutando = false;
+
+/**
+ * Inicia o monitor de inatividade. Deve ser chamado após login bem-sucedido.
+ */
+export function iniciarMonitorInatividade() {
+    if (_estaEscutando) return;
+    _estaEscutando = true;
+
+    const reiniciarTimer = () => {
+        if (_timerInatividade) clearTimeout(_timerInatividade);
+
+        _timerInatividade = setTimeout(async () => {
+            console.warn("[inatividade] Sessão expirada por inatividade");
+            pararMonitorInatividade();
+            await logoutPorInatividade();
+        }, TIMEOUT_INATIVIDADE_MS);
+    };
+
+    const eventos = ["mousedown", "keydown", "touchstart", "scroll", "mousemove"];
+    eventos.forEach(evt => {
+        document.addEventListener(evt, reiniciarTimer, { passive: true });
+    });
+
+    reiniciarTimer();
+
+    window.__inatividade_eventos = eventos;
+    window.__inatividade_callback = reiniciarTimer;
+}
+
+/**
+ * Para o monitor de inatividade. Chamado no logout.
+ */
+export function pararMonitorInatividade() {
+    if (_timerInatividade) {
+        clearTimeout(_timerInatividade);
+        _timerInatividade = null;
+    }
+
+    const eventos = window.__inatividade_eventos || [];
+    const callback = window.__inatividade_callback;
+
+    if (callback) {
+        eventos.forEach(evt => {
+            document.removeEventListener(evt, callback);
+        });
+    }
+
+    window.__inatividade_eventos = null;
+    window.__inatividade_callback = null;
+    _estaEscutando = false;
+}
+
+/**
+ * Realiza logout por inatividade e marca uma flag no sessionStorage
+ * para evitar que a página de login reloge automaticamente.
+ */
+export async function logoutPorInatividade() {
+    sessionStorage.setItem("tw_logout_inatividade", "1");
+
+    try {
+        await signOut(auth);
+    } catch (e) {
+        console.error("Erro no signOut:", e);
+    }
+
+    window.location.replace("login.html");
 }
