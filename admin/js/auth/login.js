@@ -5,24 +5,30 @@
  */
 
 import { login, resetarSenha, escutarSessao } from "./auth-service.js";
-
 /* =========================================================================
  * SE O USUÁRIO JÁ ESTIVER LOGADO, REDIRECIONA
  * =========================================================================
- *
- * ⚠️ IMPORTANTE: só redireciona se o usuário já estiver há um tempo logado.
- * Se acabamos de fazer login, o `login.js` redireciona manualmente.
- * =========================================================================
- */
+ * ⚠️ Ignora se o logout foi por inatividade (pra não relogar automático).
+ * ========================================================================= */
 
 let loginAcabouDeAcontecer = false;
 
-escutarSessao((user) => {
-    if (user && !loginAcabouDeAcontecer) {
-        // Usuário já estava logado (sessão restaurada)
-        window.location.replace("dashboard.html");
-    }
-});
+// Verifica se o logout anterior foi por inatividade
+const logoutFoiPorInatividade = sessionStorage.getItem("tw_logout_inatividade") === "1";
+
+if (logoutFoiPorInatividade) {
+    // Limpa a flag (uso único)
+    sessionStorage.removeItem("tw_logout_inatividade");
+    // Não registra auto-redirect
+    console.log("[login] Logout por inatividade detectado — auto-login desativado");
+} else {
+    escutarSessao((user) => {
+        if (user && !loginAcabouDeAcontecer) {
+            // Usuário já estava logado (sessão restaurada)
+            window.location.replace("dashboard.html");
+        }
+    });
+}
 
 /* =========================================================================
  * TELA DE LOGIN
