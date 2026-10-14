@@ -213,6 +213,7 @@ export async function editarTransacaoFinanceira(id, dados) {
 
         // 2. Monta o payload do novo estado
         const dadosDepois = {
+            tipo: dados.tipo || dadosAntes.tipo || "entrada",   // ← NOVO
             alunoNome: dados.alunoNome || "",
             valor: valorNum,
             status: statusNorm,
@@ -301,6 +302,7 @@ export async function excluirTransacaoFinanceira(id) {
  * RÓTULOS AMIGÁVEIS PARA AUDITORIA
  * ========================================================================== */
 const ROTULOS_FINANCEIRO = {
+    "tipo": "Tipo",
     "alunoNome": "Nome do Aluno",
     "valor": "Valor",
     "status": "Status",
@@ -339,6 +341,7 @@ export async function criarTransacaoFinanceira(dados) {
 
         // 1. Monta o payload da transação
         const payload = {
+            tipo: dados.tipo || "entrada",        // ← NOVO
             alunoId: dados.alunoId || "",
             alunoNome: dados.alunoNome || "",
             curso: dados.curso || "Geral",

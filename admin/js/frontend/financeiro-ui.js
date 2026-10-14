@@ -309,25 +309,46 @@ function aplicarFiltrosERenderizar() {
  * ========================================================================= */
 
 function atualizarKPIs() {
-    let recebido = 0, pendente = 0, aguardando = 0, total = 0;
+    let recebido = 0;
+    let pendente = 0;
+    let aguardando = 0;
+    let saidas = 0;
 
-    listaCompleta.forEach((t) => {
+    listaCompleta.forEach(t => {
         const v = Number(t.valor || 0);
-        total += v;
+        const tipo = t.tipo || "entrada";   // ← padrão entrada (retrocompatível)
+
+        if (tipo === "saida") {
+            saidas += v;
+            return;
+        }
+
         if (t.status === "Recebido") recebido += v;
         else if (t.status === "Pendente") pendente += v;
-        else aguardando += v;
+        else if (t.status === "Aguardando pagamento") aguardando += v;
     });
 
-    const el1 = document.getElementById("financeiro-total-recebido");
-    const el2 = document.getElementById("financeiro-total-pendente");
-    const el3 = document.getElementById("financeiro-total-aguardando");
-    const el4 = document.getElementById("financeiro-total-geral");
+    const liquido = recebido - saidas;
 
-    if (el1) el1.textContent = formatarMoeda(recebido);
-    if (el2) el2.textContent = formatarMoeda(pendente);
-    if (el3) el3.textContent = formatarMoeda(aguardando);
-    if (el4) el4.textContent = formatarMoeda(total);
+    // Helper
+    const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = formatarMoeda(val);
+    };
+
+    // IDs REAIS do HTML
+    set("financeiro-total-recebido", recebido);
+    set("financeiro-total-pendente", pendente);
+    set("financeiro-total-aguardando", aguardando);
+    set("financeiro-total-geral", liquido);
+
+    // KPI de Saídas (se você adicionar o card — ver Parte 2)
+    const elSaidas = document.getElementById("financeiro-total-saidas");
+    if (elSaidas) elSaidas.textContent = formatarMoeda(saidas);
+
+    // Atualiza também o rótulo "Total Geral" pra indicar líquido
+    const labelTotal = document.querySelector('[data-kpi-label="total-geral"]');
+    if (labelTotal) labelTotal.textContent = "Total Líquido";
 }
 
 /* =========================================================================
@@ -421,6 +442,7 @@ function renderizarTabela(pagina) {
         html += `
             <tr>
                 <td>${dataFmt}</td>
+                
                 <td><strong>${t.alunoNome || "—"}</strong></td>
                 <td>${t.curso || "—"}</td>
                 <td><span class="badge bg-light text-dark border">${t.formaPagamento}</span></td>
@@ -599,6 +621,7 @@ function abrirModalEdicao(id) {
     if (!t) return;
 
     document.getElementById("finTransacaoId").value = t.id;
+    document.getElementById("finTipo").value = t.tipo || "entrada";
     document.getElementById("finAlunoId").value = t.alunoId || "";
     document.getElementById("finNomeAluno").value = t.alunoNome || "";
     document.getElementById("finCurso").value = t.curso || "";
@@ -637,6 +660,7 @@ function configurarFormularioEdicao() {
         e.preventDefault();
 
         const id = document.getElementById("finTransacaoId").value;
+        const tipo = document.getElementById("finTipo").value || "entrada";
         const alunoNome = document.getElementById("finNomeAluno").value;
         const valorBase = parseFloat(document.getElementById("finValorBase").value) || 0;
         const ajusteTipo = document.getElementById("finAjusteTipo").value;
@@ -666,7 +690,7 @@ function configurarFormularioEdicao() {
 
                 try {
                     await editarTransacaoFinanceira(id, {
-                        alunoNome, valor: valorFinal, status,
+                        tipo, alunoNome, valor: valorFinal, status,
                         formaPagamento: forma, observacoes: obs
                     });
 
@@ -795,6 +819,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (form) form.reset();
             document.getElementById("novaCurso").value = "";
 
+            document.getElementById("novaTipo").value = "entrada";
+
             // Preenche a data de hoje
             const hoje = new Date().toISOString().split("T")[0];
             document.getElementById("novaData").value = hoje;
@@ -823,6 +849,7 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
 
             const alunoId = document.getElementById("novaAluno").value;
+            const tipo = document.getElementById("novaTipo").value || "entrada";
             const alunoObj = listaAlunosParaNova.find(a => a.id === alunoId);
             const curso = document.getElementById("novaCurso").value.trim() || "Geral";
             const valor = parseFloat(document.getElementById("novaValor").value) || 0;
@@ -849,6 +876,7 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 await criarTransacaoFinanceira({
                     alunoId,
+                    tipo,
                     alunoNome: alunoObj?.nome || "Aluno",
                     curso,
                     valor,
