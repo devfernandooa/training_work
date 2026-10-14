@@ -18,6 +18,7 @@ import { escutarTurmas } from "../backend/turmas-service.js";
 import { escutarAlunos } from "../backend/alunos-service.js";
 import { escutarLeads } from "../backend/lead-service.js";
 import { escutarCursosService } from "../backend/cursos-service.js";
+import { escutarFinanceiro } from "../backend/financeiro-service.js";
 
 /* =========================================================================
  * ESTADO LOCAL
@@ -27,6 +28,7 @@ let dadosTurmas = [];
 let dadosAlunos = [];
 let dadosLeads = [];
 let dadosCursos = [];
+let dadosFinanceiro = [];
 
 let _dashboardIniciado = false;
 
@@ -112,6 +114,16 @@ function escutarDadosDashboard() {
     } catch (e) {
         console.warn("Erro ao escutar cursos:", e);
     }
+
+    // --- FINANCEIRO ---
+    try {
+        escutarFinanceiro((transacoes) => {
+            dadosFinanceiro = Array.isArray(transacoes) ? transacoes : [];
+            recalcularTudo();
+        });
+    } catch (e) {
+        console.error("Erro ao escutar financeiro:", e);
+    }
 }
 
 /* =========================================================================
@@ -154,8 +166,17 @@ function recalcularKPIs() {
         return st !== "convertido" && st !== "perdido";
     });
 
-    // --- Receita total (placeholder — implementaremos com financeiro depois) ---
-    const receitaTotal = 0;
+    // --- Receita total (soma apenas transações com status "Recebido") ---
+    const receitaTotal = dadosFinanceiro
+        .filter(t => {
+            if (t.excluido === true) return false;
+            const status = String(t.status_pagamento || t.status || "").toLowerCase();
+            return status.includes("recebido") || status.includes("pago");
+        })
+        .reduce((soma, t) => {
+            const valor = Number(t.valor || 0);
+            return soma + (isNaN(valor) ? 0 : valor);
+        }, 0);
 
     // --- Atualiza DOM ---
     atualizarTexto("kpi-turmas-ativas", turmasAtivas.length);
