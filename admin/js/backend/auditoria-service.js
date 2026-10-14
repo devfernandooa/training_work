@@ -38,29 +38,34 @@ console.log("✅ auditoria-service.js carregado");
 
 export function compararAlteracoes(antes = {}, depois = {}) {
     const alteracoes = [];
-    const ignorar = ["atualizado_em", "atualizado_por", "id", "endereco"];
+    const ignorar = [
+        "atualizado_em", "atualizado_por", "ultimaAlteracaoEm",
+        "ultimaAlteracaoPor", "id", "uid", "endereco"
+    ];
 
     Object.keys(depois).forEach(campo => {
         if (ignorar.includes(campo)) return;
         if (campo === "endereco") return;
+
         const a = antes[campo];
         const b = depois[campo];
-        alteracoes.push({
-            campo,
-            rotulo: obterRotuloCampo(campo),   // ✅ NOVO
-            valor_anterior: a ?? null,
-            valor_novo: b ?? null
-        });
+
+        if (JSON.stringify(a) !== JSON.stringify(b)) {
+            alteracoes.push({
+                campo,
+                valor_anterior: a ?? null,
+                valor_novo: b ?? null
+            });
+        }
     });
 
-    if (depois.endereco) {
-        const ea = antes.endereco || {};
+    // Endereço (objeto aninhado) — só quando existir
+    if (depois.endereco && antes.endereco) {
         Object.keys(depois.endereco).forEach(k => {
-            if (JSON.stringify(ea[k]) !== JSON.stringify(depois.endereco[k])) {
+            if (JSON.stringify(antes.endereco[k]) !== JSON.stringify(depois.endereco[k])) {
                 alteracoes.push({
                     campo: `endereco.${k}`,
-                    rotulo: obterRotuloCampo(`endereco.${k}`),   // ✅ NOVO
-                    valor_anterior: ea[k] ?? null,
+                    valor_anterior: antes.endereco[k] ?? null,
                     valor_novo: depois.endereco[k] ?? null
                 });
             }
@@ -90,6 +95,48 @@ export async function listarAuditoriaAluno(alunoId, limite = 20) {
     const ref = collection(db, "alunos", alunoId, "auditoria");
     const q = query(ref, orderBy("criado_em", "desc"), limit(limite));
     const snap = await getDocs(q);
+    const logs = [];
+    snap.forEach(d => logs.push({ id: d.id, ...d.data() }));
+    return logs;
+}
+
+/* ==========================================================================
+ * AUDITORIA GENÉRICA (para qualquer coleção)
+ * ==========================================================================
+ * Uso:
+ *   await registrarAuditoriaGenerica("financeiro", transacaoId, {
+ *       tipo: "alteracao",
+ *       descricao: "3 campo(s) alterado(s)",
+ *       campos_alterados: [...]
+ *   });
+ * ========================================================================== */
+export async function registrarAuditoriaGenerica(colecao, docId, dados) {
+    if (!colecao || !docId) throw new Error("Coleção e ID obrigatórios para auditoria.");
+
+    const adminEmail = auth?.currentUser?.email || "Sistema";
+
+    const payload = {
+        tipo: dados.tipo || "alteracao",
+        entidade: dados.entidade || colecao,
+        descricao: dados.descricao || "Alteração registrada",
+        campos_alterados: dados.campos_alterados || [],
+        admin_email: adminEmail,
+        criado_em: new Date().toISOString()
+    };
+
+    const ref = collection(db, colecao, docId, "auditoria");
+    const docRef = await addDoc(ref, payload);
+    return { id: docRef.id, ...payload };
+}
+
+/**
+ * Lista os últimos N logs de auditoria de qualquer coleção.
+ */
+export async function listarAuditoriaGenerica(colecao, docId, limite = 20) {
+    const ref = collection(db, colecao, docId, "auditoria");
+    const q = query(ref, orderBy("criado_em", "desc"), limit(limite));
+    const snap = await getDocs(q);
+
     const logs = [];
     snap.forEach(d => logs.push({ id: d.id, ...d.data() }));
     return logs;
