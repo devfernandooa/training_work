@@ -18,6 +18,7 @@ import {
     getDocs,
     updateDoc,
     onSnapshot,
+    addDoc,
     query,
     where,
     writeBatch
@@ -314,4 +315,79 @@ function enriquecerComRotulos(alteracoes) {
         ...a,
         rotulo: ROTULOS_FINANCEIRO[a.campo] || a.campo
     }));
+}
+
+/* =========================================================================
+ * CRIAR NOVA TRANSAÇÃO
+ * =========================================================================
+ * Cria uma transação manualmente no financeiro.
+ * Também propaga o status/pagamento para o aluno vinculado (se houver).
+ * ========================================================================== */
+
+export async function criarTransacaoFinanceira(dados) {
+    try {
+        const agora = new Date().toISOString();
+        const usuario = auth.currentUser?.email || "Sistema";
+
+        // Normaliza o status
+        const statusNorm = normalizarStatus(dados.status);
+        const valorNum = parseFloat(dados.valor) || 0;
+
+        if (valorNum <= 0) {
+            throw new Error("O valor deve ser maior que zero.");
+        }
+
+        // 1. Monta o payload da transação
+        const payload = {
+            alunoId: dados.alunoId || "",
+            alunoNome: dados.alunoNome || "",
+            curso: dados.curso || "Geral",
+            valor: valorNum,
+            status: statusNorm,
+            formaPagamento: dados.formaPagamento || "Pix",
+            dataPagamento: dados.dataPagamento || "",
+            auditoriaFinanceira: dados.observacoes || "",
+            ultimaAlteracaoEm: agora,
+            ultimaAlteracaoPor: usuario,
+            criadoEm: agora,
+            criadoPor: usuario,
+            excluido: false
+        };
+
+        // 2. Cria a transação
+        const refNova = await addDoc(collection(db, NOME_COLECAO), payload);
+
+        // 3. Propaga para o aluno (se houver alunoId)
+        if (dados.alunoId) {
+            try {
+                const alunoRef = doc(db, "alunos", dados.alunoId);
+                await updateDoc(alunoRef, {
+                    status_pagamento: statusNorm,
+                    modalidade_pagamento: dados.formaPagamento || "Pix",
+                    atualizado_em: agora
+                });
+            } catch (errAluno) {
+                console.warn("⚠️ Não foi possível atualizar o aluno:", errAluno);
+            }
+        }
+
+        // 4. Registra auditoria de criação
+        try {
+            await registrarAuditoriaGenerica("financeiro", refNova.id, {
+                tipo: "criacao",
+                entidade: "financeiro",
+                descricao: "Transação criada manualmente",
+                campos_alterados: []
+            });
+        } catch (errAud) {
+            console.warn("⚠️ Falha ao registrar auditoria de criação:", errAud);
+        }
+
+        console.log(`✅ Transação ${refNova.id} criada — R$ ${valorNum}`);
+        return { id: refNova.id, ...payload };
+
+    } catch (erro) {
+        console.error("❌ Erro ao criar transação:", erro);
+        throw erro;
+    }
 }

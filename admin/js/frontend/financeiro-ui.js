@@ -7,6 +7,8 @@
  * Escuta os dados do service e renderiza.
  * =========================================================================
  */
+
+import { criarTransacaoFinanceira } from "../backend/financeiro-service.js";
 import { listarAuditoriaGenerica } from "../backend/auditoria-service.js";
 import {
     escutarFinanceiro,
@@ -768,4 +770,183 @@ function formatarValorAudit(v) {
     if (v === null || v === undefined || v === "") return "—";
     if (typeof v === "number") return "R$ " + v.toFixed(2).replace(".", ",");
     return String(v);
+}
+
+
+/* ==========================================================================
+ * MODAL DE NOVA TRANSAÇÃO
+ * ========================================================================== */
+let modalNovaTransacaoInstance = null;
+let listaAlunosParaNova = [];
+let mapaAlunosParaNova = {};
+
+document.addEventListener("DOMContentLoaded", () => {
+    const modalEl = document.getElementById("modalNovaTransacao");
+    if (modalEl && window.bootstrap) {
+        modalNovaTransacaoInstance = new bootstrap.Modal(modalEl);
+    }
+
+    // Botão "+ Nova Transação"
+    const btnNova = document.getElementById("btnNovaTransacao");
+    if (btnNova) {
+        btnNova.addEventListener("click", () => {
+            // Limpa o form
+            const form = document.getElementById("formNovaTransacao");
+            if (form) form.reset();
+            document.getElementById("novaCurso").value = "";
+
+            // Preenche a data de hoje
+            const hoje = new Date().toISOString().split("T")[0];
+            document.getElementById("novaData").value = hoje;
+
+            // Carrega alunos (uma vez)
+            carregarAlunosParaNova();
+
+            if (modalNovaTransacaoInstance) modalNovaTransacaoInstance.show();
+        });
+    }
+
+    // Select de aluno → preenche curso
+    const selectAluno = document.getElementById("novaAluno");
+    if (selectAluno) {
+        selectAluno.addEventListener("change", (e) => {
+            const alunoId = e.target.value;
+            const curso = mapaAlunosParaNova[alunoId] || "";
+            document.getElementById("novaCurso").value = curso || "Geral";
+        });
+    }
+
+    // Submit do form
+    const form = document.getElementById("formNovaTransacao");
+    if (form) {
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const alunoId = document.getElementById("novaAluno").value;
+            const alunoObj = listaAlunosParaNova.find(a => a.id === alunoId);
+            const curso = document.getElementById("novaCurso").value.trim() || "Geral";
+            const valor = parseFloat(document.getElementById("novaValor").value) || 0;
+            const status = document.getElementById("novaStatus").value;
+            const forma = document.getElementById("novaForma").value;
+            const dataPagamento = document.getElementById("novaData").value;
+            const observacoes = document.getElementById("novaObs").value.trim();
+
+            // Validações
+            if (!alunoId) {
+                mostrarErro("Selecione um aluno.");
+                return;
+            }
+            if (valor <= 0) {
+                mostrarErro("Informe um valor maior que zero.");
+                return;
+            }
+
+            const btn = form.querySelector('button[type="submit"]');
+            const txtOriginal = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Criando...`;
+
+            try {
+                await criarTransacaoFinanceira({
+                    alunoId,
+                    alunoNome: alunoObj?.nome || "Aluno",
+                    curso,
+                    valor,
+                    status,
+                    formaPagamento: forma,
+                    dataPagamento,
+                    observacoes
+                });
+
+                if (modalNovaTransacaoInstance) modalNovaTransacaoInstance.hide();
+                mostrarSucesso("Transação criada com sucesso!");
+
+            } catch (err) {
+                console.error("Erro ao criar transação:", err);
+                mostrarErro("Erro ao criar: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = txtOriginal;
+            }
+        });
+    }
+});
+
+/* ==========================================================================
+ * CARREGAR ALUNOS PARA O SELECT
+ * ========================================================================== */
+async function carregarAlunosParaNova() {
+    const select = document.getElementById("novaAluno");
+    if (!select) return;
+
+    // Se já carregou, não recarrega
+    if (listaAlunosParaNova.length > 0) {
+        preencherSelectAlunos();
+        return;
+    }
+
+    select.innerHTML = `<option value="">Carregando...</option>`;
+
+    try {
+        const { getDocs, collection } = await import("https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js");
+        const { db } = await import("../firebase-config.js");
+
+        const snap = await getDocs(collection(db, "alunos"));
+
+        listaAlunosParaNova = [];
+        mapaAlunosParaNova = {};
+
+        snap.forEach(d => {
+            const data = d.data();
+            if (data.excluido === true) return;
+
+            const aluno = {
+                id: d.id,
+                nome: data.nome || data.nome_completo || "Aluno sem nome",
+                email: data.email || ""
+            };
+
+            listaAlunosParaNova.push(aluno);
+        });
+
+        // Ordena por nome
+        listaAlunosParaNova.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+
+        // Busca cursos em paralelo
+        await Promise.all(listaAlunosParaNova.map(async (aluno) => {
+            try {
+                const { collectionGroup, query, where, getDocs: gd } = await import("https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js");
+                const { db: dbRef } = await import("../firebase-config.js");
+
+                // Busca matrículas desse aluno
+                const matRef = collection(dbRef, "alunos", aluno.id, "matriculas");
+                const matSnap = await gd(matRef);
+
+                if (!matSnap.empty) {
+                    const primeira = matSnap.docs[0].data();
+                    mapaAlunosParaNova[aluno.id] = primeira.curso_nome || "Geral";
+                }
+            } catch (e) {
+                // ignora
+            }
+        }));
+
+        preencherSelectAlunos();
+
+    } catch (err) {
+        console.error("Erro ao carregar alunos:", err);
+        select.innerHTML = `<option value="">Erro ao carregar alunos</option>`;
+    }
+}
+
+function preencherSelectAlunos() {
+    const select = document.getElementById("novaAluno");
+    if (!select) return;
+
+    let html = '<option value="">Selecione um aluno...</option>';
+    listaAlunosParaNova.forEach(aluno => {
+        html += `<option value="${aluno.id}">${aluno.nome}</option>`;
+    });
+
+    select.innerHTML = html;
 }
