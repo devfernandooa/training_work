@@ -10,6 +10,26 @@
 
 ---
 
+## ⚠️ REVISAR ANTES DE EXECUTAR
+
+Os itens abaixo foram **inferidos** durante a análise do projeto e **precisam de
+confirmação** antes de entrar na fila de execução. Se não fizerem sentido,
+ajustar ou remover.
+
+- **S4 — Verificar permissões de acesso ao painel admin**
+  Não havia menção a controle de permissões no status atual. Pode já estar
+  resolvido, pode não ser problema, ou pode ser uma lacuna real. **Confirmar.**
+
+- **M3 — Unificar componente de auditoria reutilizável**
+  Inferido (a partir dos prints) que o componente de auditoria está duplicado
+  entre Financeiro/Leads e Alunos. Se já for unificado internamente,
+  reclassificar de "criar" para "verificar".
+
+> Ao confirmar/ajustar, remover o marcador `⚠️ REVISAR` da linha correspondente
+> no cronograma (seção 4) e atualizar esta seção.
+
+---
+
 ## 1. Visão Geral
 
 Site + painel administrativo da **Training_Work**.
@@ -43,7 +63,7 @@ Histórico cronológico visual com:
   - **Diff campo a campo:** valor antigo (vermelho, riscado) → valor novo (verde)
 - **Campo "Observações"** (textarea) para justificar a alteração
 
-**Onde já está implementado (referências de código):**
+**Onde já está implementado (referências):**
 - Financeiro / Leads & Triagem (modal de auditoria)
 - Alunos → aba "Histórico" (com cabeçalho de contexto: Nome, email, CPF)
 
@@ -95,7 +115,7 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 | S1 | Auditoria de exclusões/inativações (Alunos, Leads, Cursos, Turmas) | 4–6h | Média |
 | S2 | Auditoria em "Ver Frequência" (dado sensível) | 3–4h | Média |
 | S3 | Auditoria no editar de Turmas e Calendário de Aulas | 4–5h | Média |
-| S4 | Verificar permissões de acesso ao painel admin | 2–3h | Baixa |
+| S4 | ⚠️ REVISAR — Verificar permissões de acesso ao painel admin | 2–3h | Baixa |
 | S5 | Validar impacto de CPF opcional (integridade/duplicidade) | 1–2h | Baixa |
 
 ### 🟠 Curto Prazo (1–2 semanas)
@@ -114,7 +134,7 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 |---|------|---------|-------------|
 | M1 | "Ver Frequência": adicionar editar + auditoria | 6–8h | Média |
 | M2 | Refatorar módulo de Matrículas (inteiro) | 16–24h | Alta |
-| M3 | Unificar componente de auditoria reutilizável | 8–12h | Média |
+| M3 | ⚠️ REVISAR — Unificar componente de auditoria reutilizável | 8–12h | Média |
 | M4 | Auditoria em exclusões (UI) — complementa S1 | 6–8h | Média |
 
 ### 🟢 Longo Prazo (2–3 meses)
@@ -131,7 +151,7 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 2. C1 → C2 → C6 (padronizar onde já existe componente)
 3. C3 (corrigir tabela Financeiro — rápido e visível)
 4. C4 → C5 → C7 (auditoria em Alunos/Turmas/Calendário)
-5. M3 (unificar componente de auditoria — facilita o resto)
+5. M3 (unificar componente de auditoria — facilita o resto) ⚠️ confirmar antes
 6. M1 → M2 (Frequência + Matrículas)
 7. Longo prazo em paralelo
 
