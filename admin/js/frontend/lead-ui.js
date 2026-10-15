@@ -552,14 +552,11 @@ function configurarFormularioEdicao() {
         const getVal = (elementId) => document.getElementById(elementId)?.value || "";
         const getCheck = (elementId) => document.getElementById(elementId)?.checked || false;
 
+        // CPF é opcional. Se preenchido, valida 11 dígitos.
         const cpfValor = getVal("edit-cpf").replace(/\D/g, "");
-        if (cpfValor.length !== 11) {
-            alert("O CPF é obrigatório e deve conter exatamente 11 dígitos.");
+        if (cpfValor.length > 0 && cpfValor.length !== 11) {
+            alert("O CPF deve conter exatamente 11 dígitos (ou ficar em branco).");
             document.getElementById("edit-cpf")?.focus();
-            if (btnSave) {
-                btnSave.disabled = false;
-                btnSave.textContent = "Salvar";
-            }
             return;
         }
 
@@ -569,7 +566,7 @@ function configurarFormularioEdicao() {
             email: getVal("edit-email"),
             telefone: getVal("edit-telefone"),
             curso_interesse_name: getVal("edit-curso"),
-            cpf: cpfValor,
+            cpf: cpfValor || "",
             empresa: getVal("edit-empresa"),
             cargo: getVal("edit-cargo"),
             cep: getVal("edit-cep"),

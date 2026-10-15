@@ -165,15 +165,17 @@ function renderizarCardsTurmas() {
     const termoBusca = (document.getElementById("presencaBusca")?.value || "").toLowerCase().trim();
     const filtro = document.getElementById("presencaFiltro")?.value || "todas";
 
-    // Turmas que TÊM aulas E alunos
-    const turmasComAulasNoSistema = listaTurmasGlobal.filter(t =>
+    // Todas as turmas ativas (com aulas OU alunos)
+    const turmasBase = listaTurmasGlobal.filter(t =>
         !t.excluido &&
-        (t.cronograma || []).length > 0 &&
-        obterAlunosDaTurma(t).length > 0
+        (
+            (t.cronograma || []).length > 0 ||
+            obterAlunosDaTurma(t).length > 0
+        )
     );
 
-    // Estado vazio — quando não há NENHUMA turma com aulas
-    if (turmasComAulasNoSistema.length === 0) {
+    // Estado vazio
+    if (turmasBase.length === 0) {
         container.innerHTML = "";
         if (vazio) vazio.classList.remove("d-none");
         if (contador) contador.textContent = "0 turmas";
@@ -182,8 +184,8 @@ function renderizarCardsTurmas() {
 
     if (vazio) vazio.classList.add("d-none");
 
-    // Aplica filtros
-    let turmas = turmasComAulasNoSistema.filter(t => {
+    // ✅ Aplica filtros (busca + categoria)
+    let turmas = turmasBase.filter(t => {
         if (termoBusca) {
             const nome = (t.curso_nome || t.nome_turma || t.nome || "").toLowerCase();
             const instrutor = (t.instrutor || "").toLowerCase();
@@ -196,6 +198,7 @@ function renderizarCardsTurmas() {
         if (filtro === "com-matriculas" && obterAlunosDaTurma(t).length === 0) return false;
         return true;
     });
+
 
     if (turmas.length === 0) {
         container.innerHTML = `
