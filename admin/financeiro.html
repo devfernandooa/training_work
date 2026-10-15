@@ -292,15 +292,90 @@
               </div>
             </div>
 
-            clear
-
-            <div class="modal-footer bg-white border-top py-3">
-              <button type="button" class="btn btn-outline-secondary px-4 rounded-pill"
-                data-bs-dismiss="modal">Cancelar</button>
-              <button type="submit" class="btn btn-primary px-4 rounded-pill">
-                <i class="fas fa-save me-1"></i> Salvar
-              </button>
+            <!-- Bloco 2: Financeiro -->
+            <div class="card border mb-3 shadow-sm">
+              <div class="card-body">
+                <h6 class="text-primary fw-bold mb-3">
+                  <i class="fas fa-wallet me-2"></i>Informações Financeiras
+                </h6>
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label for="finTipo" class="form-label small fw-bold text-muted">Tipo *</label>
+                    <select class="form-select" id="finTipo" required>
+                      <option value="entrada">Entrada (Receita)</option>
+                      <option value="saida">Saída de Caixa (Despesa)</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label for="finValorBase" class="form-label small fw-bold text-muted">Valor Base (R$)</label>
+                    <input type="number" step="0.01" class="form-control" id="finValorBase" required>
+                  </div>
+                  <div class="col-md-4">
+                    <label for="finAjusteTipo" class="form-label small fw-bold text-muted">Ajuste</label>
+                    <select class="form-select" id="finAjusteTipo">
+                      <option value="nenhum">Nenhum</option>
+                      <option value="desconto">% Desconto</option>
+                      <option value="acrescimo">% Acréscimo</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label for="finValorAjuste" class="form-label small fw-bold text-muted">Valor do Ajuste</label>
+                    <input type="number" step="0.01" class="form-control" id="finValorAjuste" value="0">
+                  </div>
+                  <div class="col-md-4">
+                    <label for="finFormaPagamento" class="form-label small fw-bold text-muted">Forma de
+                      Pagamento</label>
+                    <select class="form-select" id="finFormaPagamento">
+                      <option value="Pix">Pix</option>
+                      <option value="Cartão de Crédito">Cartão de Crédito</option>
+                      <option value="Boleto Bancário">Boleto Bancário</option>
+                      <option value="À Vista">À Vista</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label for="finStatusPagamento" class="form-label small fw-bold text-muted">Status</label>
+                    <select class="form-select" id="finStatusPagamento">
+                      <option value="Recebido">Recebido</option>
+                      <option value="Pendente">Pendente</option>
+                      <option value="Aguardando pagamento">Aguardando pagamento</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <!-- Bloco 3: Auditoria -->
+            <div class="p-3 bg-light rounded-3 border mb-3">
+              <span class="d-block small fw-bold text-secondary mb-2">
+                <i class="fas fa-history me-1 text-primary"></i> Auditoria
+              </span>
+              <div class="alert alert-light border small mb-2" id="infoUltimaAlteracao" style="display: none;">
+                <i class="fas fa-info-circle me-1 text-primary"></i>
+                <span id="textoUltimaAlteracao">—</span>
+              </div>
+
+              <!-- Timeline completa de alterações -->
+              <div id="timelineAuditoriaContainer"
+                style="max-height: 250px; overflow-y: auto; background: white; border-radius: 8px; padding: 12px; border: 1px solid #e2e8f0;">
+                <div class="text-center py-3 text-muted small">
+                  <i class="fas fa-history me-1"></i>
+                  Nenhuma alteração registrada ainda.
+                </div>
+              </div>
+
+              <label for="finAuditoriaNotas" class="form-label small text-muted mb-1 mt-3">Observações</label>
+              <textarea class="form-control form-control-sm" id="finAuditoriaNotas" rows="2"
+                placeholder="Ex: Desconto especial concedido..."></textarea>
+            </div>
+          </div>
+
+          <div class="modal-footer bg-white border-top py-3">
+            <button type="button" class="btn btn-outline-secondary px-4 rounded-pill"
+              data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary px-4 rounded-pill">
+              <i class="fas fa-save me-1"></i> Salvar
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -405,58 +480,72 @@
                 </h6>
                 <div class="row g-3">
                   <div class="col-md-4">
-                    <label for="novaValor" class="form-label small fw-bold text-muted">
-                      Valor (R$) *
-                    </label>
-                    <input type="number" step="0.01" class="form-control" id="novaValor" required placeholder="0,00">
-                  </div>
-                  <div class="col-md-4">
-                    <label for="novaStatus" class="form-label small fw-bold text-muted">
-                      Status *
-                    </label>
-                    <select class="form-select" id="novaStatus" required>
-                      <option value="Recebido">Recebido</option>
-                      <option value="Pendente">Pendente</option>
-                      <option value="Aguardando pagamento">Aguardando pagamento</option>
+                    <label for="finTipo" class="form-label small fw-bold text-muted">Tipo *</label>
+                    <select class="form-select" id="finTipo" required>
+                      <option value="entrada">Entrada (Receita)</option>
+                      <option value="saida">Saída de Caixa (Despesa)</option>
                     </select>
                   </div>
+
                   <div class="col-md-4">
-                    <label for="novaForma" class="form-label small fw-bold text-muted">
-                      Forma de Pagamento *
-                    </label>
-                    <select class="form-select" id="novaForma" required>
-                      <option value="Pix">Pix</option>
-                      <option value="Cartão de Crédito">Cartão de Crédito</option>
-                      <option value="Boleto Bancário">Boleto Bancário</option>
-                      <option value="À Vista">À Vista</option>
-                    </select>
+                    <label for="finValorBase" class="form-label small fw-bold text-muted">Valor Base (R$)</label>
+                    <input type="number" step="0.01" class="form-control" id="finValorBase" required>
                   </div>
-                  <div class="col-md-4">
-                    <label for="novaData" class="form-label small fw-bold text-muted">
-                      Data do Pagamento
-                    </label>
-                    <input type="date" class="form-control" id="novaData">
-                  </div>
-                  <div class="col-md-8">
-                    <label for="novaObs" class="form-label small fw-bold text-muted">
-                      Observações
-                    </label>
-                    <input type="text" class="form-control" id="novaObs"
-                      placeholder="Ex: Cobrança extra, parcelamento...">
+                  ...
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <label for="novaValor" class="form-label small fw-bold text-muted">
+                        Valor (R$) *
+                      </label>
+                      <input type="number" step="0.01" class="form-control" id="novaValor" required placeholder="0,00">
+                    </div>
+                    <div class="col-md-4">
+                      <label for="novaStatus" class="form-label small fw-bold text-muted">
+                        Status *
+                      </label>
+                      <select class="form-select" id="novaStatus" required>
+                        <option value="Recebido">Recebido</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Aguardando pagamento">Aguardando pagamento</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="novaForma" class="form-label small fw-bold text-muted">
+                        Forma de Pagamento *
+                      </label>
+                      <select class="form-select" id="novaForma" required>
+                        <option value="Pix">Pix</option>
+                        <option value="Cartão de Crédito">Cartão de Crédito</option>
+                        <option value="Boleto Bancário">Boleto Bancário</option>
+                        <option value="À Vista">À Vista</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="novaData" class="form-label small fw-bold text-muted">
+                        Data do Pagamento
+                      </label>
+                      <input type="date" class="form-control" id="novaData">
+                    </div>
+                    <div class="col-md-8">
+                      <label for="novaObs" class="form-label small fw-bold text-muted">
+                        Observações
+                      </label>
+                      <input type="text" class="form-control" id="novaObs"
+                        placeholder="Ex: Cobrança extra, parcelamento...">
+                    </div>
                   </div>
                 </div>
               </div>
+
             </div>
 
-          </div>
-
-          <div class="modal-footer bg-white border-top py-3">
-            <button type="button" class="btn btn-outline-secondary px-4 rounded-pill"
-              data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-primary px-4 rounded-pill">
-              <i class="fas fa-plus-circle me-1"></i> Criar Transação
-            </button>
-          </div>
+            <div class="modal-footer bg-white border-top py-3">
+              <button type="button" class="btn btn-outline-secondary px-4 rounded-pill"
+                data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary px-4 rounded-pill">
+                <i class="fas fa-plus-circle me-1"></i> Criar Transação
+              </button>
+            </div>
         </form>
       </div>
     </div>
