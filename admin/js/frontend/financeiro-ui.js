@@ -423,7 +423,7 @@ function renderizarTabela(pagina) {
     if (!tbody) return;
 
     if (pagina.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">Nenhuma transação encontrada.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">Nenhuma transação encontrada.</td></tr>`;
         return;
     }
 
@@ -434,38 +434,53 @@ function renderizarTabela(pagina) {
             ? new Date(t.criado_em).toLocaleDateString("pt-BR")
             : "—";
 
+        // ✅ Badge de tipo (entrada/saída)
+        const tipo = t.tipo || "entrada";
+        const tipoBadge = tipo === "saida"
+            ? `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1" style="font-size: 0.7rem;">
+               <i class="fas fa-arrow-down me-1"></i>Saída
+           </span>`
+            : `<span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1" style="font-size: 0.7rem;">
+               <i class="fas fa-arrow-up me-1"></i>Entrada
+           </span>`;
+
         // Badge de status
         let badgeClass = "bg-warning bg-opacity-10 text-warning border border-warning";
         if (t.status === "Recebido") badgeClass = "bg-success bg-opacity-10 text-success border border-success";
         else if (t.status === "Pendente") badgeClass = "bg-info bg-opacity-10 text-info border border-info";
 
+        // ✅ Valor com cor pra saída
+        const valorHtml = tipo === "saida"
+            ? `<span class="text-danger fw-bold">-${formatarMoeda(t.valor)}</span>`
+            : `<span class="fw-bold">${formatarMoeda(t.valor)}</span>`;
+
         html += `
-            <tr>
-                <td>${dataFmt}</td>
-                
-                <td><strong>${t.alunoNome || "—"}</strong></td>
-                <td>${t.curso || "—"}</td>
-                <td><span class="badge bg-light text-dark border">${t.formaPagamento}</span></td>
-                <td class="fw-bold">${formatarMoeda(t.valor)}</td>
-                <td><span class="badge rounded-pill ${badgeClass} px-3 py-2">${t.status}</span></td>
-                <td class="text-end">
-                    <div class="d-flex justify-content-end gap-1">
-                        <button class="btn btn-sm btn-outline-success px-2 py-1 btn-validar-pagamento"
-                                data-id="${t.id}" title="Marcar como Recebido">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-primary px-2 py-1 btn-editar-financeiro"
-                                data-id="${t.id}" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger px-2 py-1 btn-excluir-financeiro"
-                                data-id="${t.id}" title="Excluir">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
+        <tr>
+            <td>${dataFmt}</td>
+            <td>${tipoBadge}</td>
+            <td><strong>${t.alunoNome || "—"}</strong></td>
+            <td>${t.curso || "—"}</td>
+            <td><span class="badge bg-light text-dark border">${t.formaPagamento}</span></td>
+            <td>${valorHtml}</td>
+            <td><span class="badge rounded-pill ${badgeClass} px-3 py-2">${t.status}</span></td>
+            <td class="text-end">
+                <div class="d-flex justify-content-end gap-1">
+                    <button class="btn btn-sm btn-outline-success px-2 py-1 btn-validar-pagamento"
+                            data-id="${t.id}" title="Marcar como Recebido">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary px-2 py-1 btn-editar-financeiro"
+                            data-id="${t.id}" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger px-2 py-1 btn-excluir-financeiro"
+                            data-id="${t.id}" title="Excluir">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
     });
 
     tbody.innerHTML = html;
