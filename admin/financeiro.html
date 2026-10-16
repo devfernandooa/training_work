@@ -242,7 +242,7 @@
           </thead>
           <tbody id="financeiro-tbody">
             <tr>
-              <td colspan="7" class="text-center text-muted py-4">A carregar transações...</td>
+              <td colspan="8" class="text-center text-muted py-4">A carregar transações...</td>
             </tr>
           </tbody>
         </table>
@@ -446,26 +446,20 @@
                 </h6>
                 <div class="row g-3">
                   <div class="col-md-4">
-                    <label for="novaTipo" class="form-label small fw-bold text-muted">
-                      Tipo *
-                    </label>
-                    <select class="form-select" id="novaTipo" required>
+                    <label for="novaTipoTransacao" class="form-label small fw-bold text-muted">Tipo *</label>
+                    <select class="form-select" id="novaTipoTransacao" required>
                       <option value="entrada">Entrada (Receita)</option>
                       <option value="saida">Saída de Caixa (Despesa)</option>
                     </select>
                   </div>
                   <div class="col-md-4">
-                    <label for="novaAluno" class="form-label small fw-bold text-muted">
-                      Aluno *
-                    </label>
+                    <label for="novaAluno" class="form-label small fw-bold text-muted">Aluno *</label>
                     <select class="form-select" id="novaAluno" required>
                       <option value="">Carregando alunos...</option>
                     </select>
                   </div>
                   <div class="col-md-4">
-                    <label for="novaCurso" class="form-label small fw-bold text-muted">
-                      Curso / Descrição
-                    </label>
+                    <label for="novaCurso" class="form-label small fw-bold text-muted">Curso / Descrição</label>
                     <input type="text" class="form-control bg-white" id="novaCurso" placeholder="Auto" readonly>
                   </div>
                 </div>
@@ -480,77 +474,50 @@
                 </h6>
                 <div class="row g-3">
                   <div class="col-md-4">
-                    <label for="finTipo" class="form-label small fw-bold text-muted">Tipo *</label>
-                    <select class="form-select" id="finTipo" required>
-                      <option value="entrada">Entrada (Receita)</option>
-                      <option value="saida">Saída de Caixa (Despesa)</option>
+                    <label for="novaValor" class="form-label small fw-bold text-muted">Valor (R$) *</label>
+                    <input type="number" step="0.01" class="form-control" id="novaValor" required placeholder="0,00">
+                  </div>
+                  <div class="col-md-4">
+                    <label for="novaStatus" class="form-label small fw-bold text-muted">Status *</label>
+                    <select class="form-select" id="novaStatus" required>
+                      <option value="Recebido">Recebido</option>
+                      <option value="Pendente">Pendente</option>
+                      <option value="Aguardando pagamento">Aguardando pagamento</option>
                     </select>
                   </div>
-
                   <div class="col-md-4">
-                    <label for="finValorBase" class="form-label small fw-bold text-muted">Valor Base (R$)</label>
-                    <input type="number" step="0.01" class="form-control" id="finValorBase" required>
+                    <label for="novaForma" class="form-label small fw-bold text-muted">Forma de Pagamento *</label>
+                    <select class="form-select" id="novaForma" required>
+                      <option value="Pix">Pix</option>
+                      <option value="Cartão de Crédito">Cartão de Crédito</option>
+                      <option value="Boleto Bancário">Boleto Bancário</option>
+                      <option value="À Vista">À Vista</option>
+                    </select>
                   </div>
-                  ...
-                  <div class="row g-3">
-                    <div class="col-md-4">
-                      <label for="novaValor" class="form-label small fw-bold text-muted">
-                        Valor (R$) *
-                      </label>
-                      <input type="number" step="0.01" class="form-control" id="novaValor" required placeholder="0,00">
-                    </div>
-                    <div class="col-md-4">
-                      <label for="novaStatus" class="form-label small fw-bold text-muted">
-                        Status *
-                      </label>
-                      <select class="form-select" id="novaStatus" required>
-                        <option value="Recebido">Recebido</option>
-                        <option value="Pendente">Pendente</option>
-                        <option value="Aguardando pagamento">Aguardando pagamento</option>
-                      </select>
-                    </div>
-                    <div class="col-md-4">
-                      <label for="novaForma" class="form-label small fw-bold text-muted">
-                        Forma de Pagamento *
-                      </label>
-                      <select class="form-select" id="novaForma" required>
-                        <option value="Pix">Pix</option>
-                        <option value="Cartão de Crédito">Cartão de Crédito</option>
-                        <option value="Boleto Bancário">Boleto Bancário</option>
-                        <option value="À Vista">À Vista</option>
-                      </select>
-                    </div>
-                    <div class="col-md-4">
-                      <label for="novaData" class="form-label small fw-bold text-muted">
-                        Data do Pagamento
-                      </label>
-                      <input type="date" class="form-control" id="novaData">
-                    </div>
-                    <div class="col-md-8">
-                      <label for="novaObs" class="form-label small fw-bold text-muted">
-                        Observações
-                      </label>
-                      <input type="text" class="form-control" id="novaObs"
-                        placeholder="Ex: Cobrança extra, parcelamento...">
-                    </div>
+                  <div class="col-md-4">
+                    <label for="novaData" class="form-label small fw-bold text-muted">Data do Pagamento</label>
+                    <input type="date" class="form-control" id="novaData">
+                  </div>
+                  <div class="col-md-8">
+                    <label for="novaObs" class="form-label small fw-bold text-muted">Observações</label>
+                    <input type="text" class="form-control" id="novaObs"
+                      placeholder="Ex: Cobrança extra, parcelamento...">
                   </div>
                 </div>
               </div>
+                        <!-- ⬇️ RODAPÉ — garanta que está aqui -->
+          <div class="modal-footer bg-white border-top py-3">
+            <button type="button" class="btn btn-outline-secondary px-4 rounded-pill"
+              data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary px-4 rounded-pill">
+              <i class="fas fa-plus-circle me-1"></i> Criar Transação
+            </button>
+          </div>
 
-            </div>
-
-            <div class="modal-footer bg-white border-top py-3">
-              <button type="button" class="btn btn-outline-secondary px-4 rounded-pill"
-                data-bs-dismiss="modal">Cancelar</button>
-              <button type="submit" class="btn btn-primary px-4 rounded-pill">
-                <i class="fas fa-plus-circle me-1"></i> Criar Transação
-              </button>
-            </div>
         </form>
       </div>
     </div>
   </div>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="js/auth/auth-guard.js"></script>
   <script type="module" src="js/auth/sidebar.js"></script>
