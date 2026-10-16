@@ -14,6 +14,10 @@ import {
     updateDoc,
     onSnapshot
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import {
+    registrarAuditoriaGenerica,
+    compararAlteracoes
+} from "./auditoria-service.js";
 
 const NOME_COLECAO = "cursos";
 
@@ -143,6 +147,11 @@ export async function editarCurso(id, dados) {
         const usuario = auth.currentUser?.email || "Sistema";
         const agora = new Date().toISOString();
 
+        // 1. Lê estado ANTES (para comparar)
+        const ref = doc(db, NOME_COLECAO, id);
+        const snapAntes = await getDoc(ref);
+        const antes = snapAntes.exists() ? snapAntes.data() : {};
+
         const payload = {
             codigo: String(dados.codigo || "").toUpperCase().trim(),
             apelido: String(dados.apelido || "").trim(),
@@ -165,8 +174,21 @@ export async function editarCurso(id, dados) {
             atualizado_por: usuario
         };
 
-        await updateDoc(doc(db, NOME_COLECAO, id), payload);
+        await updateDoc(ref, payload);
         console.log(`✏️ Curso editado: ${id}`);
+
+        // 2. Auditoria — só registra se houve mudança real
+        const camposAlterados = compararAlteracoes(antes, payload);
+
+        if (camposAlterados.length > 0) {
+            await registrarAuditoriaGenerica("cursos", id, {
+                tipo: "alteracao",
+                entidade: "curso",
+                descricao: `${camposAlterados.length} campo(s) alterado(s)`,
+                campos_alterados: camposAlterados
+            });
+        }
+
         return { id, ...payload };
     } catch (erro) {
         console.error("❌ Erro ao editar curso:", erro);
@@ -184,6 +206,18 @@ export async function excluirCurso(id) {
             atualizado_em: agora,
             atualizado_por: usuario
         });
+
+        await registrarAuditoriaGenerica("cursos", id, {
+            tipo: "exclusao",
+            entidade: "curso",
+            descricao: "Curso excluído",
+            campos_alterados: [{
+                campo: "excluido",
+                valor_anterior: false,
+                valor_novo: true
+            }]
+        });
+
         console.log(`🗑️ Curso excluído (soft delete): ${id}`);
     } catch (erro) {
         console.error("❌ Erro ao excluir curso:", erro);
@@ -201,6 +235,18 @@ export async function reativarCurso(id) {
             atualizado_em: agora,
             atualizado_por: usuario
         });
+
+        await registrarAuditoriaGenerica("cursos", id, {
+            tipo: "restauracao",
+            entidade: "curso",
+            descricao: "Curso reativado",
+            campos_alterados: [{
+                campo: "excluido",
+                valor_anterior: true,
+                valor_novo: false
+            }]
+        });
+
         console.log(`♻️ Curso reativado: ${id}`);
     } catch (erro) {
         console.error("❌ Erro ao reativar curso:", erro);

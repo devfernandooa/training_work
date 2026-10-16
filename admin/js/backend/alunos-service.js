@@ -8,11 +8,13 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  getDoc,
   getDocs,
   query,
   where,
   writeBatch
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { registrarAuditoriaGenerica } from "./auditoria-service.js";
 
 /* ==========================================================================
  * AUTENTICAÇÃO E SESSÃO
@@ -81,8 +83,6 @@ export function escutarMatriculas(callback) {
         matriculasDetalhesPorAluno[alunoId].push(mat);
       });
 
-      //console.log(`📊 escutarMatriculas: ${snapshot.size} matrículas em ${Object.keys(matriculasDetalhesPorAluno).length} alunos`);
-
       if (callback) callback(matriculasPorAluno, matriculasDetalhesPorAluno);
     },
     (erro) => {
@@ -92,12 +92,23 @@ export function escutarMatriculas(callback) {
   );
 }
 
-// ✅ ESTA FUNÇÃO ESTAVA FALTANDO — agora está aqui
-export function escutarAlunos(callback) {
+/**
+ * Escuta alunos em tempo real.
+ * Por padrão, NÃO inclui excluídos (soft delete).
+ *
+ * @param {Function} callback - recebe array de alunos
+ * @param {Object} opcoes - { incluirExcluidos: boolean }
+ * @returns {Function} unsubscribe
+ */
+export function escutarAlunos(callback, opcoes = {}) {
+  const incluirExcluidos = opcoes.incluirExcluidos === true;
+
   return onSnapshot(collection(db, "alunos"), (snapshot) => {
     const listaAlunos = [];
     snapshot.forEach((docSnap) => {
-      listaAlunos.push({ id: docSnap.id, ...docSnap.data() });
+      const dados = docSnap.data();
+      if (!incluirExcluidos && dados.excluido) return;
+      listaAlunos.push({ id: docSnap.id, ...dados });
     });
 
     listaAlunos.sort((a, b) =>
@@ -130,19 +141,98 @@ export function escutarLeads(callback) {
  * OPERAÇÕES DE ESCRITA NO FIRESTORE (CRUD E SINCRONIZAÇÃO)
  * ========================================================================== */
 
+/**
+ * Alterna status entre "ativo" e "inativo".
+ * Registra auditoria (inativacao ou reativacao).
+ */
 export async function alterarStatusAlunoBackend(alunoId, statusAtual) {
   const novoStatus = statusAtual === "ativo" ? "inativo" : "ativo";
-  await updateDoc(doc(db, "alunos", alunoId), { status: novoStatus });
+  const adminEmail = auth?.currentUser?.email || "Sistema";
+  const agora = new Date().toISOString();
+
+  const ref = doc(db, "alunos", alunoId);
+  await updateDoc(ref, {
+    status: novoStatus,
+    atualizado_em: agora,
+    atualizado_por: adminEmail
+  });
+
+  await registrarAuditoriaGenerica("alunos", alunoId, {
+    tipo: novoStatus === "inativo" ? "inativacao" : "reativacao",
+    entidade: "aluno",
+    descricao: novoStatus === "inativo" ? "Aluno inativado" : "Aluno reativado",
+    campos_alterados: [{
+      campo: "status",
+      valor_anterior: statusAtual,
+      valor_novo: novoStatus
+    }]
+  });
 }
 
+/**
+ * Exclui um aluno (SOFT DELETE).
+ * As matrículas do aluno são PRESERVADAS (decisão de projeto).
+ * Registra auditoria (exclusao).
+ */
 export async function excluirAlunoBackend(alunoId) {
-  await deleteDoc(doc(db, "alunos", alunoId));
+  const adminEmail = auth?.currentUser?.email || "Sistema";
+  const agora = new Date().toISOString();
+
+  const ref = doc(db, "alunos", alunoId);
+  await updateDoc(ref, {
+    excluido: true,
+    excluido_em: agora,
+    excluido_por: adminEmail,
+    atualizado_em: agora,
+    atualizado_por: adminEmail
+  });
+
+  await registrarAuditoriaGenerica("alunos", alunoId, {
+    tipo: "exclusao",
+    entidade: "aluno",
+    descricao: "Aluno excluído",
+    campos_alterados: [{
+      campo: "excluido",
+      valor_anterior: false,
+      valor_novo: true
+    }]
+  });
+}
+
+/**
+ * Restaura um aluno previamente excluído (soft delete).
+ * Registra auditoria (restauracao).
+ */
+export async function restaurarAlunoBackend(alunoId) {
+  const adminEmail = auth?.currentUser?.email || "Sistema";
+  const agora = new Date().toISOString();
+
+  const ref = doc(db, "alunos", alunoId);
+  await updateDoc(ref, {
+    excluido: false,
+    excluido_em: null,
+    excluido_por: null,
+    atualizado_em: agora,
+    atualizado_por: adminEmail
+  });
+
+  await registrarAuditoriaGenerica("alunos", alunoId, {
+    tipo: "restauracao",
+    entidade: "aluno",
+    descricao: "Aluno restaurado",
+    campos_alterados: [{
+      campo: "excluido",
+      valor_anterior: true,
+      valor_novo: false
+    }]
+  });
 }
 
 export async function cadastrarAlunoBackend(dadosAluno, enderecoCompleto) {
   await addDoc(collection(db, "alunos"), {
     ...dadosAluno,
     endereco: enderecoCompleto,
+    excluido: false,
     criado_em: new Date().toISOString()
   });
 }

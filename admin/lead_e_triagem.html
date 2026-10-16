@@ -194,49 +194,56 @@
               <option value="100">100 por página</option>
             </select>
 
-          </div>
-        </div>
+            <!-- 🗑️ NOVO: Mostrar Excluídos -->
+            <button class="btn btn-outline-danger btn-sm px-3 rounded-pill" id="btn-alternar-leads-excluidos">
+              <i class="fas fa-trash-alt me-1"></i> Mostrar Excluídos
+            </button>
 
-        <!-- ─────────────────────────────────────────────────────────
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ─────────────────────────────────────────────────────────
          CONTADOR
          ───────────────────────────────────────────────────────── -->
-        <div class="d-flex justify-content-between align-items-center mb-2 px-1">
-          <small class="text-muted" id="contador-leads">Mostrando 0 de 0 leads</small>
-        </div>
+      <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+        <small class="text-muted" id="contador-leads">Mostrando 0 de 0 leads</small>
+      </div>
 
-        <!-- DESKTOP: Tabela -->
-        <div class="view-desktop">
-          <table class="tabela-leads">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Candidato</th>
-                <th>Curso</th>
-                <th>Prioridade (IA)</th>
-                <th>Análise Gemini</th>
-                <th>Status</th>
-                <th style="text-align: center;">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="leads-tbody">
-              <!-- Dados via JS -->
-            </tbody>
-          </table>
-        </div>
+      <!-- DESKTOP: Tabela -->
+      <div class="view-desktop">
+        <table class="tabela-leads">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Candidato</th>
+              <th>Curso</th>
+              <th>Prioridade (IA)</th>
+              <th>Análise Gemini</th>
+              <th>Status</th>
+              <th style="text-align: center;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="leads-tbody">
+            <!-- Dados via JS -->
+          </tbody>
+        </table>
+      </div>
 
-        <!-- MOBILE: Cards -->
-        <div class="view-mobile" id="leads-mobile-container">
-          <!-- Cartões mobile via JS -->
-        </div>
+      <!-- MOBILE: Cards -->
+      <div class="view-mobile" id="leads-mobile-container">
+        <!-- Cartões mobile via JS -->
+      </div>
 
-        <!-- ─────────────────────────────────────────────────────────
+      <!-- ─────────────────────────────────────────────────────────
          PAGINAÇÃO
          ───────────────────────────────────────────────────────── -->
-        <nav class="d-flex justify-content-center mt-3" aria-label="Navegação de páginas">
-          <ul class="pagination pagination-sm mb-0" id="paginacao-leads">
-            <!-- Botões gerados via JS -->
-          </ul>
-        </nav>
+      <nav class="d-flex justify-content-center mt-3" aria-label="Navegação de páginas">
+        <ul class="pagination pagination-sm mb-0" id="paginacao-leads">
+          <!-- Botões gerados via JS -->
+        </ul>
+      </nav>
 
       </div>
     </section>
@@ -314,7 +321,8 @@
                     <div class="row g-2">
                       <div class="col-md-4">
                         <label for="edit-cpf" class="form-label small text-muted mb-0">CPF (11 dígitos)</label>
-                        <input type="text" class="form-control form-control-sm" id="edit-cpf" placeholder="000.000.000-00">
+                        <input type="text" class="form-control form-control-sm" id="edit-cpf"
+                          placeholder="000.000.000-00">
                       </div>
                       <div class="col-md-4">
                         <label for="edit-empresa" class="form-label small text-muted mb-0">Empresa</label>
@@ -429,7 +437,8 @@
                     <div class="row g-2">
 
                       <div class="col-md-4">
-                        <label for="input-valor-curso" class="form-label small text-muted mb-1">Valor do Curso (R$)</label>
+                        <label for="input-valor-curso" class="form-label small text-muted mb-1">Valor do Curso
+                          (R$)</label>
                         <input type="number" step="0.01" class="form-control form-control-sm border-primary"
                           id="input-valor-curso" placeholder="Ex: 450.00">
                       </div>
@@ -552,6 +561,54 @@
         </div>
       </div>
     </div> <!-- Confirmação de Exclusão -->
+
+    <!-- ============================================================
+       MODAL DE CONFIRMAÇÃO: RESTAURAR LEAD
+       ============================================================ -->
+    <div class="modal fade" id="modalRestaurarLead" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+          <div class="modal-body text-center p-4 p-md-5">
+            <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"
+              aria-label="Fechar"></button>
+
+            <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+              style="width: 72px; height: 72px; background: #dcfce7; color: #16a34a;">
+              <i class="fas fa-recycle fa-2x"></i>
+            </div>
+
+            <h4 class="fw-bold mb-2" style="color: #0f172a;">
+              Restaurar Lead?
+            </h4>
+
+            <p class="text-muted mb-4" style="font-size: 0.95rem; line-height: 1.5;">
+              O lead voltará a aparecer na listagem. Esta ação será registrada no log de auditoria.
+            </p>
+
+            <div class="p-3 rounded-3 mb-4" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+              <small class="text-muted d-block mb-1"
+                style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">
+                Candidato
+              </small>
+              <strong class="text-dark d-block" id="nomeLeadRestaurar" style="font-size: 0.95rem;">—</strong>
+            </div>
+
+            <input type="hidden" id="restaurarLeadId">
+
+            <div class="d-flex gap-2 justify-content-center">
+              <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold" data-bs-dismiss="modal">
+                Cancelar
+              </button>
+              <button type="button" class="btn btn-success px-4 rounded-pill fw-semibold"
+                id="btnConfirmarRestaurarLead">
+                <i class="fas fa-recycle me-1"></i> Restaurar Lead
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"

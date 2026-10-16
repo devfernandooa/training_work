@@ -7,6 +7,7 @@
  *   - lead.nome → lead.name
  *   - lead.curso → lead.curso_interesse_name
  *   - Ao salvar edição, grava em `name` e `curso_interesse_name`
+ *   - Fase 2 (S1): toggle "Mostrar Excluídos" + restaurar lead
  * =========================================================================
  */
 
@@ -15,7 +16,8 @@ import {
     atualizarStatusLead,
     salvarEdicaoLead,
     obterLeadPorId,
-    excluirLead
+    excluirLead,
+    restaurarLead
 } from "../backend/lead-service.js";
 
 /* ====== ESTADO GLOBAL ====== */
@@ -26,15 +28,15 @@ let itensPorPagina = 20;
 let termoBusca = "";
 let editModalInstance = null;
 let excluirModalInstance = null;
+let restaurarModalInstance = null;
 let leadIdParaExcluir = null;
+let leadIdParaRestaurar = null;
 let timerBusca = null;
+let mostrarExcluidos = false;      // ⬅️ NOVO
+let unsubscribeLeads = null;       // ⬅️ NOVO
 
 
-/* ====== HELPERS DE CAMPO ======
- * Como convivemos com leads antigos (que às vezes têm `nome`/`curso`)
- * e leads novos (que têm `name`/`curso_interesse_name`), centralizamos
- * a leitura aqui. Assim, se um dia padronizarmos tudo, é 1 lugar só.
- */
+/* ====== HELPERS DE CAMPO ====== */
 function getNomeLead(lead) {
     return lead.name || lead.nome || "";
 }
@@ -54,17 +56,26 @@ document.addEventListener("DOMContentLoaded", () => {
     configurarFormularioEdicao();
     configurarViaCEP();
     configurarBotaoConversao();
+    configurarToggleExcluidos();
+
+    iniciarEscutaLeads();
+});
+
+
+/* ====== ESCUTA DE LEADS (recriável) ====== */
+function iniciarEscutaLeads() {
+    if (unsubscribeLeads) unsubscribeLeads();
 
     try {
-        escutarLeads((leads) => {
+        unsubscribeLeads = escutarLeads((leads) => {
             listaLeadsCompleta = leads;
             paginaAtual = 1;
             aplicarFiltrosERenderizar();
-        });
+        }, { incluirExcluidos: mostrarExcluidos });
     } catch (erro) {
         console.error("❌ Erro ao escutar leads:", erro);
     }
-});
+}
 
 
 /* ====== MODAIS ====== */
@@ -79,6 +90,12 @@ function configurarModais() {
         excluirModalInstance = new bootstrap.Modal(modalExcluirEl);
     }
 
+    const modalRestaurarEl = document.getElementById("modalRestaurarLead");
+    if (modalRestaurarEl && window.bootstrap) {
+        restaurarModalInstance = new bootstrap.Modal(modalRestaurarEl);
+    }
+
+    // Confirmar exclusão
     const btnConfirmarExclusao = document.getElementById("btn-confirmar-exclusao");
     if (btnConfirmarExclusao) {
         btnConfirmarExclusao.addEventListener("click", async () => {
@@ -98,6 +115,55 @@ function configurarModais() {
             }
         });
     }
+
+    // Confirmar restauração (NOVO)
+    const btnConfirmarRestaurar = document.getElementById("btnConfirmarRestaurarLead");
+    if (btnConfirmarRestaurar) {
+        btnConfirmarRestaurar.addEventListener("click", async () => {
+            if (!leadIdParaRestaurar) return;
+            const txt = btnConfirmarRestaurar.innerHTML;
+            btnConfirmarRestaurar.disabled = true;
+            btnConfirmarRestaurar.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Restaurando...`;
+            try {
+                await restaurarLead(leadIdParaRestaurar);
+                if (restaurarModalInstance) restaurarModalInstance.hide();
+            } catch (erro) {
+                console.error("Erro ao restaurar lead:", erro);
+                alert("Não foi possível restaurar. Tente novamente.");
+            } finally {
+                btnConfirmarRestaurar.disabled = false;
+                btnConfirmarRestaurar.innerHTML = txt;
+                leadIdParaRestaurar = null;
+            }
+        });
+    }
+}
+
+
+/* ====== TOGGLE EXCLUÍDOS (NOVO) ====== */
+function configurarToggleExcluidos() {
+    const btn = document.getElementById("btn-alternar-leads-excluidos");
+    if (!btn) return;
+
+    btn.addEventListener("click", () => {
+        mostrarExcluidos = !mostrarExcluidos;
+
+        // Ao ligar excluídos, reseta filtro de prioridade
+        if (mostrarExcluidos) {
+            const filterPriority = document.getElementById("filter-priority");
+            if (filterPriority) filterPriority.value = "all";
+        }
+
+        btn.innerHTML = mostrarExcluidos
+            ? `<i class="fas fa-users me-1"></i> Ver Ativos`
+            : `<i class="fas fa-trash-alt me-1"></i> Mostrar Excluídos`;
+
+        btn.classList.toggle("active", mostrarExcluidos);
+        btn.classList.toggle("btn-danger", mostrarExcluidos);
+        btn.classList.toggle("btn-outline-danger", !mostrarExcluidos);
+
+        iniciarEscutaLeads();
+    });
 }
 
 
@@ -106,6 +172,19 @@ function configurarFiltros() {
     const filterPriority = document.getElementById("filter-priority");
     if (filterPriority) {
         filterPriority.addEventListener("change", () => {
+            // Se mudar a prioridade, desliga o modo "excluídos"
+            if (mostrarExcluidos) {
+                mostrarExcluidos = false;
+                const btnExcluidos = document.getElementById("btn-alternar-leads-excluidos");
+                if (btnExcluidos) {
+                    btnExcluidos.innerHTML = `<i class="fas fa-trash-alt me-1"></i> Mostrar Excluídos`;
+                    btnExcluidos.classList.remove("active", "btn-danger");
+                    btnExcluidos.classList.add("btn-outline-danger");
+                }
+                iniciarEscutaLeads();
+                return;
+            }
+
             paginaAtual = 1;
             aplicarFiltrosERenderizar();
         });
@@ -157,14 +236,17 @@ function aplicarFiltrosERenderizar() {
         });
     }
 
-    const filterPriority = document.getElementById("filter-priority");
-    const filtroPrio = filterPriority ? filterPriority.value : "all";
+    // Filtro de prioridade — só se NÃO estiver no modo "excluídos"
+    if (!mostrarExcluidos) {
+        const filterPriority = document.getElementById("filter-priority");
+        const filtroPrio = filterPriority ? filterPriority.value : "all";
 
-    if (filtroPrio !== "all") {
-        filtrados = filtrados.filter((lead) => {
-            const prio = (lead.prioridade || "média").toLowerCase();
-            return prio === filtroPrio.toLowerCase();
-        });
+        if (filtroPrio !== "all") {
+            filtrados = filtrados.filter((lead) => {
+                const prio = (lead.prioridade || "média").toLowerCase();
+                return prio === filtroPrio.toLowerCase();
+            });
+        }
     }
 
     listaLeadsFiltrada = filtrados;
@@ -189,6 +271,7 @@ function atualizarKPIs() {
     let alta = 0;
     let emAtendimento = 0;
 
+    // KPIs sempre consideram TODOS os leads (não só o filtro)
     listaLeadsCompleta.forEach((l) => {
         const prio = (l.prioridade || "").toLowerCase();
         const stat = (l.status || "").toLowerCase();
@@ -214,9 +297,11 @@ function renderizarTabela(pagina, totalFiltrados, inicio, fim) {
     if (!tbody) return;
 
     if (pagina.length === 0) {
-        const msg = listaLeadsCompleta.length === 0
-            ? "Nenhuma inscrição encontrada."
-            : "Nenhum lead corresponde aos filtros atuais.";
+        const msg = mostrarExcluidos
+            ? "Nenhum lead excluído."
+            : (listaLeadsCompleta.length === 0
+                ? "Nenhuma inscrição encontrada."
+                : "Nenhum lead corresponde aos filtros atuais.");
 
         tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 2rem;">${msg}</td></tr>`;
         if (mobileContainer) {
@@ -263,21 +348,37 @@ function renderizarTabela(pagina, totalFiltrados, inicio, fim) {
             dataFormatada = new Date(lead.data.seconds * 1000).toLocaleDateString("pt-BR");
         }
 
-        const acoesBotoes = `
-            <div class="actions-group" style="display: inline-flex; gap: 0.4rem; justify-content: center;">
-                <a href="https://wa.me/${lead.telefone || ""}" target="_blank"
-                   class="btn-icon btn-icon-whatsapp text-decoration-none"
-                   title="Contatar WhatsApp" data-action="contatar" data-id="${lead.id}">
-                    <i class="fab fa-whatsapp"></i>
-                </a>
-                <button class="btn-icon btn-icon-edit btn-editar-action" data-id="${lead.id}" title="Editar Lead">
-                    <i class="fas fa-pen"></i>
-                </button>
-                <button class="btn-icon btn-icon-delete btn-excluir-action" data-id="${lead.id}" title="Excluir Lead">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </div>
-        `;
+        const estaExcluido = lead.excluido === true;
+
+        // ⬇️ Ações: excluído mostra [Ver] [Restaurar]; normal mostra WhatsApp/Editar/Excluir
+        const acoesBotoes = estaExcluido
+            ? `
+                <div class="actions-group" style="display: inline-flex; gap: 0.4rem; justify-content: center;">
+                    <button class="btn-icon btn-icon-edit btn-restaurar-action" data-id="${lead.id}" title="Restaurar Lead">
+                        <i class="fas fa-recycle"></i>
+                    </button>
+                </div>
+            `
+            : `
+                <div class="actions-group" style="display: inline-flex; gap: 0.4rem; justify-content: center;">
+                    <a href="https://wa.me/${lead.telefone || ""}" target="_blank"
+                       class="btn-icon btn-icon-whatsapp text-decoration-none"
+                       title="Contatar WhatsApp" data-action="contatar" data-id="${lead.id}">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                    <button class="btn-icon btn-icon-edit btn-editar-action" data-id="${lead.id}" title="Editar Lead">
+                        <i class="fas fa-pen"></i>
+                    </button>
+                    <button class="btn-icon btn-icon-delete btn-excluir-action" data-id="${lead.id}" title="Excluir Lead">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            `;
+
+        // Badge de status especial se estiver excluído
+        const statusPillFinal = estaExcluido
+            ? `<span class="status-pill px-3 py-1 rounded-pill d-inline-flex align-items-center gap-1" style="border: 1px solid #dc2626; color: #b91c1c; background: #fef2f2; font-size: 0.82rem; font-weight: 500;">Excluído</span>`
+            : statusPill;
 
         htmlDesktop += `
             <tr>
@@ -291,7 +392,7 @@ function renderizarTabela(pagina, totalFiltrados, inicio, fim) {
                 <td style="max-width: 250px; font-size: 0.8rem; color: #475569; line-height: 1.3;">
                     ${lead.resumo_ia || lead.mensagem || "-"}
                 </td>
-                <td>${statusPill}</td>
+                <td>${statusPillFinal}</td>
                 <td style="text-align: center;">${acoesBotoes}</td>
             </tr>
         `;
@@ -308,7 +409,7 @@ function renderizarTabela(pagina, totalFiltrados, inicio, fim) {
                 <div style="font-size: 0.85rem; color: #475569; margin-bottom: 0.75rem;">
                     <p style="margin: 0.2rem 0;"><strong>Curso:</strong> ${cursoLead}</p>
                     <p style="margin: 0.2rem 0;"><strong>Análise:</strong> ${lead.resumo_ia || lead.mensagem || "-"}</p>
-                    <p style="margin: 0.2rem 0;"><strong>Status:</strong> ${statusPill}</p>
+                    <p style="margin: 0.2rem 0;"><strong>Status:</strong> ${statusPillFinal}</p>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; margin-top: 0.5rem; padding-top: 0.5rem;">
                     <span style="font-size: 0.75rem; color: #94a3b8;">${dataFormatada}</span>
@@ -331,12 +432,13 @@ function renderizarContador(totalFiltrado, inicio, fim) {
     if (!el) return;
 
     if (totalFiltrado === 0) {
-        el.textContent = `Nenhum lead encontrado`;
+        el.textContent = mostrarExcluidos ? "Nenhum lead excluído" : "Nenhum lead encontrado";
         return;
     }
 
     const fimExibido = Math.min(fim, totalFiltrado);
-    el.textContent = `Mostrando ${inicio + 1}-${fimExibido} de ${totalFiltrado} lead${totalFiltrado > 1 ? "s" : ""}`;
+    const prefixo = mostrarExcluidos ? "Mostrando excluídos" : "Mostrando";
+    el.textContent = `${prefixo} ${inicio + 1}-${fimExibido} de ${totalFiltrado} lead${totalFiltrado > 1 ? "s" : ""}`;
 }
 
 
@@ -450,6 +552,20 @@ function configurarEventosTabela() {
             if (excluirModalInstance) excluirModalInstance.show();
             return;
         }
+
+        // ⬇️ NOVO: Restaurar lead
+        const btnRestaurar = e.target.closest(".btn-restaurar-action");
+        if (btnRestaurar) {
+            const id = btnRestaurar.getAttribute("data-id");
+            const lead = listaLeadsCompleta.find(l => l.id === id);
+
+            leadIdParaRestaurar = id;
+            const nomeEl = document.getElementById("nomeLeadRestaurar");
+            if (nomeEl) nomeEl.textContent = getNomeLead(lead) || "este lead";
+
+            if (restaurarModalInstance) restaurarModalInstance.show();
+            return;
+        }
     };
 
     tbody.addEventListener("click", tbody._handler);
@@ -484,11 +600,9 @@ function preencherModalEdicao(id, data) {
     };
 
     setVal("edit-lead-id", id);
-    // ✅ CORRIGIDO: lê `name` primeiro, cai pra `nome` como fallback
     setVal("edit-nome", data.name || data.nome || data.candidato || "");
     setVal("edit-email", data.email || "");
     setVal("edit-telefone", data.telefone || "");
-    // ✅ CORRIGIDO: lê `curso_interesse_name` primeiro
     setVal("edit-curso", data.curso_interesse_name || data.curso || "");
     setVal("edit-resumo-ia", data.resumo_ia || data.mensagem || "");
     setVal("edit-status", data.status || "Novo");
@@ -552,15 +666,17 @@ function configurarFormularioEdicao() {
         const getVal = (elementId) => document.getElementById(elementId)?.value || "";
         const getCheck = (elementId) => document.getElementById(elementId)?.checked || false;
 
-        // CPF é opcional. Se preenchido, valida 11 dígitos.
         const cpfValor = getVal("edit-cpf").replace(/\D/g, "");
         if (cpfValor.length > 0 && cpfValor.length !== 11) {
             alert("O CPF deve conter exatamente 11 dígitos (ou ficar em branco).");
             document.getElementById("edit-cpf")?.focus();
+            if (btnSave) {
+                btnSave.disabled = false;
+                btnSave.textContent = "Salvar";
+            }
             return;
         }
 
-        // ✅ CORRIGIDO: grava com o schema do Firestore (name, curso_interesse_name)
         const dados = {
             name: getVal("edit-nome"),
             email: getVal("edit-email"),

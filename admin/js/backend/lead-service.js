@@ -14,11 +14,6 @@
  *   - A UI (lead-ui.js) é o GARÇOM (leva os dados para a mesa/HTML)
  *   - O AUTH-GUARD é o PORTEIRO (verifica quem pode entrar)
  *
- * Cada um faz uma coisa. Isso deixa o código:
- *   - Mais fácil de testar
- *   - Mais fácil de entender
- *   - Mais fácil de reutilizar em outras telas
- *
  * COLEÇÃO: /leads
  * Estrutura de um lead:
  *   {
@@ -33,6 +28,7 @@
  *   - atualizarStatusLead(id, novoStatus) → muda o status
  *   - salvarEdicaoLead(id, dados)         → atualiza campos
  *   - excluirLead(id)                     → marca como excluído (soft delete)
+ *   - restaurarLead(id)                   → restaura um lead excluído
  * =========================================================================
  */
 
@@ -45,29 +41,28 @@ import {
     updateDoc,
     onSnapshot
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import {
+    registrarAuditoriaGenerica,
+    compararAlteracoes
+} from "./auditoria-service.js";
 
 // Nome da coleção no Firestore.
-// Colocamos numa constante porque, se um dia mudar, é só mudar AQUI.
 const NOME_COLECAO = "leads";
 
 
 /* ==========================================================================
  * ESCUTA EM TEMPO REAL
- * ==========================================================================
- *
- * "Escutar" significa: toda vez que um lead mudar no banco,
- * o Firestore chama nossa função de volta (callback).
- *
- * Isso permite atualizar a tela SEM o usuário precisar dar F5.
  * ========================================================================== */
 
 /**
  * Escuta todos os leads não-excluídos em tempo real.
  *
  * @param {Function} callback — recebe o array de leads (mais recentes primeiro)
+ * @param {Object} opcoes — { incluirExcluidos: boolean }
  * @returns {Function} — função para CANCELAR a escuta (importante!)
  */
-export function escutarLeads(callback) {
+export function escutarLeads(callback, opcoes = {}) {
+    const incluirExcluidos = opcoes.incluirExcluidos === true;
     const colRef = collection(db, NOME_COLECAO);
 
     return onSnapshot(
@@ -80,8 +75,8 @@ export function escutarLeads(callback) {
             snapshot.forEach((docSnap) => {
                 const dados = docSnap.data();
 
-                // Ignora leads "excluídos" (soft delete)
-                if (dados.excluido) return;
+                // Ignora leads "excluídos" (soft delete) — a menos que peçam
+                if (!incluirExcluidos && dados.excluido) return;
 
                 leads.push({ id: docSnap.id, ...dados });
             });
@@ -107,14 +102,10 @@ export function escutarLeads(callback) {
 
 /* ==========================================================================
  * LEITURA PONTUAL
- * ==========================================================================
- *
- * Diferente de "escutar", aqui a gente lê UMA VEZ e pronto.
- * Útil quando você só quer uma lista para exportar CSV, por exemplo.
  * ========================================================================== */
 
 /**
- * Lê todos os leads uma única vez.
+ * Lê todos os leads não-excluídos uma única vez.
  *
  * @returns {Promise<Array>} — array de leads
  */
@@ -140,25 +131,42 @@ export async function obterLeads() {
 
 /* ==========================================================================
  * ATUALIZAR STATUS DO LEAD
- * ==========================================================================
- *
- * Status possíveis (fluxo típico):
- *   "Novo" → "Em Contato" → "Qualificado" → "Convertido" ou "Perdido"
  * ========================================================================== */
 
 /**
  * Atualiza o campo `status` de um lead.
+ * Registra auditoria (tipo "alteracao", campo "status").
  *
  * @param {string} id — ID do documento do lead
- * @param {string} novoStatus — ex.: "Em Contato", "Qualificado"
+ * @param {string} novoStatus — ex.: "Em Atendimento", "Convertido"
  */
 export async function atualizarStatusLead(id, novoStatus) {
     try {
-        await updateDoc(doc(db, NOME_COLECAO, id), {
+        const usuario = auth.currentUser?.email || "Sistema";
+        const agora = new Date().toISOString();
+
+        // 1. Lê estado atual (para saber o status anterior)
+        const ref = doc(db, NOME_COLECAO, id);
+        const snap = await getDoc(ref);
+        const antes = snap.exists() ? snap.data() : {};
+
+        // 2. Atualiza
+        await updateDoc(ref, {
             status: novoStatus,
-            atualizado_em: new Date().toISOString(),
-            // `?.` significa: se auth.currentUser for null, não quebra
-            atualizado_por: auth.currentUser?.email || "Sistema"
+            atualizado_em: agora,
+            atualizado_por: usuario
+        });
+
+        // 3. Auditoria
+        await registrarAuditoriaGenerica("leads", id, {
+            tipo: "alteracao",
+            entidade: "lead",
+            descricao: "Status alterado",
+            campos_alterados: [{
+                campo: "status",
+                valor_anterior: antes.status ?? null,
+                valor_novo: novoStatus
+            }]
         });
     } catch (erro) {
         console.error("❌ Erro ao atualizar status do lead:", erro);
@@ -169,24 +177,43 @@ export async function atualizarStatusLead(id, novoStatus) {
 
 /* ==========================================================================
  * SALVAR EDIÇÃO COMPLETA
- * ==========================================================================
- *
- * Quando o admin edita vários campos de uma vez no modal.
  * ========================================================================== */
 
 /**
  * Atualiza vários campos do lead de uma só vez.
+ * Registra auditoria com diff (compararAlteracoes).
  *
  * @param {string} id — ID do documento
  * @param {Object} dados — objeto com os campos a atualizar
  */
 export async function salvarEdicaoLead(id, dados) {
     try {
-        await updateDoc(doc(db, NOME_COLECAO, id), {
+        const usuario = auth.currentUser?.email || "Sistema";
+        const agora = new Date().toISOString();
+
+        // 1. Lê estado ANTES
+        const ref = doc(db, NOME_COLECAO, id);
+        const snap = await getDoc(ref);
+        const antes = snap.exists() ? snap.data() : {};
+
+        // 2. Atualiza
+        await updateDoc(ref, {
             ...dados,
-            atualizado_em: new Date().toISOString(),
-            atualizado_por: auth.currentUser?.email || "Sistema"
+            atualizado_em: agora,
+            atualizado_por: usuario
         });
+
+        // 3. Auditoria — só registra se houve mudança real
+        const camposAlterados = compararAlteracoes(antes, dados);
+
+        if (camposAlterados.length > 0) {
+            await registrarAuditoriaGenerica("leads", id, {
+                tipo: "alteracao",
+                entidade: "lead",
+                descricao: `${camposAlterados.length} campo(s) alterado(s)`,
+                campos_alterados: camposAlterados
+            });
+        }
     } catch (erro) {
         console.error("❌ Erro ao salvar edição do lead:", erro);
         throw erro;
@@ -196,10 +223,6 @@ export async function salvarEdicaoLead(id, dados) {
 
 /* ==========================================================================
  * BUSCAR UM LEAD POR ID
- * ==========================================================================
- *
- * Útil quando precisamos dos dados antes de abrir um modal de edição.
- * A UI chama esta função, recebe os dados e preenche o modal.
  * ========================================================================== */
 
 /**
@@ -226,30 +249,75 @@ export async function obterLeadPorId(id) {
 
 
 /* ==========================================================================
- * EXCLUSÃO LÓGICA (SOFT DELETE)
- * ==========================================================================
- *
- * Em vez de APAGAR o documento, marcamos com `excluido: true`.
- * Assim:
- *   - O lead some da listagem
- *   - Mas o histórico fica preservado
- *   - Podemos "desfazer" se precisar
+ * EXCLUSÃO LÓGICA (SOFT DELETE) + RESTAURAÇÃO
  * ========================================================================== */
 
 /**
  * Marca um lead como excluído (não apaga de verdade).
+ * Registra auditoria (tipo "exclusao").
  *
  * @param {string} id — ID do documento
  */
 export async function excluirLead(id) {
     try {
+        const usuario = auth.currentUser?.email || "Sistema";
+        const agora = new Date().toISOString();
+
         await updateDoc(doc(db, NOME_COLECAO, id), {
             excluido: true,
-            atualizado_em: new Date().toISOString(),
-            atualizado_por: auth.currentUser?.email || "Sistema"
+            excluido_em: agora,
+            excluido_por: usuario,
+            atualizado_em: agora,
+            atualizado_por: usuario
+        });
+
+        await registrarAuditoriaGenerica("leads", id, {
+            tipo: "exclusao",
+            entidade: "lead",
+            descricao: "Lead excluído",
+            campos_alterados: [{
+                campo: "excluido",
+                valor_anterior: false,
+                valor_novo: true
+            }]
         });
     } catch (erro) {
         console.error("❌ Erro ao excluir lead:", erro);
+        throw erro;
+    }
+}
+
+/**
+ * Restaura um lead previamente excluído (soft delete).
+ * Registra auditoria (tipo "restauracao").
+ *
+ * @param {string} id — ID do documento
+ */
+export async function restaurarLead(id) {
+    try {
+        const usuario = auth.currentUser?.email || "Sistema";
+        const agora = new Date().toISOString();
+
+        await updateDoc(doc(db, NOME_COLECAO, id), {
+            excluido: false,
+            excluido_em: null,
+            excluido_por: null,
+            atualizado_em: agora,
+            atualizado_por: usuario
+        });
+
+        await registrarAuditoriaGenerica("leads", id, {
+            tipo: "restauracao",
+            entidade: "lead",
+            descricao: "Lead restaurado",
+            campos_alterados: [{
+                campo: "excluido",
+                valor_anterior: true,
+                valor_novo: false
+            }]
+        });
+    } catch (erro) {
+        console.error("❌ Erro ao restaurar lead:", erro);
         throw erro;
     }
 }
