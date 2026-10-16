@@ -6,3 +6,11 @@
 @import url('modules/cursos.css');
 @import url('modules/matriculas.css');
 
+/* Modais empilhados: o 2º modal (confirmação) precisa ficar acima do 1º (formulários) */
+#modalConfirmacao {
+    z-index: 2000;
+}
+#modalConfirmacao + .modal-backdrop,
+.modal-backdrop.show:nth-of-type(2) {
+    z-index: 1990;
+}

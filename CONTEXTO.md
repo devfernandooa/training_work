@@ -15,10 +15,6 @@
 Os itens abaixo foram **inferidos** durante a análise do projeto e **precisam de
 confirmação** antes de entrar na fila de execução.
 
-- **S4 — Verificar permissões de acesso ao painel admin**
-  Não havia menção a controle de permissões no status atual. Pode já estar
-  resolvido, pode não ser problema, ou pode ser uma lacuna real. **Confirmar.**
-
 - **M3 — Unificar componente de auditoria reutilizável**
   Inferido (a partir dos prints) que o componente de auditoria está duplicado
   entre Financeiro/Leads e Alunos. Se já for unificado internamente,
@@ -113,6 +109,10 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 5. **Matrículas:** módulo inteiro ainda NÃO refatorado (M2)
 6. **Bug conhecido:** `lead-ui.js` usa `"em_contato"` em vez de `"Em Atendimento"`
 7. **`configurarBotaoConversao()`** está desativado (só mostra alerta) — mantido por ora
+8. **Melhoria (baixa prioridade) — Validação de email único:**
+   - C-new.1 — Adicionar verificação de email único ao criar **aluno** (previne duplicidade antes de acontecer)
+   - C-new.2 — Adicionar verificação de email único ao criar **lead** (mesma coisa)
+   - **Contexto:** o CPF ficou opcional em 15/10 (S5 confirmou risco zero nos dados atuais — 24 alunos, 0 sem CPF, 0 emails duplicados). Como o CPF deixa de ser barreira natural, a validação de email passa a ser a proteção contra duplicidade. **Não é urgente** — é melhoria desejável para médio prazo.
 
 ---
 
@@ -124,7 +124,7 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 | ~~S1~~ | ~~Auditoria de exclusões/inativações~~ ✅ CONCLUÍDO (16/10) | 4–6h | Média |
 | ~~S2~~ | ~~Auditoria em presença~~ ✅ CONCLUÍDO (16/10) | 3–4h | Média |
 | ~~S3~~ | ~~Auditoria no Calendário de Aulas~~ ✅ CONCLUÍDO (16/10) | 4–5h | Média |
-| S4 | ⚠️ REVISAR — Verificar permissões de acesso ao painel admin | 2–3h | Baixa |
+| ~~S4~~ | ~~Verificar permissões de acesso ao painel admin~~ ✅ CONFIRMADO (16/10) | 2–3h | Baixa |
 | S5 | Validar impacto de CPF opcional (integridade/duplicidade) | 1–2h | Baixa |
 
 ### 🟠 Curto Prazo (1–2 semanas)
@@ -157,8 +157,8 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 | L5 | Documentação de arquitetura e fluxos | 4–6h | Baixa |
 
 ### Ordem recomendada de execução
-1. ~~S1 → S2 → S3~~ ✅ (segurança de auditoria — concluído em 16/10)
-2. S4 → S5 (fecha a fila de segurança)
+1. ~~S1 → S2 → S3 → S4~~ ✅ (segurança de auditoria — concluído em 16/10)
+2. S5 (fecha a fila de segurança)
 3. C3 → C3.5 (correções visuais rápidas)
 4. C1 → C2 (padronizar auditoria no formato visual)
 5. C4 → C5 → C6 → C7 (auditoria restante)
@@ -169,7 +169,7 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 ### Totais
 | Prazo | Horas | Dias úteis (8h) |
 |-------|-------|-----------------|
-| 🔴 Segurança (restante) | 3–5h | 0,5 |
+| 🔴 Segurança (restante) | 1–2h | 0,25 |
 | 🟠 Curto | 23–31h | 3–4 |
 | 🟡 Médio | 36–52h | 5–7 |
 | 🟢 Longo | 46–70h | 6–9 |
@@ -187,6 +187,9 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 - **Soft delete:** toda exclusão é reversível (marca `excluido: true`)
 - **Auditoria de presença/calendário:** grava na subcoleção `turmas/{id}/auditoria`
 - **Exclusão de aluno:** preserva matrículas (Opção 1)
+- **Admin:** validação por `administradores/{uid}` + campo `ativo: true`; logout por inatividade (30 min); retry de `getDoc` em `permission-denied`
+- **Firestore Rules:** bloqueio geral no fim + `isAdmin()` valida no servidor; auditoria é imutável (`update/delete: false`)
+- **Form público de leads:** validação server-side via `leadValido()` (whitelist de campos + regex + limites)
 
 ---
 
@@ -226,7 +229,26 @@ versionado no Git e é acessível a qualquer momento.
 **Pendências conhecidas:**
 - ⚠️ `lead-ui.js` chama `atualizarStatusLead(id, "em_contato")` mas o status real é `"Em Atendimento"` — corrigir futuramente
 - ⚠️ `atualizarAlunoComMatriculaBackend` ainda faz hard delete de matrículas ao editar — faz parte do M2 (refatorar Matrículas)
+---
 
+### S5 — Validação de impacto do CPF opcional ✅
+**Status:** Confirmado · **Data:** 16/10/2026
+
+**O que foi verificado (24 alunos):**
+- **0** alunos sem CPF
+- **0** emails duplicados
+- CPF opcional **não causou problemas** nos dados atuais
+
+**Conclusão:** risco aceito. Na prática, o CPF continua sendo preenchido por todos.
+
+**Pendência registrada (baixa prioridade):**
+- **C-new.1** — validação de email único ao criar aluno
+- **C-new.2** — validação de email único ao criar lead
+- Motivo: com o CPF opcional, o email passa a ser a única barreira natural contra duplicidade. Não é urgente — os dados atuais estão limpos.
+
+**Impacto no cronograma:**
+- ✅ Item **S5** concluído
+- ✅ **Bloco de segurança 100% concluído** (S1 + S2 + S3 + S4 + S5)
 ---
 
 ### Fix — Remoção de gravação redundante no botão Salvar do modal de alunos ✅
@@ -260,3 +282,24 @@ versionado no Git e é acessível a qualquer momento.
 - ✅ Itens **S2 e S3** concluídos
 - ✅ **Bloco de segurança:** 3 de 5 concluídos (falta S4 e S5)
 - ➡️ **Próximo:** S4 (permissões de acesso) ou C3/C3.5 (correções visuais)
+
+---
+
+### S4 — Verificação de permissões admin e Firestore Rules ✅
+**Status:** Confirmado · **Data:** 16/10/2026
+
+**O que foi verificado:**
+- `auth-guard.js` + `auth-service.js` validam admin por **UID** (`administradores/{user.uid}`)
+- Só libera se `ativo === true`
+- Logout automático por inatividade (30 min)
+- Firestore Rules têm:
+  - `isAdmin()` que valida no **servidor** (não burlável via client)
+  - Bloqueio geral no fim (`allow read, write: if false`)
+  - Auditoria imutável (`allow update, delete: if false`)
+  - Validação de payload do form público de leads (`leadValido()`)
+  - Cada admin só acessa o próprio doc
+- **Nenhuma correção necessária** — segurança em nível de produção
+
+**Impacto no cronograma:**
+- ✅ Item **S4** concluído
+- ✅ **Bloco de segurança:** 4 de 5 concluídos (falta só S5)

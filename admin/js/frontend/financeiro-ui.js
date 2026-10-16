@@ -674,48 +674,75 @@ function configurarFormularioEdicao() {
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const id = document.getElementById("finTransacaoId").value;
-        const tipo = document.getElementById("finTipo").value || "entrada";
-        const alunoNome = document.getElementById("finNomeAluno").value;
-        const valorBase = parseFloat(document.getElementById("finValorBase").value) || 0;
-        const ajusteTipo = document.getElementById("finAjusteTipo").value;
-        const valorAjuste = parseFloat(document.getElementById("finValorAjuste").value) || 0;
-        const status = document.getElementById("finStatusPagamento").value;
-        const forma = document.getElementById("finFormaPagamento").value;
-        const obs = document.getElementById("finAuditoriaNotas").value;
+        const alunoId = document.getElementById("novaAluno").value;
+        const tipo = document.getElementById("novaTipoTransacao").value || "entrada";
+        const alunoObj = listaAlunosParaNova.find(a => a.id === alunoId);
+        const curso = document.getElementById("novaCurso").value.trim() || "Geral";
+        const valor = parseFloat(document.getElementById("novaValor").value) || 0;
+        const status = document.getElementById("novaStatus").value;
+        const forma = document.getElementById("novaForma").value;
+        const dataPagamento = document.getElementById("novaData").value;
+        const observacoes = document.getElementById("novaObs").value.trim();
 
-        let valorFinal = valorBase;
-        if (ajusteTipo === "desconto") valorFinal = valorBase - (valorBase * valorAjuste / 100);
-        else if (ajusteTipo === "acrescimo") valorFinal = valorBase + (valorBase * valorAjuste / 100);
+        // Validações
+        if (!alunoId) {
+            mostrarErro("Selecione um aluno.");
+            return;
+        }
+        if (valor <= 0) {
+            mostrarErro("Informe um valor maior que zero.");
+            return;
+        }
 
-        // ⚡ Confirmação ANTES de salvar, com resumo das alterações
+        // 📋 Confirmação antes de criar (padrão das outras ações do Financeiro)
+        const tipoLabel = tipo === "saida" ? "Saída de Caixa" : "Entrada (Receita)";
+        const valorFormatado = valor.toFixed(2).replace(".", ",");
+
         pedirConfirmacao({
-            tipo: "warning",
-            titulo: "Confirmar Alterações?",
-            mensagem: `Deseja realmente guardar as alterações desta transação?\n\n` +
-                `• Aluno: ${alunoNome}\n` +
-                `• Valor final: R$ ${valorFinal.toFixed(2).replace(".", ",")}\n` +
+            tipo: "info",
+            titulo: "Confirmar Nova Transação?",
+            mensagem:
+                `Deseja criar esta transação?\n\n` +
+                `• Aluno: ${alunoObj?.nome || "Aluno"}\n` +
+                `• Tipo: ${tipoLabel}\n` +
+                `• Curso: ${curso}\n` +
+                `• Valor: R$ ${valorFormatado}\n` +
                 `• Status: ${status}\n` +
                 `• Forma: ${forma}`,
-            textoBotao: "Salvar Alterações",
+            textoBotao: "Criar Transação",
             corBotao: "btn-primary",
             onConfirmar: async () => {
                 const btn = form.querySelector('button[type="submit"]');
-                if (btn) { btn.disabled = true; btn.textContent = "A guardar..."; }
+                const txtOriginal = btn ? btn.innerHTML : "";
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Criando...`;
+                }
 
                 try {
-                    await editarTransacaoFinanceira(id, {
-                        tipo, alunoNome, valor: valorFinal, status,
-                        formaPagamento: forma, observacoes: obs
+                    await criarTransacaoFinanceira({
+                        alunoId,
+                        tipo,
+                        alunoNome: alunoObj?.nome || "Aluno",
+                        curso,
+                        valor,
+                        status,
+                        formaPagamento: forma,
+                        dataPagamento,
+                        observacoes
                     });
 
-                    if (modalEdicaoInstance) modalEdicaoInstance.hide();
-                    mostrarSucesso("Transação atualizada com sucesso!");
+                    if (modalNovaTransacaoInstance) modalNovaTransacaoInstance.hide();
+                    mostrarSucesso("Transação criada com sucesso!");
 
                 } catch (err) {
-                    mostrarErro("Erro ao guardar: " + err.message);
+                    console.error("Erro ao criar transação:", err);
+                    mostrarErro("Erro ao criar: " + err.message);
                 } finally {
-                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i> Guardar'; }
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = txtOriginal;
+                    }
                 }
             }
         });
@@ -834,7 +861,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (form) form.reset();
             document.getElementById("novaCurso").value = "";
 
-            document.getElementById("novaTipo").value = "entrada";
+            const elTipo = document.getElementById("novaTipoTransacao");
+            if (elTipo) elTipo.value = "entrada";
 
             // Preenche a data de hoje
             const hoje = new Date().toISOString().split("T")[0];
@@ -864,7 +892,7 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
 
             const alunoId = document.getElementById("novaAluno").value;
-            const tipo = document.getElementById("novaTipo").value || "entrada";
+            const tipo = document.getElementById("novaTipoTransacao").value || "entrada";
             const alunoObj = listaAlunosParaNova.find(a => a.id === alunoId);
             const curso = document.getElementById("novaCurso").value.trim() || "Geral";
             const valor = parseFloat(document.getElementById("novaValor").value) || 0;
@@ -883,34 +911,58 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const btn = form.querySelector('button[type="submit"]');
-            const txtOriginal = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Criando...`;
+            // 📋 Confirmação antes de criar (padrão das outras ações do Financeiro)
+            const tipoLabel = tipo === "saida" ? "Saída de Caixa" : "Entrada (Receita)";
+            const valorFormatado = valor.toFixed(2).replace(".", ",");
 
-            try {
-                await criarTransacaoFinanceira({
-                    alunoId,
-                    tipo,
-                    alunoNome: alunoObj?.nome || "Aluno",
-                    curso,
-                    valor,
-                    status,
-                    formaPagamento: forma,
-                    dataPagamento,
-                    observacoes
-                });
+            pedirConfirmacao({
+                tipo: "info",
+                titulo: "Confirmar Nova Transação?",
+                mensagem:
+                    `Deseja criar esta transação?\n\n` +
+                    `• Aluno: ${alunoObj?.nome || "Aluno"}\n` +
+                    `• Tipo: ${tipoLabel}\n` +
+                    `• Curso: ${curso}\n` +
+                    `• Valor: R$ ${valorFormatado}\n` +
+                    `• Status: ${status}\n` +
+                    `• Forma: ${forma}`,
+                textoBotao: "Criar Transação",
+                corBotao: "btn-primary",
+                onConfirmar: async () => {
+                    const btn = form.querySelector('button[type="submit"]');
+                    const txtOriginal = btn ? btn.innerHTML : "";
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Criando...`;
+                    }
 
-                if (modalNovaTransacaoInstance) modalNovaTransacaoInstance.hide();
-                mostrarSucesso("Transação criada com sucesso!");
+                    try {
+                        await criarTransacaoFinanceira({
+                            alunoId,
+                            tipo,
+                            alunoNome: alunoObj?.nome || "Aluno",
+                            curso,
+                            valor,
+                            status,
+                            formaPagamento: forma,
+                            dataPagamento,
+                            observacoes
+                        });
 
-            } catch (err) {
-                console.error("Erro ao criar transação:", err);
-                mostrarErro("Erro ao criar: " + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = txtOriginal;
-            }
+                        if (modalNovaTransacaoInstance) modalNovaTransacaoInstance.hide();
+                        mostrarSucesso("Transação criada com sucesso!");
+
+                    } catch (err) {
+                        console.error("Erro ao criar transação:", err);
+                        mostrarErro("Erro ao criar: " + err.message);
+                    } finally {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = txtOriginal;
+                        }
+                    }
+                }
+            });
         });
     }
 });
