@@ -11,6 +11,7 @@ import { auth, db } from "../firebase-config.js";
 import {
     collection,
     doc,
+    getDoc,
     getDocs,
     setDoc,
     updateDoc,
@@ -20,7 +21,11 @@ import {
     query,
     where
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import {
+    registrarAuditoriaGenerica,
+    compararAlteracoes
+} from "./auditoria-service.js";
 
 const NOME_COLECAO = "turmas";
 
@@ -33,8 +38,6 @@ const NOME_COLECAO = "turmas";
  * @param {Function} callback - Recebe o array de turmas
  * @returns {Function} unsubscribe
  */
-
-
 export function escutarTurmas(callback) {
     const refColecao = collection(db, NOME_COLECAO);
 
@@ -95,6 +98,8 @@ export async function obterTurmasBackend() {
 
 /**
  * Cria ou atualiza um documento de turma em /turmas.
+ * Em EDIÇÃO, registra auditoria com o diff.
+ *
  * @param {Object} dadosTurma
  * @param {string|null} turmaId - ID para edição, null para criação
  * @returns {Promise<string>} ID da turma gravada
@@ -116,8 +121,25 @@ export async function salvarTurmaBackend(dadosTurma, turmaId = null) {
             // EDIÇÃO
             idFinal = turmaId;
             const refDoc = doc(db, NOME_COLECAO, turmaId);
+
+            // 1. Lê estado ANTES
+            const snapAntes = await getDoc(refDoc);
+            const antes = snapAntes.exists() ? snapAntes.data() : {};
+
+            // 2. Atualiza
             await updateDoc(refDoc, payload);
-            //console.log(`✏️ Turma ${turmaId} atualizada.`);
+
+            // 3. Auditoria — só registra se houve mudança real
+            const camposAlterados = compararAlteracoes(antes, payload);
+
+            if (camposAlterados.length > 0) {
+                await registrarAuditoriaGenerica("turmas", turmaId, {
+                    tipo: "alteracao",
+                    entidade: "turma",
+                    descricao: `${camposAlterados.length} campo(s) alterado(s)`,
+                    campos_alterados: camposAlterados
+                });
+            }
         } else {
             // CRIAÇÃO
             payload.criado_em = timestamp;
@@ -127,7 +149,14 @@ export async function salvarTurmaBackend(dadosTurma, turmaId = null) {
 
             const refNova = await addDoc(collection(db, NOME_COLECAO), payload);
             idFinal = refNova.id;
-            //console.log(`✅ Turma ${idFinal} criada.`);
+
+            // Auditoria de criação
+            await registrarAuditoriaGenerica("turmas", idFinal, {
+                tipo: "criacao",
+                entidade: "turma",
+                descricao: "Turma criada",
+                campos_alterados: []
+            });
         }
 
         return idFinal;
@@ -139,24 +168,54 @@ export async function salvarTurmaBackend(dadosTurma, turmaId = null) {
 
 /**
  * Alterna o status entre "Ativo" e "Inativo".
+ * Registra auditoria (inativacao ou reativacao).
  */
 export async function alternarStatusTurmaBackend(turmaId, novoStatus) {
     try {
+        const usuario = auth?.currentUser?.email || "Sistema";
+        const agora = new Date().toISOString();
+
         const refDoc = doc(db, NOME_COLECAO, turmaId);
+
+        // 1. Lê status anterior
+        const snapAntes = await getDoc(refDoc);
+        const statusAnterior = snapAntes.exists() ? snapAntes.data().status : null;
+
+        // 2. Atualiza
         await updateDoc(refDoc, {
             status: novoStatus,
-            atualizado_em: new Date().toISOString()
+            atualizado_em: agora,
+            atualizado_por: usuario
         });
-        ////console.log(`🔄 Turma ${turmaId} → ${novoStatus}`);
+
+        // 3. Auditoria
+        await registrarAuditoriaGenerica("turmas", turmaId, {
+            tipo: String(novoStatus).toLowerCase() === "inativo" ? "inativacao" : "reativacao",
+            entidade: "turma",
+            descricao: String(novoStatus).toLowerCase() === "inativo"
+                ? "Turma inativada"
+                : "Turma reativada",
+            campos_alterados: [{
+                campo: "status",
+                valor_anterior: statusAnterior,
+                valor_novo: novoStatus
+            }]
+        });
     } catch (erro) {
         console.error("❌ Erro ao alternar status:", erro);
         throw erro;
     }
 }
 
+/**
+ * Matricula um aluno na turma.
+ * Registra auditoria (adicao_aluno).
+ */
 export async function matricularAlunoNaTurmaBackend(turmaId, aluno) {
     try {
         const alunoId = aluno.id || aluno.aluno_id;
+        const usuario = auth?.currentUser?.email || "Sistema";
+        const agora = new Date().toISOString();
 
         // 1. Cria doc na subcoleção /matriculas
         await setDoc(
@@ -165,7 +224,7 @@ export async function matricularAlunoNaTurmaBackend(turmaId, aluno) {
                 aluno_id: alunoId,
                 aluno_nome: aluno.nome || aluno.nome_aluno || "",
                 aluno_email: aluno.email || "",
-                data_matricula: new Date().toISOString(),
+                data_matricula: agora,
                 status: "Matriculado"
             }
         );
@@ -187,26 +246,44 @@ export async function matricularAlunoNaTurmaBackend(turmaId, aluno) {
 
             matriculados.push({
                 aluno_id: alunoId,
-                data_matricula: new Date().toISOString(),
+                data_matricula: agora,
                 status: "Matriculado"
             });
 
             await updateDoc(refTurma, {
                 alunos_matriculados: matriculados,
                 vagas_ocupadas: matriculados.length,
-                atualizado_em: new Date().toISOString()
+                atualizado_em: agora,
+                atualizado_por: usuario
             });
         }
 
-        //console.log(`✅ Aluno ${alunoId} matriculado na turma ${turmaId}.`);
+        // 3. Auditoria
+        await registrarAuditoriaGenerica("turmas", turmaId, {
+            tipo: "adicao_aluno",
+            entidade: "turma",
+            descricao: `Aluno adicionado: ${aluno.nome || aluno.nome_aluno || alunoId}`,
+            campos_alterados: [{
+                campo: "alunos_matriculados",
+                valor_anterior: null,
+                valor_novo: alunoId
+            }]
+        });
     } catch (erro) {
         console.error("❌ Erro ao matricular aluno:", erro);
         throw erro;
     }
 }
 
+/**
+ * Remove um aluno da turma.
+ * Registra auditoria (remocao_aluno).
+ */
 export async function removerAlunoDaTurmaBackend(turmaId, alunoId) {
     try {
+        const usuario = auth?.currentUser?.email || "Sistema";
+        const agora = new Date().toISOString();
+
         // 1. Remove doc da subcoleção /matriculas
         await deleteDoc(doc(db, "turmas", turmaId, "matriculas", alunoId));
 
@@ -225,10 +302,21 @@ export async function removerAlunoDaTurmaBackend(turmaId, alunoId) {
         await updateDoc(refTurma, {
             alunos_matriculados: matriculados,
             vagas_ocupadas: matriculados.length,
-            atualizado_em: new Date().toISOString()
+            atualizado_em: agora,
+            atualizado_por: usuario
         });
 
-       // //console.log(`🗑️ Aluno ${alunoId} removido da turma ${turmaId}.`);
+        // 3. Auditoria
+        await registrarAuditoriaGenerica("turmas", turmaId, {
+            tipo: "remocao_aluno",
+            entidade: "turma",
+            descricao: `Aluno removido: ${alunoId}`,
+            campos_alterados: [{
+                campo: "alunos_matriculados",
+                valor_anterior: alunoId,
+                valor_novo: null
+            }]
+        });
     } catch (erro) {
         console.error("❌ Erro ao remover aluno:", erro);
         throw erro;

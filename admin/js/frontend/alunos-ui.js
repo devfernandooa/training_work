@@ -1,9 +1,15 @@
 // ==========================================================================
-// TRAINING WORK — UI DE ALUNOS
+// TRAINING WORK — UI DE ALUNOS (alunos-ui.js)
 // ==========================================================================
 import { notificar } from "../modules/notificacao.js";
 import { auth, db } from "../firebase-config.js";
 import { registrarAuditoriaAluno, compararAlteracoes } from "../backend/auditoria-service.js";
+import {
+    escutarAlunos,
+    excluirAlunoBackend,
+    restaurarAlunoBackend,
+    alterarStatusAlunoBackend
+} from "../backend/alunos-service.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import {
     collection,
@@ -11,7 +17,6 @@ import {
     collectionGroup,
     doc,
     updateDoc,
-    deleteDoc,
     addDoc
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
@@ -21,6 +26,8 @@ let listaAlunos = [];
 let matriculasPorAluno = {};
 let iniciou = false;
 let filtroInativos = false;
+let filtroExcluidos = false;   // ⬅️ NOVO
+let unsubscribeAlunos = null;  // ⬅️ NOVO: para recriar o listener quando o toggle mudar
 
 /* ==========================================================================
  * AUTH
@@ -40,18 +47,8 @@ onAuthStateChanged(auth, (user) => {
         });
     }
 
-    // Escuta alunos
-    onSnapshot(collection(db, "alunos"), (snap) => {
-        listaAlunos = [];
-        snap.forEach(d => listaAlunos.push({ id: d.id, ...d.data() }));
-        listaAlunos.sort((a, b) =>
-            new Date(b.criado_em || 0) - new Date(a.criado_em || 0)
-        );
-        console.log("📥 [alunos-ui] Alunos recebidos:", listaAlunos.length);
-        renderizar();
-    }, (err) => {
-        console.error("❌ [alunos-ui] onSnapshot alunos:", err);
-    });
+    // Escuta alunos (com filtro controlado pelo service)
+    iniciarEscutaAlunos();
 
     // Escuta matrículas (subcoleção)
     onSnapshot(collectionGroup(db, "matriculas"), (snap) => {
@@ -70,6 +67,19 @@ onAuthStateChanged(auth, (user) => {
         console.warn("⚠️ [alunos-ui] onSnapshot matriculas:", err.message);
     });
 });
+
+/* ==========================================================================
+ * ESCUTA DE ALUNOS (recriável quando o toggle muda)
+ * ========================================================================== */
+function iniciarEscutaAlunos() {
+    if (unsubscribeAlunos) unsubscribeAlunos();
+
+    unsubscribeAlunos = escutarAlunos((alunos) => {
+        listaAlunos = alunos;
+        console.log("📥 [alunos-ui] Alunos recebidos:", listaAlunos.length);
+        renderizar();
+    }, { incluirExcluidos: filtroExcluidos });
+}
 
 /* ==========================================================================
  * RENDER
@@ -92,7 +102,8 @@ function renderizar() {
     // Atualiza título da seção
     const titulo = document.getElementById("titulo-secao-alunos");
     if (titulo) {
-        titulo.textContent = filtroInativos ? "Alunos Inativos" : "Alunos Ativos";
+        if (filtroExcluidos) titulo.textContent = "Alunos Excluídos";
+        else titulo.textContent = filtroInativos ? "Alunos Inativos" : "Alunos Ativos";
     }
 
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -101,11 +112,22 @@ function renderizar() {
     set("metric-alunos-inativos", inativos);
     set("metric-alunos-debitos", debitos);
 
-    // Filtro (sem redeclarar filtroInativos!)
+    // Filtro
     const filtrados = listaAlunos.filter(a => {
         const status = (a.status || "ativo").toLowerCase();
-        if (filtroInativos && status !== "inativo") return false;
-        if (!filtroInativos && status === "inativo") return false;
+        const estaExcluido = a.excluido === true;
+
+        // Quando "Mostrar Excluídos" está ligado, mostra SÓ excluídos
+        if (filtroExcluidos && !estaExcluido) return false;
+
+        // Quando desligado, o service já filtrou os excluídos, mas por segurança:
+        if (!filtroExcluidos && estaExcluido) return false;
+
+        // Filtro ativo/inativo (não se aplica à visão de excluídos)
+        if (!filtroExcluidos) {
+            if (filtroInativos && status !== "inativo") return false;
+            if (!filtroInativos && status === "inativo") return false;
+        }
 
         if (termo) {
             const nome = (a.nome || "").toLowerCase();
@@ -117,7 +139,10 @@ function renderizar() {
     });
 
     if (filtrados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">Nenhum aluno encontrado.</td></tr>`;
+        const msg = filtroExcluidos
+            ? "Nenhum aluno excluído."
+            : "Nenhum aluno encontrado.";
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">${msg}</td></tr>`;
         return;
     }
 
@@ -134,11 +159,44 @@ function renderizar() {
         const data = aluno.criado_em ? new Date(aluno.criado_em).toLocaleDateString("pt-BR") : "Recente";
 
         const statusAtual = (aluno.status || "ativo").toLowerCase();
-        const badgeStatus = statusAtual === "inativo"
-            ? `<span class="badge bg-secondary bg-opacity-10 text-secondary">Inativo</span>`
-            : statusAtual === "debito"
-                ? `<span class="badge bg-warning bg-opacity-10 text-warning">Em Débito</span>`
-                : `<span class="badge bg-success bg-opacity-10 text-success">Ativo</span>`;
+        const estaExcluido = aluno.excluido === true;
+
+        // Badge de status (se excluído, mostra "Excluído")
+        const badgeStatus = estaExcluido
+            ? `<span class="badge bg-danger bg-opacity-10 text-danger">Excluído</span>`
+            : statusAtual === "inativo"
+                ? `<span class="badge bg-secondary bg-opacity-10 text-secondary">Inativo</span>`
+                : statusAtual === "debito"
+                    ? `<span class="badge bg-warning bg-opacity-10 text-warning">Em Débito</span>`
+                    : `<span class="badge bg-success bg-opacity-10 text-success">Ativo</span>`;
+
+        // ⬇️ Ações diferentes para excluídos
+        const acoes = estaExcluido
+            ? `
+                <button class="btn btn-sm btn-outline-info px-2 py-1 btn-ficha" data-id="${aluno.id}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-success px-2 py-1 btn-restaurar" data-id="${aluno.id}" title="Restaurar">
+                    <i class="fas fa-recycle"></i>
+                </button>
+            `
+            : `
+                <a href="${zapLink}" target="_blank" class="btn btn-sm btn-outline-success px-2 py-1">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+                <button class="btn btn-sm btn-outline-info px-2 py-1 btn-ficha" data-id="${aluno.id}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-primary px-2 py-1 btn-editar" data-id="${aluno.id}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-warning px-2 py-1 btn-status" data-id="${aluno.id}" title="${statusAtual === "ativo" ? "Inativar" : "Reativar"}">
+                    <i class="fas ${statusAtual === "ativo" ? "fa-user-slash" : "fa-user-check"}"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger px-2 py-1 btn-excluir" data-id="${aluno.id}">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            `;
 
         html += `
             <tr>
@@ -151,24 +209,10 @@ function renderizar() {
                 <td class="d-none d-lg-table-cell">${data}</td>
                 <td>${badgeStatus}</td>
                 <td class="text-end">
-    <div class="d-flex justify-content-end gap-1">
-        <a href="${zapLink}" target="_blank" class="btn btn-sm btn-outline-success px-2 py-1">
-            <i class="fab fa-whatsapp"></i>
-        </a>
-        <button class="btn btn-sm btn-outline-info px-2 py-1 btn-ficha" data-id="${aluno.id}">
-            <i class="fas fa-eye"></i>
-        </button>
-        <button class="btn btn-sm btn-outline-primary px-2 py-1 btn-editar" data-id="${aluno.id}">
-            <i class="fas fa-edit"></i>
-        </button>
-        <button class="btn btn-sm btn-outline-warning px-2 py-1 btn-status" data-id="${aluno.id}" title="${statusAtual === "ativo" ? "Inativar" : "Reativar"}">
-            <i class="fas ${statusAtual === "ativo" ? "fa-user-slash" : "fa-user-check"}"></i>
-        </button>
-        <button class="btn btn-sm btn-outline-danger px-2 py-1 btn-excluir" data-id="${aluno.id}">
-            <i class="fas fa-trash-alt"></i>
-        </button>
-    </div>
-</td>
+                    <div class="d-flex justify-content-end gap-1">
+                        ${acoes}
+                    </div>
+                </td>
             </tr>
         `;
     });
@@ -290,6 +334,22 @@ document.addEventListener("click", (e) => {
         }
         return;
     }
+
+    // ⬇️ NOVO: Restaurar aluno
+    if (btn.classList.contains("btn-restaurar")) {
+        const aluno = listaAlunos.find(a => a.id === id);
+        if (!aluno) return;
+
+        document.getElementById("restaurarAlunoId").value = aluno.id;
+        document.getElementById("nomeAlunoRestaurar").textContent = aluno.nome || "este aluno";
+
+        const modalEl = document.getElementById("modalRestaurarAluno");
+        if (modalEl && window.bootstrap) {
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+        return;
+    }
 });
 
 // Busca
@@ -300,7 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 /* ==========================================================================
- * CONFIRMAR MUDANÇA DE STATUS
+ * CONFIRMAR MUDANÇA DE STATUS (agora usa o service)
  * ========================================================================== */
 document.addEventListener("DOMContentLoaded", () => {
     const btnConfirmar = document.getElementById("btnConfirmarStatusAluno");
@@ -322,10 +382,8 @@ document.addEventListener("DOMContentLoaded", () => {
         btnConfirmar.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Processando...`;
 
         try {
-            await updateDoc(doc(db, "alunos", id), {
-                status: novoStatus,
-                atualizado_em: new Date().toISOString()
-            });
+            // ⬇️ Agora chama o service (que grava auditoria)
+            await alterarStatusAlunoBackend(id, statusAtual);
 
             const modalEl = document.getElementById("modalConfirmarStatusAluno");
             const modalInstance = bootstrap.Modal.getInstance(modalEl);
@@ -344,7 +402,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* ==========================================================================
- * CONFIRMAR EXCLUSÃO
+ * CONFIRMAR EXCLUSÃO (agora soft delete via service)
  * ========================================================================== */
 document.addEventListener("DOMContentLoaded", () => {
     const btnConfirmar = document.getElementById("btnConfirmarExclusao");
@@ -359,7 +417,8 @@ document.addEventListener("DOMContentLoaded", () => {
         btnConfirmar.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Excluindo...`;
 
         try {
-            await deleteDoc(doc(db, "alunos", id));
+            // ⬇️ Agora é SOFT DELETE (não apaga) + grava auditoria
+            await excluirAlunoBackend(id);
 
             const modalEl = document.getElementById("modalExcluirAluno");
             const modalInstance = bootstrap.Modal.getInstance(modalEl);
@@ -375,13 +434,46 @@ document.addEventListener("DOMContentLoaded", () => {
             btnConfirmar.innerHTML = txt;
         }
     });
-
-
-    /* ==========================================================================
-     * FORM EDITAR ALUNO → ABRE MODAL DE CONFIRMAÇÃO
-     * ========================================================================== */
-
 });
+
+/* ==========================================================================
+ * CONFIRMAR RESTAURAÇÃO (NOVO)
+ * ========================================================================== */
+document.addEventListener("DOMContentLoaded", () => {
+    const btnConfirmar = document.getElementById("btnConfirmarRestaurarAluno");
+    if (!btnConfirmar) return;
+
+    btnConfirmar.addEventListener("click", async () => {
+        const id = document.getElementById("restaurarAlunoId")?.value;
+        if (!id) return;
+
+        const txt = btnConfirmar.innerHTML;
+        btnConfirmar.disabled = true;
+        btnConfirmar.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Restaurando...`;
+
+        try {
+            await restaurarAlunoBackend(id);
+
+            const modalEl = document.getElementById("modalRestaurarAluno");
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) modalInstance.hide();
+
+            notificar("Aluno restaurado com sucesso.", "sucesso");
+
+        } catch (error) {
+            console.error("Erro ao restaurar:", error);
+            notificar("Erro ao restaurar o aluno.", "erro");
+        } finally {
+            btnConfirmar.disabled = false;
+            btnConfirmar.innerHTML = txt;
+        }
+    });
+});
+
+
+/* ==========================================================================
+ * FORM EDITAR ALUNO → ABRE MODAL DE CONFIRMAÇÃO
+ * ========================================================================== */
 document.addEventListener("DOMContentLoaded", () => {
     const formEditar = document.getElementById("formEditarAluno");
     if (!formEditar) return;
@@ -511,8 +603,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
-
-  
 });
 
 /* ==========================================================================
@@ -522,11 +612,50 @@ const btnVerInativos = document.getElementById("btn-alternar-alunos-inativos");
 if (btnVerInativos) {
     btnVerInativos.addEventListener("click", () => {
         filtroInativos = !filtroInativos;
+        filtroExcluidos = false; // desliga excluídos ao alternar inativos
+
+        // Reseta o botão de excluídos
+        const btnExcluidos = document.getElementById("btn-alternar-alunos-excluidos");
+        if (btnExcluidos) {
+            btnExcluidos.innerHTML = `<i class="fas fa-trash-alt me-1"></i> Mostrar Excluídos`;
+            btnExcluidos.classList.remove("active", "btn-danger");
+            btnExcluidos.classList.add("btn-outline-danger");
+        }
 
         btnVerInativos.innerHTML = filtroInativos
             ? `<i class="fas fa-eye me-1"></i> Ver Ativos`
             : `<i class="fas fa-eye-slash me-1"></i> Ver Inativos`;
 
+        iniciarEscutaAlunos();
+        renderizar();
+    });
+}
+
+/* ==========================================================================
+ * BOTÃO "MOSTRAR EXCLUÍDOS" (NOVO)
+ * ========================================================================== */
+const btnExcluidos = document.getElementById("btn-alternar-alunos-excluidos");
+if (btnExcluidos) {
+    btnExcluidos.addEventListener("click", () => {
+        filtroExcluidos = !filtroExcluidos;
+
+        // Ao ligar excluídos, desliga inativos
+        if (filtroExcluidos) {
+            filtroInativos = false;
+            if (btnVerInativos) {
+                btnVerInativos.innerHTML = `<i class="fas fa-eye-slash me-1"></i> Ver Inativos`;
+            }
+        }
+
+        btnExcluidos.innerHTML = filtroExcluidos
+            ? `<i class="fas fa-users me-1"></i> Ver Ativos`
+            : `<i class="fas fa-trash-alt me-1"></i> Mostrar Excluídos`;
+
+        btnExcluidos.classList.toggle("active", filtroExcluidos);
+        btnExcluidos.classList.toggle("btn-danger", filtroExcluidos);
+        btnExcluidos.classList.toggle("btn-outline-danger", !filtroExcluidos);
+
+        iniciarEscutaAlunos();
         renderizar();
     });
 }
@@ -572,6 +701,7 @@ if (formNovoAluno) {
         try {
             await addDoc(collection(db, "alunos"), {
                 ...dados,
+                excluido: false,
                 criado_em: new Date().toISOString(),
                 atualizado_em: new Date().toISOString()
             });
@@ -595,21 +725,8 @@ if (formNovoAluno) {
 }
 
 
-
 /* ==========================================================================
  * VIACEP — Autopreenchimento genérico de endereço
- * ==========================================================================
- * Uso:
- *   configurarViaCEP({
- *       inputCepId: "editCepAluno",
- *       mapaCampos: {
- *           logradouro: "editLogradouroAluno",
- *           bairro: "editBairroAluno",
- *           cidade: "editCidadeAluno",
- *           estado: "editEstadoAluno"
- *       },
- *       campoFocoId: "editNumeroAluno"
- *   });
  * ========================================================================== */
 function configurarViaCEP({ inputCepId, mapaCampos = {}, campoFocoId = null }) {
     const cepInput = document.getElementById(inputCepId);
@@ -643,7 +760,6 @@ function configurarViaCEP({ inputCepId, mapaCampos = {}, campoFocoId = null }) {
                 return;
             }
 
-            // Preenche os campos mapeados
             const setVal = (id, val) => {
                 const el = document.getElementById(id);
                 if (el) el.value = val || "";
@@ -654,7 +770,6 @@ function configurarViaCEP({ inputCepId, mapaCampos = {}, campoFocoId = null }) {
             setVal(mapaCampos.cidade, data.localidade);
             setVal(mapaCampos.estado, data.uf);
 
-            // Foco no próximo campo
             if (campoFocoId) document.getElementById(campoFocoId)?.focus();
 
             notificar("Endereço preenchido automaticamente.", "sucesso");
@@ -671,8 +786,6 @@ function configurarViaCEP({ inputCepId, mapaCampos = {}, campoFocoId = null }) {
 /* ==========================================================================
  * REGISTRA O VIACEP NOS DOIS MODAIS
  * ========================================================================== */
-
-// Modal de Edição de Aluno
 configurarViaCEP({
     inputCepId: "editCepAluno",
     mapaCampos: {
@@ -684,7 +797,6 @@ configurarViaCEP({
     campoFocoId: "editNumeroAluno"
 });
 
-// Modal de Novo Aluno
 configurarViaCEP({
     inputCepId: "cepAluno",
     mapaCampos: {

@@ -157,6 +157,11 @@
             <i class="fas fa-eye-slash me-1"></i> Ver Inativos
           </button>
 
+          <!-- Botão Mostrar Excluídos -->
+          <button class="btn btn-outline-danger btn-sm px-3 rounded-pill" id="btn-alternar-alunos-excluidos">
+            <i class="fas fa-trash-alt me-1"></i> Mostrar Excluídos
+          </button>
+
           <!-- Botão Novo Aluno (Em Azul e Posicionado Abaixo/Na Secção) -->
           <button class="btn btn-primary btn-sm px-3 rounded-pill" id="btnNovoAluno" data-bs-toggle="modal"
             data-bs-target="#modalNovoAluno">
@@ -770,6 +775,52 @@
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+     MODAL DE CONFIRMAÇÃO: RESTAURAR ALUNO
+     ============================================================ -->
+  <div class="modal fade" id="modalRestaurarAluno" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-body text-center p-4 p-md-5">
+          <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"
+            aria-label="Fechar"></button>
+
+          <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+            style="width: 72px; height: 72px; background: #dcfce7; color: #16a34a;">
+            <i class="fas fa-recycle fa-2x"></i>
+          </div>
+
+          <h4 class="fw-bold mb-2" style="color: #0f172a;">
+            Restaurar Aluno?
+          </h4>
+
+          <p class="text-muted mb-4" style="font-size: 0.95rem; line-height: 1.5;">
+            O aluno voltará a aparecer na lista de ativos. Esta ação será registrada no log de auditoria.
+          </p>
+
+          <div class="p-3 rounded-3 mb-4" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+            <small class="text-muted d-block mb-1"
+              style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">
+              Aluno(a)
+            </small>
+            <strong class="text-dark d-block" id="nomeAlunoRestaurar" style="font-size: 0.95rem;">—</strong>
+          </div>
+
+          <input type="hidden" id="restaurarAlunoId">
+
+          <div class="d-flex gap-2 justify-content-center">
+            <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+            <button type="button" class="btn btn-success px-4 rounded-pill fw-semibold" id="btnConfirmarRestaurarAluno">
+              <i class="fas fa-recycle me-1"></i> Restaurar Aluno
+            </button>
+          </div>
         </div>
       </div>
     </div>
