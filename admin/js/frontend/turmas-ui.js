@@ -715,39 +715,14 @@ function configurarEventosUI() {
         }
 
         // 6) Botão "Salvar" do rodapé do modal de alunos
+        //    As matrículas/remoções já foram persistidas pelo service (com auditoria).
+        //    Este botão só fecha o modal — evita gravação redundante de auditoria.
         const btnSalvarModal = e.target.closest("#btnSalvarModalAlunosTurma");
         if (btnSalvarModal) {
-            if (!turmaAtualGestao) return;
-
-            // Buscar versão mais atualizada na lista global
-            const turmaMaisRecente = listaTurmasGlobal.find((t) => t.id === turmaAtualGestao.id)
-                || turmaAtualGestao;
-
-            const textoOriginal = btnSalvarModal.innerHTML;
-
-            try {
-                btnSalvarModal.disabled = true;
-                btnSalvarModal.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> A guardar...`;
-
-                await salvarTurmaBackend({
-                    alunos_matriculados: turmaMaisRecente.alunos_matriculados || [],
-                    logs_auditoria: turmaMaisRecente.logs_auditoria || []
-                }, turmaMaisRecente.id);
-
-                // Fecha o modal
-                const modalEl = getEl("modalAlunosTurma");
-                if (modalEl && window.bootstrap) {
-                    const m = bootstrap.Modal.getInstance(modalEl);
-                    if (m) m.hide();
-                }
-
-                console.log(`✅ Alterações salvas no modal de alunos.`);
-            } catch (err) {
-                console.error("❌ Erro ao guardar alterações:", err);
-                alert("Erro ao guardar as alterações no Firestore.");
-            } finally {
-                btnSalvarModal.disabled = false;
-                btnSalvarModal.innerHTML = textoOriginal;
+            const modalEl = getEl("modalAlunosTurma");
+            if (modalEl && window.bootstrap) {
+                const m = bootstrap.Modal.getInstance(modalEl);
+                if (m) m.hide();
             }
             return;
         }

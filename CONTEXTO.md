@@ -4,7 +4,7 @@
 > de qualquer nova sessão de trabalho (por humano ou IA) para retomar o contexto sem
 > perder o fio da meada. Mantenha-o atualizado ao fim de cada bloco de trabalho.
 
-**Última atualização:** 15/10/2026
+**Última atualização:** 16/10/2026
 **Responsável:** Fernando (devfernandooa)
 **Repo:** https://github.com/devfernandooa/training_work
 
@@ -79,7 +79,7 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 
 ---
 
-## 3. Status dos Módulos (15/10/2026)
+## 3. Status dos Módulos (16/10/2026)
 
 ### ✅ Funcionando / Concluído
 - **Index:** renderização de cursos OK; formulário de contato cria lead OK
@@ -100,10 +100,11 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 
 ### ⚠️ Pendências
 1. **Financeiro:** tabela com colunas desajustadas / itens fora de posição
-2. **Auditorias em formato antigo:** Leads, Cursos, Turmas, Alunos (editar), Presença
-3. **Sem auditoria:** excluir/inativar (Alunos, Leads, Cursos, Turmas); editar Turmas; Calendário de Aulas (ver/editar/registrar presença); adicionar/remover aluno da Turma
+2. **Auditorias em formato antigo na UI:** Leads e Cursos (backend já grava, falta renderizar no "novo formato" visual)
+3. **Sem auditoria:** Calendário de Aulas (ver/editar/registrar presença); "Ver Frequência" (Presença)
 4. **"Ver Frequência":** abre modal, lista, mas sem auditoria e sem editar
 5. **Matrículas:** módulo inteiro ainda NÃO refatorado
+6. **Bug conhecido:** `lead-ui.js` usa `"em_contato"` em vez de `"Em Atendimento"`
 
 ---
 
@@ -112,7 +113,7 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 ### 🔴 URGENTE — Segurança (fazer primeiro)
 | # | Item | Duração | Dificuldade |
 |---|------|---------|-------------|
-| S1 | Auditoria de exclusões/inativações (Alunos, Leads, Cursos, Turmas) | 4–6h | Média |
+| ~~S1~~ | ~~Auditoria de exclusões/inativações (Alunos, Leads, Cursos, Turmas)~~ ✅ CONCLUÍDO (16/10) | 4–6h | Média |
 | S2 | Auditoria em "Ver Frequência" (dado sensível) | 3–4h | Média |
 | S3 | Auditoria no editar de Turmas e Calendário de Aulas | 4–5h | Média |
 | S4 | ⚠️ REVISAR — Verificar permissões de acesso ao painel admin | 2–3h | Baixa |
@@ -179,3 +180,32 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 ## 6. Como usar este arquivo em nova conversa
 
 Ao abrir uma nova sessão de trabalho (com IA ou humano), cole/referencie:
+
+
+## 7. Histórico de Entregas
+
+### S1 — Soft delete e auditoria em exclusões/inativações ✅
+**Status:** Concluído · **PR:** [#119](https://github.com/devfernandooa/training_work/pull/119)
+**Data:** 16/10/2026
+
+**O que entrou:**
+- Backend dos 4 services (`alunos`, `cursos`, `lead`, `turmas`) com auditoria
+- Exclusões viraram **soft delete** (reversíveis)
+- Subcoleção `/{modulo}/{id}/auditoria` com logs estruturados
+- UI de Alunos e Leads com toggle "Mostrar Excluídos" + botão Restaurar
+- UIs de Cursos e Turmas já usavam o service → auditoria passou a funcionar automaticamente
+
+**Decisões registradas:**
+- Exclusão de aluno **preserva matrículas** (Opção 1)
+- Auditoria no formato novo (diff + observações)
+- Toggle de excluídos é mutuamente exclusivo com filtros de status/prioridade
+
+**Pendências conhecidas:**
+- ⚠️ `lead-ui.js` chama `atualizarStatusLead(id, "em_contato")` mas o status real é `"Em Atendimento"` — corrigir futuramente
+- ⚠️ `atualizarAlunoComMatriculaBackend` ainda faz hard delete de matrículas ao editar — faz parte do M2 (refatorar Matrículas)
+- ⚠️ `turmas-ui.js` — botão "Salvar" do modal de alunos não gravava nada útil (só duplicava auditoria); ajustado para apenas fechar o modal (16/10/2026)
+
+**Impacto no cronograma:**
+- ✅ Item **S1** concluído
+- ✅ **Fase 2 de UI** concluída nos 4 módulos (Alunos, Leads, Cursos, Turmas)
+- ➡️ **Próximo:** S2 (auditoria em "Ver Frequência" / Presença) ou S3 (auditoria no calendário de aulas)
