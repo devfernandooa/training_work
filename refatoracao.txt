@@ -42,3 +42,101 @@
     │       └── notificacao.js
     └── css/
         └── modules/
+
+
+Proóximo contexto de mudanças
+# ROADMAP DE EVOLUÇÃO — Training_Work
+
+> **Propósito:** Documento estratégico com as diretrizes para as próximas fases do projeto
+> após a conclusão da refatoração atual (segurança, auditorias e correções visuais).
+> Não executar agora — apenas registrar para consulta futura.
+
+---
+
+## 1. Transição para CRM Genérico
+
+**Decisão Arquitetural:** NÃO começar do zero. A base de backend (Firebase, auditoria, soft delete, estrutura de services) é sólida e deve ser evoluída.
+
+**O que precisa ser feito (quando o momento chegar):**
+
+### 1.1 — Desacoplamento Semântico
+Os nomes atuais são de nicho (treinamento). Para atender outras áreas, precisamos mapear:
+- `alunos` → `contatos` / `clientes`
+- `cursos` → `produtos` / `serviços`
+- `turmas` → `projetos` / `oportunidades`
+- `matrículas` → `pedidos` / `negócios`
+- `leads` → `leads` (permanece)
+
+**Cuidados:**
+- Migração de dados exige script de backup e recriação.
+- Renomear coleções no Firestore e refatorar todos os `services.js` e `UIs`.
+- Estimar 2 a 4 dias de trabalho dedicado.
+
+### 1.2 — Campos Genéricos
+Para evitar fazer um sistema "sob medida" para cada cliente, adotar:
+- `tags: []` — para segmentação flexível
+- `dados_personalizados: {}` — JSON com campos extras por segmento
+
+### 1.3 — Multi-tenant (opcional, para SaaS)
+Se o CRM for vendido para várias empresas, o Firestore precisará de `empresa_id` em todas as coleções. Hoje já temos `empresas`, mas o controle é parcial.
+
+---
+
+## 2. Integração com IA e Canais de Comunicação
+
+**Decisão:** Utilizar **Make** (Integromat) como orquestrador. Não construir do zero.
+
+### 2.1 — Fluxo Base com Make
+1. Lead entra no Firestore (`leads`).
+2. Make "escuta" o documento novo.
+3. IA analisa o lead (Gemini/OpenAI) e gera resumo e prioridade.
+4. Make dispara notificações:
+   - WhatsApp (API Cloud oficial da Meta ou Z-API)
+   - E-mail (Gmail ou SendGrid)
+   - SMS (Twilio ou similar)
+5. Make atualiza o status no Firestore (`em_atendimento`).
+6. Make registra o log de envio na auditoria.
+
+### 2.2 — O que funciona hoje
+- WhatsApp: Sim (com API oficial ou Z-API).
+- E-mail: Sim (nativo).
+- SMS: Sim (Twilio).
+- Instagram: **Parcial** — Só é possível responder mensagens recebidas, não iniciar conversas (restrição da Meta).
+
+### 2.3 — Cuidados
+- Não expor chaves de API no frontend.
+- Utilizar **Cloud Functions** (Firebase) para esconder credenciais no lado do servidor.
+
+---
+
+## 3. Modernização Tecnológica
+
+**Decisão:** Versionar o projeto atual e migrar o Frontend de forma incremental no futuro.
+
+### 3.1 — Estado Atual (Fase 1)
+- **Frontend:** Vanilla JS (ES6) + Módulos.
+- **Backend:** Firebase (Auth, Firestore) + Serviços JS.
+- **Benefício:** Simples, rápido e sem dependência de frameworks pesados.
+- **Risco:** Manutenção em projetos grandes fica complexa.
+
+### 3.2 — Fase 2 (Modernização)
+- **Frontend:** Migrar para **React**, **Vue** ou **Next.js**.
+- **Estratégia:** Não reescrever tudo de uma vez. Começar pelo Dashboard, depois telas de CRM, por último os módulos administrativos.
+- **Backend:** Manter Firebase. Os `services.js` atuais são a lógica de negócio; eles serão reutilizados como "hooks" ou "stores" nos novos frameworks.
+
+### 3.3 — Fase 3 (Escala)
+- **Banco:** Se o Firestore ficar lento com muitos dados, migrar para PostgreSQL, mantendo o Firestore como cache.
+- **Infraestrutura:** Avaliar migração do Vercel para AWS/GCP se houver demanda por SLAs.
+
+---
+
+## 4. Prioridades Pós-Refatoração
+
+| Item | Prioridade | Complexidade |
+| :--- | :--- | :--- |
+| Concluir C1 e C2 (Auditorias visuais) | Alta | Baixa |
+| Concluir M1 e M2 (Frequência e Matrículas) | Média | Média |
+| Concluir L1 a L5 (Longo prazo) | Baixa | Variável |
+| Desacoplamento para CRM Genérico | Média | Média |
+| Integração com Make + IA + Canais | Baixa | Baixa (terceiros) |
+| Migração de Frontend (React/Vue) | Baixa | Alta |
