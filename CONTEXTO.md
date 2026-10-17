@@ -60,6 +60,27 @@ versionado no Git e é acessível a qualquer momento.
 
 ---
 
+### C3 + C3.5 — Correções visuais no Financeiro e Calendário ✅
+**Status:** Concluído · **PR:** [#XXX](https://github.com/devfernandooa/training_work/pull/XXX)
+**Data:** 16/10/2026
+
+**C3 — Financeiro:**
+- Corrige colspan da linha de loading (7 → 8)
+- Remove IDs duplicados no modal de Nova Transação
+- Adiciona modal de confirmação antes de criar transação
+- Ajusta z-index do modal de confirmação quando empilhado
+
+**C3.5 — Quadro Geral de Aulas:**
+- Adiciona `min-width: 900px` na tabela
+- Ajusta larguras das colunas
+- Cria classe `.tabela-cronograma` com regras específicas
+- Coluna "Ações" agora visível
+
+**Impacto:**
+- ✅ Itens **C3** e **C3.5** concluídos
+- ➡️ Próximo: C1 (padronizar auditoria no formato visual — Leads)
+---
+
 ### S4 — Verificação de permissões admin e Firestore Rules ✅
 
 **Status:** Confirmado · **Data:** 16/10/2026
