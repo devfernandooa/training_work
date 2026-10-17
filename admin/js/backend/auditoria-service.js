@@ -32,7 +32,7 @@ const ROTULOS_CAMPOS = {
   status_pagamento: "Status de Pagamento",
   modalidade_pagamento: "Forma de Pagamento",
 
-  // ⬇️ NOVOS: Campos de Curso
+  // Campos de Curso
   apelido: "Apelido",
   codigo: "Código",
   carga_horaria: "Carga Horária",
@@ -46,6 +46,16 @@ const ROTULOS_CAMPOS = {
   dias_padrao: "Dias da Semana",
   horario_padrao: "Horário",
   turno_padrao: "Turno",
+
+  // Campos de Turma
+  vagas_maximas: "Vagas Máximas",
+  instrutor: "Instrutor",
+  horario: "Horário",
+  dias_semana: "Dias da Semana",
+  modalidade: "Modalidade",
+  carga_horaria: "Carga Horária", // (se não existir ainda)
+  codigo_turma: "Código da Turma",
+  curso_nome: "Curso",
 };
 
 export function obterRotuloCampo(campo) {
