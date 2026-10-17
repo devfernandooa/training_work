@@ -3,11 +3,57 @@ import {
   obterRotuloCampo,
 } from "../backend/auditoria-service.js";
 
+/**
+ * Limpa nomes de campos compostos (ex: "cronograma.aula_123.data" vira "data")
+ * e busca o rótulo amigável no dicionário.
+ */
+function obterNomeAmigavel(campo) {
+  let nome = campo;
+  if (nome.startsWith("cronograma.aula_")) {
+    nome = nome.split(".").pop();
+  }
+  return obterRotuloCampo(nome) || nome;
+}
+
+/**
+ * Formata o valor para exibição (Moeda, Data ISO, etc).
+ */
+export function formatarValorAudit(v, nomeCampo = "") {
+  if (v === null || v === undefined || v === "") return "—";
+
+  // Se for Data ISO (YYYY-MM-DD)
+  if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
+    const [y, m, d] = v.split("-");
+    return `${d}/${m}/${y}`;
+  }
+
+  // Se for Número
+  if (typeof v === "number") {
+    // Se o campo for carga horária, não coloca R$
+    if (nomeCampo.includes("carga")) {
+      return `${v}h`;
+    }
+    // Se for valor, investimento, preço, coloca R$
+    if (
+      nomeCampo.includes("valor") ||
+      nomeCampo.includes("investimento") ||
+      nomeCampo.includes("preco")
+    ) {
+      return "R$ " + v.toFixed(2).replace(".", ",");
+    }
+    // Outros números (vagas, horas soltas, etc) só mostra o número
+    return String(v);
+  }
+
+  return String(v);
+}
+
 export async function renderizarTimelineAuditoria({
   colecao,
   docId,
   containerId,
   limite = 20,
+  filtroPrefixoCampo = null,
 }) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -17,13 +63,25 @@ export async function renderizarTimelineAuditoria({
   try {
     const logs = await listarAuditoriaGenerica(colecao, docId, limite);
 
-    if (!logs || logs.length === 0) {
-      container.innerHTML = `<div class="text-center py-3 text-muted small"><i class="fas fa-history me-1"></i>Nenhuma alteração registrada ainda.</div>`;
+    let logsFiltrados = logs;
+    if (filtroPrefixoCampo) {
+      logsFiltrados = logs
+        .map((log) => {
+          const camposFiltrados = (log.campos_alterados || []).filter((c) =>
+            String(c.campo).startsWith(filtroPrefixoCampo),
+          );
+          return { ...log, campos_alterados: camposFiltrados };
+        })
+        .filter((log) => log.campos_alterados.length > 0);
+    }
+
+    if (!logsFiltrados || logsFiltrados.length === 0) {
+      container.innerHTML = `<div class="text-center py-3 text-muted small"><i class="fas fa-history me-1"></i>Nenhuma alteração registrada para este item.</div>`;
       return;
     }
 
     let html = "";
-    logs.forEach((log) => {
+    logsFiltrados.forEach((log) => {
       const data = log.criado_em ? new Date(log.criado_em) : null;
       const dataFmt = data
         ? `${data.toLocaleDateString("pt-BR")} às ${data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
@@ -36,18 +94,26 @@ export async function renderizarTimelineAuditoria({
                     <table class="table table-sm table-borderless mb-0 mt-2" style="font-size: 0.78rem;">
                         <tbody>
                             ${campos
-                              .map(
-                                (c) => `
+                              .map((c) => {
+                                const temValorAnterior =
+                                  c.valor_anterior !== null &&
+                                  c.valor_anterior !== undefined &&
+                                  c.valor_anterior !== "";
+                                const blocoAnterior = temValorAnterior
+                                  ? `<span class="badge bg-danger bg-opacity-10 text-danger">${formatarValorAudit(c.valor_anterior)}</span>
+                                       <i class="fas fa-arrow-right mx-1 text-muted" style="font-size: 0.65rem;"></i>`
+                                  : `<i class="fas fa-plus text-success me-2" style="font-size: 0.7rem;" title="Novo registro"></i>`;
+
+                                return `
                                 <tr>
-                                    <td class="text-muted" style="width: 40%;"><strong>${obterRotuloCampo(c.campo) || c.campo}</strong></td>
+                                    <td class="text-muted" style="width: 40%;"><strong>${obterNomeAmigavel(c.campo)}</strong></td>
                                     <td>
-                                        <span class="badge bg-danger bg-opacity-10 text-danger">${formatarValorAudit(c.valor_anterior)}</span>
-                                        <i class="fas fa-arrow-right mx-1 text-muted" style="font-size: 0.65rem;"></i>
-                                        <span class="badge bg-success bg-opacity-10 text-success">${formatarValorAudit(c.valor_novo)}</span>
+                                        ${blocoAnterior}
+                                          <span class="badge bg-success bg-opacity-10 text-success">${formatarValorAudit(c.valor_novo, c.campo)}</span>
                                     </td>
                                 </tr>
-                            `,
-                              )
+                            `;
+                              })
                               .join("")}
                         </tbody>
                     </table>
@@ -72,10 +138,4 @@ export async function renderizarTimelineAuditoria({
     console.error("[auditoria-timeline] Erro:", err);
     container.innerHTML = `<small class="text-muted">Erro ao carregar histórico.</small>`;
   }
-}
-
-export function formatarValorAudit(v) {
-  if (v === null || v === undefined || v === "") return "—";
-  if (typeof v === "number") return "R$ " + v.toFixed(2).replace(".", ",");
-  return String(v);
 }
