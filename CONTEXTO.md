@@ -149,16 +149,16 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 
 ### 🟠 Curto Prazo (1–2 semanas)
 
-| #        | Item                                                                            | Duração | Dificuldade |
-| -------- | ------------------------------------------------------------------------------- | ------- | ----------- |
-| ~~C1~~   | ~~Padronizar auditoria (novo formato) em Leads & Triagem~~ ✅ CONCLUÍDO (17/10) | 3–4h    | Baixa       |
-| ~~C2~~   | ~~Padronizar auditoria (novo formato) em Cursos~~ ✅ CONCLUÍDO (17/10)          | 3–4h    | Baixa       |
-| ~~C3~~   | ~~Corrigir tabela do Financeiro~~ ✅ CONCLUÍDO (16/10)                          | 2–4h    | Baixa/Média |
-| ~~C3.5~~ | ~~Corrigir layout do Quadro Geral de Aulas~~ ✅ CONCLUÍDO (16/10)               | 2–3h    | Baixa       |
-| C4       | Auditoria no editar de Alunos                                                   | 2–3h    | Baixa       |
-| C5       | Auditoria em adicionar/remover aluno da Turma                                   | 3–4h    | Média       |
-| C6       | Auditoria no editar de Turmas                                                   | 3–4h    | Baixa       |
-| C7       | Auditoria em Calendário de Aulas (ver/editar/registrar)                         | 5–6h    | Média       |
+| #        | Item                                                                             | Duração | Dificuldade |
+| -------- | -------------------------------------------------------------------------------- | ------- | ----------- |
+| ~~C1~~   | ~~Padronizar auditoria (novo formato) em Leads & Triagem~~ ✅ CONCLUÍDO (17/10)  | 3–4h    | Baixa       |
+| ~~C2~~   | ~~Padronizar auditoria (novo formato) em Cursos~~ ✅ CONCLUÍDO (17/10)           | 3–4h    | Baixa       |
+| ~~C3~~   | ~~Corrigir tabela do Financeiro~~ ✅ CONCLUÍDO (16/10)                           | 2–4h    | Baixa/Média |
+| ~~C3.5~~ | ~~Corrigir layout do Quadro Geral de Aulas~~ ✅ CONCLUÍDO (16/10)                | 2–3h    | Baixa       |
+| ~~C4~~   | ~~Auditoria no editar de Alunos~~ ✅ CONCLUÍDO (17/10 - já estava ok)            | 2–3h    | Baixa       |
+| C5       | Auditoria em adicionar/remover aluno da Turma                                    | 3–4h    | Média       |
+| ~~C6~~   | ~~Auditoria no editar de Turmas~~ ✅ CONCLUÍDO (17/10)                           | 3–4h    | Baixa       |
+| ~~C7~~   | ~~Auditoria em Calendário de Aulas (ver/editar/registrar)~~ ✅ CONCLUÍDO (17/10) | 5–6h    | Média       |
 
 ### 🟡 Médio Prazo (3–6 semanas)
 
@@ -358,3 +358,13 @@ versionado no Git e é acessível a qualquer momento.
 - ✅ M3 parcialmente concluído (falta migrar `financeiro-ui.js`)
 - ✅ Componente pronto para os próximos módulos
 - ➡️ Próximo: C6 (auditoria visual em Turmas)
+
+### C4 (verificado) + C6 + C7 — Auditoria visual completa na UI ✅
+
+**Status:** Concluído · **PR:** [#XXX](https://github.com/devfernandooa/training_work/pull/XXX)
+**Data:** 17/10/2026
+
+- **C4 (Verificado):** A aba "Histórico" do módulo de Alunos já estava no novo formato desde o S1.
+- **C6 (Turmas):** Modal de edição agora renderiza o histórico de alterações.
+- **C7 (Calendário):** Modal de edição de Aula agora renderiza o histórico filtrado apenas daquela aula.
+- **Evolução do componente:** `auditoria-timeline.js` agora aceita filtro por prefixo (para aulas) e formata datas/carga horária corretamente.
