@@ -56,6 +56,13 @@ const ROTULOS_CAMPOS = {
   carga_horaria: "Carga Horária", // (se não existir ainda)
   codigo_turma: "Código da Turma",
   curso_nome: "Curso",
+
+  // Campos de Aula / Calendário
+  data: "Data",
+  hora_inicio: "Hora Início",
+  hora_fim: "Hora Término",
+  instrutor: "Professor/Instrutor",
+  sala: "Sala/Local",
 };
 
 export function obterRotuloCampo(campo) {
