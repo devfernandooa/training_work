@@ -512,11 +512,27 @@
                         <textarea class="form-control form-control-sm" id="edit-resumo-ia" rows="2"
                           placeholder="Notas do atendimento..."></textarea>
                       </div>
+
+                      <!-- Campo Última Alteração (MANTENHA APENAS ESTE) -->
                       <div class="col-12 mt-1">
                         <label for="edit-atualizado-por" class="form-label small text-muted mb-0">Última
                           Alteração</label>
                         <input type="text" class="form-control form-control-sm bg-white text-muted"
                           id="edit-atualizado-por" disabled readonly>
+                      </div>
+
+                      <!-- Container de Auditoria (MANTENHA APENAS ESTE) -->
+                      <div class="col-12 mt-2">
+                        <span class="d-block small fw-bold text-secondary mb-2">
+                          <i class="fas fa-list-alt me-1 text-primary"></i> Histórico de Alterações
+                        </span>
+                        <div id="leadAuditoriaContainer"
+                          style="max-height: 250px; overflow-y: auto; background: white; border-radius: 8px; padding: 12px; border: 1px solid #e2e8f0;">
+                          <div class="text-center py-3 text-muted small">
+                            <i class="fas fa-history me-1"></i>
+                            Nenhuma alteração registrada ainda.
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
