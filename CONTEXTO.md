@@ -102,17 +102,14 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 4. **Fix** — Remoção de gravação redundante no botão Salvar do modal de alunos (PR #120)
 
 ### ⚠️ Pendências
-1. **Financeiro:** tabela com colunas desajustadas / itens fora de posição (visual)
-2. **Layout do Quadro Geral de Aulas:** tabela estoura horizontalmente, coluna Ações sai da tela (visual)
-3. **Auditorias em formato antigo na UI:** Leads e Cursos (backend já grava, falta renderizar no "novo formato" visual)
-4. **"Ver Frequência":** abre modal, lista, mas sem auditoria e sem editar (edição é M1)
-5. **Matrículas:** módulo inteiro ainda NÃO refatorado (M2)
-6. **Bug conhecido:** `lead-ui.js` usa `"em_contato"` em vez de `"Em Atendimento"`
-7. **`configurarBotaoConversao()`** está desativado (só mostra alerta) — mantido por ora
-8. **Melhoria (baixa prioridade) — Validação de email único:**
-   - C-new.1 — Adicionar verificação de email único ao criar **aluno** (previne duplicidade antes de acontecer)
-   - C-new.2 — Adicionar verificação de email único ao criar **lead** (mesma coisa)
-   - **Contexto:** o CPF ficou opcional em 15/10 (S5 confirmou risco zero nos dados atuais — 24 alunos, 0 sem CPF, 0 emails duplicados). Como o CPF deixa de ser barreira natural, a validação de email passa a ser a proteção contra duplicidade. **Não é urgente** — é melhoria desejável para médio prazo.
+1. ~~Financeiro: tabela com colunas desajustadas~~ ✅ RESOLVIDO (16/10)
+2. ~~Layout do Quadro Geral de Aulas: tabela estoura horizontalmente~~ ✅ RESOLVIDO (16/10)
+3. Auditorias em formato antigo na UI: Leads e Cursos (backend já grava, falta renderizar)
+4. "Ver Frequência": abre modal, lista, mas sem auditoria e sem editar (edição é M1)
+5. Matrículas: módulo inteiro ainda NÃO refatorado (M2)
+6. Bug conhecido: `lead-ui.js` usa `"em_contato"` em vez de `"Em Atendimento"`
+7. `configurarBotaoConversao()` está desativado (só mostra alerta) — mantido
+8. **NOVO — Pendência visual (baixa prioridade):** ao abrir modal de confirmação sobre o modal de Nova Transação (Financeiro), o backdrop não escurece o modal de baixo — fica visualmente "estranho" mas funcional
 
 ---
 
@@ -123,7 +120,7 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 |---|------|---------|-------------|
 | ~~S1~~ | ~~Auditoria de exclusões/inativações~~ ✅ CONCLUÍDO (16/10) | 4–6h | Média |
 | ~~S2~~ | ~~Auditoria em presença~~ ✅ CONCLUÍDO (16/10) | 3–4h | Média |
-| ~~S3~~ | ~~Auditoria no Calendário de Aulas~~ ✅ CONCLUÍDO (16/10) | 4–5h | Média |
+| ~~C3~~ | ~~Corrigir tabela do Financeiro~~ ✅ CONCLUÍDO (16/10) | 2–4h | Baixa/Média |
 | ~~S4~~ | ~~Verificar permissões de acesso ao painel admin~~ ✅ CONFIRMADO (16/10) | 2–3h | Baixa |
 | S5 | Validar impacto de CPF opcional (integridade/duplicidade) | 1–2h | Baixa |
 
@@ -133,7 +130,7 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 | C1 | Padronizar auditoria (novo formato) em Leads & Triagem | 3–4h | Baixa |
 | C2 | Padronizar auditoria (novo formato) em Cursos | 3–4h | Baixa |
 | C3 | Corrigir tabela do Financeiro (colunas desalinhadas) | 2–4h | Baixa/Média |
-| C3.5 | Corrigir layout do Quadro Geral de Aulas (overflow horizontal) | 2–3h | Baixa |
+| ~~C3.5~~ | ~~Corrigir layout do Quadro Geral de Aulas~~ ✅ CONCLUÍDO (16/10) | 2–3h | Baixa |
 | C4 | Auditoria no editar de Alunos | 2–3h | Baixa |
 | C5 | Auditoria em adicionar/remover aluno da Turma | 3–4h | Média |
 | C6 | Auditoria no editar de Turmas | 3–4h | Baixa |
@@ -157,20 +154,19 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 | L5 | Documentação de arquitetura e fluxos | 4–6h | Baixa |
 
 ### Ordem recomendada de execução
-1. ~~S1 → S2 → S3 → S4~~ ✅ (segurança de auditoria — concluído em 16/10)
-2. S5 (fecha a fila de segurança)
-3. C3 → C3.5 (correções visuais rápidas)
-4. C1 → C2 (padronizar auditoria no formato visual)
-5. C4 → C5 → C6 → C7 (auditoria restante)
-6. M3 (unificar componente de auditoria) ⚠️ confirmar antes
-7. M1 → M2 (Frequência + Matrículas)
-8. Longo prazo em paralelo
+1. ~~S1 → S2 → S3 → S4 → S5~~ ✅ (segurança — concluído em 16/10)
+2. ~~C3 → C3.5~~ ✅ (correções visuais — concluído em 16/10)
+3. C1 → C2 (padronizar auditoria no formato visual)
+4. C4 → C5 → C6 → C7 (auditoria restante)
+5. M3 (unificar componente de auditoria) ⚠️ confirmar antes
+6. M1 → M2 (Frequência + Matrículas)
+7. Longo prazo em paralelo
 
 ### Totais
 | Prazo | Horas | Dias úteis (8h) |
 |-------|-------|-----------------|
 | 🔴 Segurança (restante) | 1–2h | 0,25 |
-| 🟠 Curto | 23–31h | 3–4 |
+| 🟠 Curto (restante) | 6–8h | 1 |
 | 🟡 Médio | 36–52h | 5–7 |
 | 🟢 Longo | 46–70h | 6–9 |
 | **TOTAL restante** | **~108–158h** | **~14–20** |
@@ -283,6 +279,27 @@ versionado no Git e é acessível a qualquer momento.
 - ✅ **Bloco de segurança:** 3 de 5 concluídos (falta S4 e S5)
 - ➡️ **Próximo:** S4 (permissões de acesso) ou C3/C3.5 (correções visuais)
 
+---
+
+### C3 + C3.5 — Correções visuais no Financeiro e Calendário ✅
+**Status:** Concluído · **PR:** [#XXX](https://github.com/devfernandooa/training_work/pull/XXX)
+**Data:** 16/10/2026
+
+**C3 — Financeiro:**
+- Corrige colspan da linha de loading (7 → 8)
+- Remove IDs duplicados no modal de Nova Transação
+- Adiciona modal de confirmação antes de criar transação
+- Ajusta z-index do modal de confirmação quando empilhado
+
+**C3.5 — Quadro Geral de Aulas:**
+- Adiciona `min-width: 900px` na tabela
+- Ajusta larguras das colunas
+- Cria classe `.tabela-cronograma` com regras específicas
+- Coluna "Ações" agora visível
+
+**Impacto:**
+- ✅ Itens **C3** e **C3.5** concluídos
+- ➡️ Próximo: C1 (padronizar auditoria no formato visual — Leads)
 ---
 
 ### S4 — Verificação de permissões admin e Firestore Rules ✅
