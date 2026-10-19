@@ -7,13 +7,16 @@
  * Escuta os dados do service e renderiza.
  * =========================================================================
  */
-
+import {
+  renderizarTimelineAuditoria,
+  formatarValorAudit,
+} from "../modules/auditoria-timeline.js";
 import { criarTransacaoFinanceira } from "../backend/financeiro-service.js";
 import {
-    escutarFinanceiro,
-    atualizarStatusFinanceiro,
-    editarTransacaoFinanceira,
-    excluirTransacaoFinanceira
+  escutarFinanceiro,
+  atualizarStatusFinanceiro,
+  editarTransacaoFinanceira,
+  excluirTransacaoFinanceira,
 } from "../backend/financeiro-service.js";
 import { renderizarTimelineAuditoria } from "../modules/auditoria-timeline.js";
 
@@ -76,8 +79,8 @@ function pedirConfirmacao(opcoes) {
 }
 
 function mostrarSucesso(mensagem) {
-    const toastEl = document.getElementById("toastSucesso");
-    const mensagemEl = document.getElementById("toastSucessoMensagem");
+  const toastEl = document.getElementById("toastSucesso");
+  const mensagemEl = document.getElementById("toastSucessoMensagem");
 
     if (!toastEl) {
         console.log("✅", mensagem);
@@ -131,10 +134,10 @@ let modalEdicaoInstance = null;
 let timerBusca = null;
 
 function formatarMoeda(valor) {
-    return Number(valor || 0).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-    });
+  return Number(valor || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -171,47 +174,59 @@ document.addEventListener("DOMContentLoaded", () => {
         paginaAtual = 1;
         aplicarFiltrosERenderizar();
     });
+  }
+
+  configurarFiltros();
+  configurarFormularioEdicao();
+  configurarEventosTabela();
+
+  escutarFinanceiro((transacoes) => {
+    console.log("📊 [financeiro-ui] Recebi", transacoes.length, "transações");
+    listaCompleta = transacoes;
+    paginaAtual = 1;
+    aplicarFiltrosERenderizar();
+  });
 });
 
 function configurarFiltros() {
-    const inputBusca = document.getElementById("busca-transacao");
-    if (inputBusca) {
-        inputBusca.addEventListener("input", (e) => {
-            clearTimeout(timerBusca);
-            timerBusca = setTimeout(() => {
-                termoBusca = e.target.value.trim().toLowerCase();
-                paginaAtual = 1;
-                aplicarFiltrosERenderizar();
-            }, 300);
-        });
-    }
+  const inputBusca = document.getElementById("busca-transacao");
+  if (inputBusca) {
+    inputBusca.addEventListener("input", (e) => {
+      clearTimeout(timerBusca);
+      timerBusca = setTimeout(() => {
+        termoBusca = e.target.value.trim().toLowerCase();
+        paginaAtual = 1;
+        aplicarFiltrosERenderizar();
+      }, 300);
+    });
+  }
 
-    const selectStatus = document.getElementById("filtroStatusFinanceiro");
-    if (selectStatus) {
-        selectStatus.addEventListener("change", (e) => {
-            filtroStatus = e.target.value;
-            paginaAtual = 1;
-            aplicarFiltrosERenderizar();
-        });
-    }
+  const selectStatus = document.getElementById("filtroStatusFinanceiro");
+  if (selectStatus) {
+    selectStatus.addEventListener("change", (e) => {
+      filtroStatus = e.target.value;
+      paginaAtual = 1;
+      aplicarFiltrosERenderizar();
+    });
+  }
 
-    const selectForma = document.getElementById("filtroFormaPagamento");
-    if (selectForma) {
-        selectForma.addEventListener("change", (e) => {
-            filtroForma = e.target.value;
-            paginaAtual = 1;
-            aplicarFiltrosERenderizar();
-        });
-    }
+  const selectForma = document.getElementById("filtroFormaPagamento");
+  if (selectForma) {
+    selectForma.addEventListener("change", (e) => {
+      filtroForma = e.target.value;
+      paginaAtual = 1;
+      aplicarFiltrosERenderizar();
+    });
+  }
 
-    const selectItens = document.getElementById("itens-por-pagina-financeiro");
-    if (selectItens) {
-        selectItens.addEventListener("change", (e) => {
-            itensPorPagina = parseInt(e.target.value, 10) || 20;
-            paginaAtual = 1;
-            aplicarFiltrosERenderizar();
-        });
-    }
+  const selectItens = document.getElementById("itens-por-pagina-financeiro");
+  if (selectItens) {
+    selectItens.addEventListener("change", (e) => {
+      itensPorPagina = parseInt(e.target.value, 10) || 20;
+      paginaAtual = 1;
+      aplicarFiltrosERenderizar();
+    });
+  }
 }
 
 function aplicarFiltrosERenderizar() {
@@ -265,12 +280,12 @@ function atualizarKPIs() {
             return;
         }
 
-        if (t.status === "Recebido") recebido += v;
-        else if (t.status === "Pendente") pendente += v;
-        else if (t.status === "Aguardando pagamento") aguardando += v;
-    });
+    if (t.status === "Recebido") recebido += v;
+    else if (t.status === "Pendente") pendente += v;
+    else if (t.status === "Aguardando pagamento") aguardando += v;
+  });
 
-    const liquido = recebido - saidas;
+  const liquido = recebido - saidas;
 
     const set = (id, val) => {
         const el = document.getElementById(id);
@@ -290,16 +305,48 @@ function atualizarKPIs() {
 }
 
 function renderizarGraficos() {
-    let recebido = 0, pendente = 0, aguardando = 0;
-    const formas = { "Pix": 0, "Cartão de Crédito": 0, "Boleto Bancário": 0, "À Vista": 0 };
+  let recebido = 0,
+    pendente = 0,
+    aguardando = 0;
+  const formas = {
+    Pix: 0,
+    "Cartão de Crédito": 0,
+    "Boleto Bancário": 0,
+    "À Vista": 0,
+  };
 
-    listaCompleta.forEach((t) => {
-        const v = Number(t.valor || 0);
-        if (t.status === "Recebido") recebido += v;
-        else if (t.status === "Pendente") pendente += v;
-        else aguardando += v;
+  listaCompleta.forEach((t) => {
+    const v = Number(t.valor || 0);
+    if (t.status === "Recebido") recebido += v;
+    else if (t.status === "Pendente") pendente += v;
+    else aguardando += v;
 
-        if (formas[t.formaPagamento] !== undefined) formas[t.formaPagamento] += v;
+    if (formas[t.formaPagamento] !== undefined) formas[t.formaPagamento] += v;
+  });
+
+  // Gráfico 1 — Fluxo
+  const ctx1 = document.getElementById("graficoFluxoCaixa")?.getContext("2d");
+  if (ctx1) {
+    if (graficoFluxoInstance) graficoFluxoInstance.destroy();
+    graficoFluxoInstance = new Chart(ctx1, {
+      type: "bar",
+      data: {
+        labels: ["Recebido", "Pendente", "Aguardando"],
+        datasets: [
+          {
+            label: "R$",
+            data: [recebido, pendente, aguardando],
+            backgroundColor: ["#198754", "#0dcaf0", "#ffc107"],
+            borderRadius: 6,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } },
+      },
     });
 
     const ctx1 = document.getElementById("graficoFluxoCaixa")?.getContext("2d");
@@ -396,76 +443,76 @@ function renderizarTabela(pagina) {
             </td>
         </tr>
     `;
-    });
+  });
 
-    tbody.innerHTML = html;
+  tbody.innerHTML = html;
 }
 
 function renderizarContador(total, inicio, fim) {
-    const el = document.getElementById("contador-transacoes");
-    if (!el) return;
-    if (total === 0) {
-        el.textContent = "Nenhuma transação encontrada";
-        return;
-    }
-    el.textContent = `Mostrando ${inicio + 1}-${Math.min(fim, total)} de ${total} transações`;
+  const el = document.getElementById("contador-transacoes");
+  if (!el) return;
+  if (total === 0) {
+    el.textContent = "Nenhuma transação encontrada";
+    return;
+  }
+  el.textContent = `Mostrando ${inicio + 1}-${Math.min(fim, total)} de ${total} transações`;
 }
 
 function renderizarPaginacao(totalPaginas) {
-    const ul = document.getElementById("paginacao-financeiro");
-    if (!ul) return;
+  const ul = document.getElementById("paginacao-financeiro");
+  if (!ul) return;
 
-    if (totalPaginas <= 1) {
-        ul.innerHTML = "";
-        return;
-    }
+  if (totalPaginas <= 1) {
+    ul.innerHTML = "";
+    return;
+  }
 
-    let html = "";
+  let html = "";
 
-    html += `<li class="page-item ${paginaAtual === 1 ? "disabled" : ""}">
+  html += `<li class="page-item ${paginaAtual === 1 ? "disabled" : ""}">
         <a class="page-link" href="#" data-page="${paginaAtual - 1}"><i class="fas fa-chevron-left"></i></a>
     </li>`;
 
-    const paginas = calcularPaginasVisiveis(paginaAtual, totalPaginas);
-    paginas.forEach((p) => {
-        if (p === "...") {
-            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-        } else {
-            html += `<li class="page-item ${p === paginaAtual ? "active" : ""}">
+  const paginas = calcularPaginasVisiveis(paginaAtual, totalPaginas);
+  paginas.forEach((p) => {
+    if (p === "...") {
+      html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+    } else {
+      html += `<li class="page-item ${p === paginaAtual ? "active" : ""}">
                 <a class="page-link" href="#" data-page="${p}">${p}</a>
             </li>`;
-        }
-    });
+    }
+  });
 
-    html += `<li class="page-item ${paginaAtual === totalPaginas ? "disabled" : ""}">
+  html += `<li class="page-item ${paginaAtual === totalPaginas ? "disabled" : ""}">
         <a class="page-link" href="#" data-page="${paginaAtual + 1}"><i class="fas fa-chevron-right"></i></a>
     </li>`;
 
-    ul.innerHTML = html;
+  ul.innerHTML = html;
 
-    ul.querySelectorAll("a.page-link").forEach((link) => {
-        link.addEventListener("click", (e) => {
-            e.preventDefault();
-            const p = parseInt(link.getAttribute("data-page"), 10);
-            if (!isNaN(p) && p >= 1 && p <= totalPaginas && p !== paginaAtual) {
-                paginaAtual = p;
-                aplicarFiltrosERenderizar();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-            }
-        });
+  ul.querySelectorAll("a.page-link").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const p = parseInt(link.getAttribute("data-page"), 10);
+      if (!isNaN(p) && p >= 1 && p <= totalPaginas && p !== paginaAtual) {
+        paginaAtual = p;
+        aplicarFiltrosERenderizar();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     });
+  });
 }
 
 function calcularPaginasVisiveis(atual, total) {
-    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-    const paginas = [1];
-    if (atual > 4) paginas.push("...");
-    const inicio = Math.max(2, atual - 1);
-    const fim = Math.min(total - 1, atual + 1);
-    for (let i = inicio; i <= fim; i++) paginas.push(i);
-    if (atual < total - 3) paginas.push("...");
-    paginas.push(total);
-    return paginas;
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const paginas = [1];
+  if (atual > 4) paginas.push("...");
+  const inicio = Math.max(2, atual - 1);
+  const fim = Math.min(total - 1, atual + 1);
+  for (let i = inicio; i <= fim; i++) paginas.push(i);
+  if (atual < total - 3) paginas.push("...");
+  paginas.push(total);
+  return paginas;
 }
 
 function configurarEventosTabela() {
@@ -551,6 +598,7 @@ function abrirModalEdicao(id) {
             boxInfo.style.display = "none";
         }
     }
+  }
 
     // ⬇️ NOVO: Chamada do componente compartilhado
     renderizarTimelineAuditoria({
@@ -560,12 +608,36 @@ function abrirModalEdicao(id) {
         limite: 20
     });
 
-    if (modalEdicaoInstance) modalEdicaoInstance.show();
+  if (modalEdicaoInstance) modalEdicaoInstance.show();
 }
 
 function configurarFormularioEdicao() {
-    const form = document.getElementById("formEditarFinanceiro");
-    if (!form) return;
+  const form = document.getElementById("formEditarFinanceiro");
+  if (!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const alunoId = document.getElementById("novaAluno").value;
+    const tipo =
+      document.getElementById("novaTipoTransacao").value || "entrada";
+    const alunoObj = listaAlunosParaNova.find((a) => a.id === alunoId);
+    const curso = document.getElementById("novaCurso").value.trim() || "Geral";
+    const valor = parseFloat(document.getElementById("novaValor").value) || 0;
+    const status = document.getElementById("novaStatus").value;
+    const forma = document.getElementById("novaForma").value;
+    const dataPagamento = document.getElementById("novaData").value;
+    const observacoes = document.getElementById("novaObs").value.trim();
+
+    // Validações
+    if (!alunoId) {
+      mostrarErro("Selecione um aluno.");
+      return;
+    }
+    if (valor <= 0) {
+      mostrarErro("Informe um valor maior que zero.");
+      return;
+    }
 
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -615,6 +687,7 @@ function configurarFormularioEdicao() {
             }
         });
     });
+  });
 }
 
 /* ==========================================================================
@@ -681,36 +754,88 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const btn = form.querySelector('button[type="submit"]');
-            const txtOriginal = btn.innerHTML;
+  // Submit do form
+  const form = document.getElementById("formNovaTransacao");
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const alunoId = document.getElementById("novaAluno").value;
+      const tipo =
+        document.getElementById("novaTipoTransacao").value || "entrada";
+      const alunoObj = listaAlunosParaNova.find((a) => a.id === alunoId);
+      const curso =
+        document.getElementById("novaCurso").value.trim() || "Geral";
+      const valor = parseFloat(document.getElementById("novaValor").value) || 0;
+      const status = document.getElementById("novaStatus").value;
+      const forma = document.getElementById("novaForma").value;
+      const dataPagamento = document.getElementById("novaData").value;
+      const observacoes = document.getElementById("novaObs").value.trim();
+
+      // Validações
+      if (!alunoId) {
+        mostrarErro("Selecione um aluno.");
+        return;
+      }
+      if (valor <= 0) {
+        mostrarErro("Informe um valor maior que zero.");
+        return;
+      }
+
+      // 📋 Confirmação antes de criar (padrão das outras ações do Financeiro)
+      const tipoLabel =
+        tipo === "saida" ? "Saída de Caixa" : "Entrada (Receita)";
+      const valorFormatado = valor.toFixed(2).replace(".", ",");
+
+      pedirConfirmacao({
+        tipo: "info",
+        titulo: "Confirmar Nova Transação?",
+        mensagem:
+          `Deseja criar esta transação?\n\n` +
+          `• Aluno: ${alunoObj?.nome || "Aluno"}\n` +
+          `• Tipo: ${tipoLabel}\n` +
+          `• Curso: ${curso}\n` +
+          `• Valor: R$ ${valorFormatado}\n` +
+          `• Status: ${status}\n` +
+          `• Forma: ${forma}`,
+        textoBotao: "Criar Transação",
+        corBotao: "btn-primary",
+        onConfirmar: async () => {
+          const btn = form.querySelector('button[type="submit"]');
+          const txtOriginal = btn ? btn.innerHTML : "";
+          if (btn) {
             btn.disabled = true;
             btn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Criando...`;
+          }
 
-            try {
-                await criarTransacaoFinanceira({
-                    alunoId,
-                    tipo,
-                    alunoNome: alunoObj?.nome || "Aluno",
-                    curso,
-                    valor,
-                    status,
-                    formaPagamento: forma,
-                    dataPagamento,
-                    observacoes
-                });
+          try {
+            await criarTransacaoFinanceira({
+              alunoId,
+              tipo,
+              alunoNome: alunoObj?.nome || "Aluno",
+              curso,
+              valor,
+              status,
+              formaPagamento: forma,
+              dataPagamento,
+              observacoes,
+            });
 
-                if (modalNovaTransacaoInstance) modalNovaTransacaoInstance.hide();
-                mostrarSucesso("Transação criada com sucesso!");
-
-            } catch (err) {
-                console.error("Erro ao criar transação:", err);
-                mostrarErro("Erro ao criar: " + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = txtOriginal;
+            if (modalNovaTransacaoInstance) modalNovaTransacaoInstance.hide();
+            mostrarSucesso("Transação criada com sucesso!");
+          } catch (err) {
+            console.error("Erro ao criar transação:", err);
+            mostrarErro("Erro ao criar: " + err.message);
+          } finally {
+            if (btn) {
+              btn.disabled = false;
+              btn.innerHTML = txtOriginal;
             }
-        });
-    }
+          }
+        },
+      });
+    });
+  }
 });
 
 async function carregarAlunosParaNova() {
@@ -724,27 +849,27 @@ async function carregarAlunosParaNova() {
 
     select.innerHTML = `<option value="">Carregando...</option>`;
 
-    try {
-        const { getDocs, collection } = await import("https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js");
-        const { db } = await import("../firebase-config.js");
+  // Se já carregou, não recarrega
+  if (listaAlunosParaNova.length > 0) {
+    preencherSelectAlunos();
+    return;
+  }
 
-        const snap = await getDocs(collection(db, "alunos"));
+  select.innerHTML = `<option value="">Carregando...</option>`;
 
-        listaAlunosParaNova = [];
-        mapaAlunosParaNova = {};
+  try {
+    const { getDocs, collection } =
+      await import("https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js");
+    const { db } = await import("../firebase-config.js");
 
-        snap.forEach(d => {
-            const data = d.data();
-            if (data.excluido === true) return;
+    const snap = await getDocs(collection(db, "alunos"));
 
-            const aluno = {
-                id: d.id,
-                nome: data.nome || data.nome_completo || "Aluno sem nome",
-                email: data.email || ""
-            };
+    listaAlunosParaNova = [];
+    mapaAlunosParaNova = {};
 
-            listaAlunosParaNova.push(aluno);
-        });
+    snap.forEach((d) => {
+      const data = d.data();
+      if (data.excluido === true) return;
 
         listaAlunosParaNova.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
@@ -767,20 +892,50 @@ async function carregarAlunosParaNova() {
 
         preencherSelectAlunos();
 
-    } catch (err) {
-        console.error("Erro ao carregar alunos:", err);
-        select.innerHTML = `<option value="">Erro ao carregar alunos</option>`;
-    }
+    // Ordena por nome
+    listaAlunosParaNova.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+
+    // Busca cursos em paralelo
+    await Promise.all(
+      listaAlunosParaNova.map(async (aluno) => {
+        try {
+          const {
+            collectionGroup,
+            query,
+            where,
+            getDocs: gd,
+          } = await import("https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js");
+          const { db: dbRef } = await import("../firebase-config.js");
+
+          // Busca matrículas desse aluno
+          const matRef = collection(dbRef, "alunos", aluno.id, "matriculas");
+          const matSnap = await gd(matRef);
+
+          if (!matSnap.empty) {
+            const primeira = matSnap.docs[0].data();
+            mapaAlunosParaNova[aluno.id] = primeira.curso_nome || "Geral";
+          }
+        } catch (e) {
+          // ignora
+        }
+      }),
+    );
+
+    preencherSelectAlunos();
+  } catch (err) {
+    console.error("Erro ao carregar alunos:", err);
+    select.innerHTML = `<option value="">Erro ao carregar alunos</option>`;
+  }
 }
 
 function preencherSelectAlunos() {
-    const select = document.getElementById("novaAluno");
-    if (!select) return;
+  const select = document.getElementById("novaAluno");
+  if (!select) return;
 
-    let html = '<option value="">Selecione um aluno...</option>';
-    listaAlunosParaNova.forEach(aluno => {
-        html += `<option value="${aluno.id}">${aluno.nome}</option>`;
-    });
+  let html = '<option value="">Selecione um aluno...</option>';
+  listaAlunosParaNova.forEach((aluno) => {
+    html += `<option value="${aluno.id}">${aluno.nome}</option>`;
+  });
 
-    select.innerHTML = html;
+  select.innerHTML = html;
 }

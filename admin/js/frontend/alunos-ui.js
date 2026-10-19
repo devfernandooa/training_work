@@ -808,4 +808,16 @@ configurarViaCEP({
     campoFocoId: "enderecoNumero"
 });
 
+/* ==========================================================================
+ * DEBUG
+ * ========================================================================== */
+window.__alunosDebug = {
+    get alunos() { return listaAlunos; },
+    get matriculas() { return matriculasPorAluno; },
+    get filtroInativos() { return filtroInativos; },
+    get filtroExcluidos() { return filtroExcluidos; },
+    refresh: () => renderizar()
+};
+
+console.log("✅ [alunos-ui] listeners registrados. Use __alunosDebug no console.");
 console.log("✅ [alunos-ui] listeners registrados");

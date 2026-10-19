@@ -526,4 +526,58 @@ table.tabela-leads td.col-analise {
     font-size: 0.72rem;
 }
 
+/* ==========================================================================
+   TABELA DO QUADRO GERAL DE AULAS (Calendário)
+   ==========================================================================
+   Corrige o overflow horizontal: a tabela ganha min-width pra caber todas
+   as colunas, e o wrapper aplica scroll horizontal em vez de cortar a
+   última coluna (Ações).
+   ========================================================================== */
 
+.tabela-cronograma {
+  table-layout: auto;
+  width: 100%;
+}
+
+.tabela-cronograma th,
+.tabela-cronograma td {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* "Curso / Turma" — permite quebra de linha interna nos badges */
+.tabela-cronograma td:nth-child(2),
+.tabela-cronograma th:nth-child(2) {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* "Professor" — trunca com ellipsis em telas estreitas */
+.tabela-cronograma td:nth-child(4) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Coluna "Ações" — alinha os botões à direita e trava largura */
+.tabela-cronograma th:last-child,
+.tabela-cronograma td:last-child {
+  width: 130px;
+  min-width: 130px;
+  text-align: right;
+}
+
+/* Wrapper com scroll horizontal quando a tabela não couber */
+.tabela-cronograma-wrapper,
+div.table-responsive:has(.tabela-cronograma) {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Em telas estreitas, dá uma folga no padding pra ganhar espaço */
+@media (max-width: 1200px) {
+  .tabela-cronograma th,
+  .tabela-cronograma td {
+    padding: 0.5rem 0.4rem;
+    font-size: 0.82rem;
+  }
+}
