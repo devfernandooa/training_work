@@ -975,11 +975,14 @@
 
                         <div class="card border shadow-sm p-3 rounded-3 bg-white">
                             <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.85rem;">
-                                <i class="fas fa-history me-2"></i>Log de Auditoria da Turma
+                                <i class="fas fa-history me-2"></i>Histórico de Alterações da Turma
                             </h6>
-                            <div id="modalLogsAuditoriaTurma" class="small text-muted"
-                                style="max-height: 120px; overflow-y: auto; font-size: 0.78rem;">
-                                <em>Sem alterações recentes registradas.</em>
+                            <!--  O ID AQUI DEVE SER DIFERENTE -->
+                            <div id="turmaAlunosAuditoriaContainer"
+                                style="max-height: 250px; overflow-y: auto; background: white; border-radius: 8px; padding: 12px; border: 1px solid #e2e8f0;">
+                                <div class="text-center py-3 text-muted small">
+                                    <i class="fas fa-history me-1"></i> Nenhuma alteração registrada ainda.
+                                </div>
                             </div>
                         </div>
                     </div>

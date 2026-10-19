@@ -628,6 +628,14 @@ function configurarEventosUI() {
       popularSelectAlunosModal(listaAlunosSistemaGlobal);
       renderizarTabelaModalAlunos(turmaAtualGestao);
 
+      // No btn-acao-alunos:
+      await renderizarTimelineAuditoria({
+        colecao: "turmas",
+        docId: id,
+        containerId: "turmaAlunosAuditoriaContainer", // Lembre-se de usar o ID do modal de alunos
+        filtroTipo: ["adicao_aluno", "remocao_aluno"] // <-- Só mostra alunos
+      });
+
       const modalEl = getEl("modalAlunosTurma");
       if (modalEl && window.bootstrap) {
         const m =
@@ -688,10 +696,12 @@ function configurarEventosUI() {
         );
         if (opt) selectCurso.value = opt.value;
       }
+      // No btn-acao-editar:
       await renderizarTimelineAuditoria({
         colecao: "turmas",
         docId: id,
         containerId: "turmaAuditoriaContainer",
+        filtroExcluirTipo: ["adicao_aluno", "remocao_aluno"] // <-- O Segredo está aqui
       });
 
       const modalEl = getEl("modalEditarTurma");

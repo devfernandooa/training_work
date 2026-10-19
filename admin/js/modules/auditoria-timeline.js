@@ -54,6 +54,8 @@ export async function renderizarTimelineAuditoria({
   containerId,
   limite = 20,
   filtroPrefixoCampo = null,
+  filtroTipo = null,
+  filtroExcluirTipo = null // ⬅️ NOVO AQUI
 }) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -62,24 +64,33 @@ export async function renderizarTimelineAuditoria({
 
   try {
     const logs = await listarAuditoriaGenerica(colecao, docId, limite);
-
     let logsFiltrados = logs;
+
+    // 1. Filtra por tipo (incluir)
+    if (filtroTipo && Array.isArray(filtroTipo)) {
+      logsFiltrados = logsFiltrados.filter(log => filtroTipo.includes(log.tipo));
+    }
+
+    // 2. Filtra por tipo (excluir) ⬅️ NOVO
+    if (filtroExcluirTipo && Array.isArray(filtroExcluirTipo)) {
+      logsFiltrados = logsFiltrados.filter(log => !filtroExcluirTipo.includes(log.tipo));
+    }
+
+    // 3. Filtra por prefixo de campo
     if (filtroPrefixoCampo) {
-      logsFiltrados = logs
-        .map((log) => {
-          const camposFiltrados = (log.campos_alterados || []).filter((c) =>
-            String(c.campo).startsWith(filtroPrefixoCampo),
-          );
-          return { ...log, campos_alterados: camposFiltrados };
-        })
-        .filter((log) => log.campos_alterados.length > 0);
+      logsFiltrados = logsFiltrados.map(log => {
+        const camposFiltrados = (log.campos_alterados || []).filter(c =>
+          String(c.campo).startsWith(filtroPrefixoCampo)
+        );
+        return { ...log, campos_alterados: camposFiltrados };
+      }).filter(log => log.campos_alterados.length > 0);
     }
 
     if (!logsFiltrados || logsFiltrados.length === 0) {
       container.innerHTML = `<div class="text-center py-3 text-muted small"><i class="fas fa-history me-1"></i>Nenhuma alteração registrada para este item.</div>`;
       return;
     }
-
+    
     let html = "";
     logsFiltrados.forEach((log) => {
       const data = log.criado_em ? new Date(log.criado_em) : null;
@@ -93,28 +104,31 @@ export async function renderizarTimelineAuditoria({
         camposHtml = `
                     <table class="table table-sm table-borderless mb-0 mt-2" style="font-size: 0.78rem;">
                         <tbody>
-                            ${campos
-                              .map((c) => {
-                                const temValorAnterior =
-                                  c.valor_anterior !== null &&
-                                  c.valor_anterior !== undefined &&
-                                  c.valor_anterior !== "";
-                                const blocoAnterior = temValorAnterior
-                                  ? `<span class="badge bg-danger bg-opacity-10 text-danger">${formatarValorAudit(c.valor_anterior)}</span>
+                                                        ${campos.map(c => {
+                                const temValorAnterior = c.valor_anterior !== null && c.valor_anterior !== undefined && c.valor_anterior !== "";
+                                
+                                // ⬇️ NOVO: Se for alunos_matriculados, esconde o ID
+                                const isAlunoMatriculado = c.campo.includes("alunos_matriculados");
+                                const exibirValores = !isAlunoMatriculado;
+
+                                const blocoAnterior = (temValorAnterior && exibirValores)
+                                    ? `<span class="badge bg-danger bg-opacity-10 text-danger">${formatarValorAudit(c.valor_anterior)}</span>
                                        <i class="fas fa-arrow-right mx-1 text-muted" style="font-size: 0.65rem;"></i>`
-                                  : `<i class="fas fa-plus text-success me-2" style="font-size: 0.7rem;" title="Novo registro"></i>`;
+                                    : (exibirValores ? `<i class="fas fa-plus text-success me-2" style="font-size: 0.7rem;" title="Novo registro"></i>` : "");
+
+                                const blocoNovo = exibirValores
+                                    ? `<span class="badge bg-success bg-opacity-10 text-success">${formatarValorAudit(c.valor_novo, c.campo)}</span>`
+                                    : `<span class="text-muted small fst-italic">(adicionado à lista)</span>`;
 
                                 return `
                                 <tr>
                                     <td class="text-muted" style="width: 40%;"><strong>${obterNomeAmigavel(c.campo)}</strong></td>
                                     <td>
                                         ${blocoAnterior}
-                                          <span class="badge bg-success bg-opacity-10 text-success">${formatarValorAudit(c.valor_novo, c.campo)}</span>
+                                        ${blocoNovo}
                                     </td>
                                 </tr>
-                            `;
-                              })
-                              .join("")}
+                            `}).join("")}
                         </tbody>
                     </table>
                 `;
