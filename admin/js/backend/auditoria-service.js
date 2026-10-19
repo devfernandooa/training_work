@@ -26,6 +26,8 @@ const ROTULOS_CAMPOS = {
   "endereco.bairro": "Bairro",
   "endereco.cidade": "Cidade",
   "endereco.estado": "Estado (UF)",
+  "alunos_matriculados": "Aluno Matriculado",
+  "vagas_maximas": "Vagas Máximas",
 
   // Campos de Financeiro
   valor: "Valor do Curso",

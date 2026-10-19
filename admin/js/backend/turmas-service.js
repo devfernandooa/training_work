@@ -134,10 +134,14 @@ export async function salvarTurmaBackend(dadosTurma, turmaId = null) {
 
             if (camposAlterados.length > 0) {
                 await registrarAuditoriaGenerica("turmas", turmaId, {
-                    tipo: "alteracao",
+                    tipo: "adicao_aluno",
                     entidade: "turma",
-                    descricao: `${camposAlterados.length} campo(s) alterado(s)`,
-                    campos_alterados: camposAlterados
+                    descricao: `Aluno adicionado: ${aluno.nome || aluno.nome_aluno || alunoId}`,
+                    campos_alterados: [{
+                        campo: "alunos_matriculados",
+                        valor_anterior: null,
+                        valor_novo: aluno.nome || aluno.nome_aluno || alunoId // <--- AGORA GRAVA O NOME
+                    }]
                 });
             }
         } else {
