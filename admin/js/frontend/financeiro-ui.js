@@ -12,19 +12,16 @@ import {
   formatarValorAudit,
 } from "../modules/auditoria-timeline.js";
 import { criarTransacaoFinanceira } from "../backend/financeiro-service.js";
-import { listarAuditoriaGenerica } from "../backend/auditoria-service.js";
 import {
   escutarFinanceiro,
   atualizarStatusFinanceiro,
   editarTransacaoFinanceira,
   excluirTransacaoFinanceira,
 } from "../backend/financeiro-service.js";
+import { renderizarTimelineAuditoria } from "../modules/auditoria-timeline.js";
 
 /* =========================================================================
  * ESTADO
- * ========================================================================= */
-/* =========================================================================
- * HELPERS DE FEEDBACK (substituem alert() e confirm())
  * ========================================================================= */
 
 let modalConfirmacaoInstance = null;
@@ -33,127 +30,93 @@ let callbackConfirmacao = null;
 
 /**
  * Mostra um modal de confirmação estilizado.
- *
- * @param {Object} opcoes
- * @param {string} opcoes.titulo — Título do modal
- * @param {string} opcoes.mensagem — Texto principal
- * @param {string} opcoes.textoBotao — Texto do botão de confirmar (padrão: "Confirmar")
- * @param {string} opcoes.corBotao — Classe Bootstrap (padrão: "btn-primary")
- * @param {string} opcoes.icone — Classe Font Awesome (padrão: "fa-question-circle")
- * @param {Function} opcoes.onConfirmar — Função a executar ao confirmar
  */
 function pedirConfirmacao(opcoes) {
-  const modalEl = document.getElementById("modalConfirmacao");
-  if (!modalEl) {
-    if (window.confirm(opcoes.mensagem)) {
-      if (typeof opcoes.onConfirmar === "function") opcoes.onConfirmar();
+    const modalEl = document.getElementById("modalConfirmacao");
+    if (!modalEl) {
+        if (window.confirm(opcoes.mensagem)) {
+            if (typeof opcoes.onConfirmar === "function") opcoes.onConfirmar();
+        }
+        return;
     }
-    return;
-  }
 
-  // Mapeia ícone + cores conforme o tipo
-  const icones = {
-    warning: {
-      icone: "fa-exclamation-triangle",
-      cor: "#f59e0b",
-      fundo: "#fef3c7",
-    },
-    success: { icone: "fa-check-circle", cor: "#16a34a", fundo: "#dcfce7" },
-    danger: { icone: "fa-trash-alt", cor: "#dc2626", fundo: "#fee2e2" },
-    info: { icone: "fa-info-circle", cor: "#0284c7", fundo: "#e0f2fe" },
-  };
+    const icones = {
+        "warning": { icone: "fa-exclamation-triangle", cor: "#f59e0b", fundo: "#fef3c7" },
+        "success": { icone: "fa-check-circle", cor: "#16a34a", fundo: "#dcfce7" },
+        "danger": { icone: "fa-trash-alt", cor: "#dc2626", fundo: "#fee2e2" },
+        "info": { icone: "fa-info-circle", cor: "#0284c7", fundo: "#e0f2fe" },
+    };
 
-  const tipo = opcoes.tipo || "info";
-  const cfg = icones[tipo] || icones.info;
+    const tipo = opcoes.tipo || "info";
+    const cfg = icones[tipo] || icones.info;
 
-  // Ícone
-  const iconeEl = document.getElementById("modalConfirmacaoIcone");
-  if (iconeEl) {
-    iconeEl.style.background = cfg.fundo;
-    iconeEl.innerHTML = `<i class="fas ${cfg.icone} fa-2x" style="color: ${cfg.cor};"></i>`;
-  }
+    const iconeEl = document.getElementById("modalConfirmacaoIcone");
+    if (iconeEl) {
+        iconeEl.style.background = cfg.fundo;
+        iconeEl.innerHTML = `<i class="fas ${cfg.icone} fa-2x" style="color: ${cfg.cor};"></i>`;
+    }
 
-  // Título
-  const titulo = document.getElementById("modalConfirmacaoTitulo");
-  if (titulo) titulo.textContent = opcoes.titulo || "Confirmação";
+    const titulo = document.getElementById("modalConfirmacaoTitulo");
+    if (titulo) titulo.textContent = opcoes.titulo || "Confirmação";
 
-  // Mensagem
-  const mensagem = document.getElementById("modalConfirmacaoMensagem");
-  if (mensagem) {
-    // Suporta \n como <br>
-    mensagem.innerHTML = (opcoes.mensagem || "Tem certeza?").replace(
-      /\n/g,
-      "<br>",
-    );
-  }
+    const mensagem = document.getElementById("modalConfirmacaoMensagem");
+    if (mensagem) {
+        mensagem.innerHTML = (opcoes.mensagem || "Tem certeza?").replace(/\n/g, "<br>");
+    }
 
-  // Botão
-  const btn = document.getElementById("modalConfirmacaoBtn");
-  if (btn) {
-    btn.textContent = opcoes.textoBotao || "Confirmar";
-    btn.className = `btn ${opcoes.corBotao || "btn-primary"} px-4 rounded-pill fw-semibold`;
-  }
+    const btn = document.getElementById("modalConfirmacaoBtn");
+    if (btn) {
+        btn.textContent = opcoes.textoBotao || "Confirmar";
+        btn.className = `btn ${opcoes.corBotao || "btn-primary"} px-4 rounded-pill fw-semibold`;
+    }
 
-  callbackConfirmacao = opcoes.onConfirmar;
+    callbackConfirmacao = opcoes.onConfirmar;
 
-  if (!modalConfirmacaoInstance && window.bootstrap) {
-    modalConfirmacaoInstance = new bootstrap.Modal(modalEl);
-  }
-  if (modalConfirmacaoInstance) modalConfirmacaoInstance.show();
+    if (!modalConfirmacaoInstance && window.bootstrap) {
+        modalConfirmacaoInstance = new bootstrap.Modal(modalEl);
+    }
+    if (modalConfirmacaoInstance) modalConfirmacaoInstance.show();
 }
 
-/**
- * Mostra um toast de sucesso no canto superior direito.
- * @param {string} mensagem
- */
 function mostrarSucesso(mensagem) {
   const toastEl = document.getElementById("toastSucesso");
   const mensagemEl = document.getElementById("toastSucessoMensagem");
 
-  if (!toastEl) {
-    console.log("✅", mensagem); // fallback
-    return;
-  }
+    if (!toastEl) {
+        console.log("✅", mensagem);
+        return;
+    }
 
-  if (mensagemEl) mensagemEl.textContent = mensagem;
-
-  if (!toastSucessoInstance && window.bootstrap) {
-    toastSucessoInstance = new bootstrap.Toast(toastEl, { delay: 3000 });
-  }
-  if (toastSucessoInstance) toastSucessoInstance.show();
+    if (mensagemEl) mensagemEl.textContent = mensagem;
+    if (!toastSucessoInstance && window.bootstrap) {
+        toastSucessoInstance = new bootstrap.Toast(toastEl, { delay: 3000 });
+    }
+    if (toastSucessoInstance) toastSucessoInstance.show();
 }
 
-/**
- * Mostra um toast de erro (vermelho).
- */
 function mostrarErro(mensagem) {
-  const toastEl = document.getElementById("toastSucesso");
-  const mensagemEl = document.getElementById("toastSucessoMensagem");
+    const toastEl = document.getElementById("toastSucesso");
+    const mensagemEl = document.getElementById("toastSucessoMensagem");
 
-  if (!toastEl) {
-    console.error("❌", mensagem);
-    return;
-  }
+    if (!toastEl) {
+        console.error("❌", mensagem);
+        return;
+    }
 
-  toastEl.classList.remove("bg-success");
-  toastEl.classList.add("bg-danger");
+    toastEl.classList.remove("bg-success");
+    toastEl.classList.add("bg-danger");
 
-  if (mensagemEl)
-    mensagemEl.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${mensagem}`;
+    if (mensagemEl) mensagemEl.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${mensagem}`;
 
-  const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
-  toast.show();
+    const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+    toast.show();
 
-  // Volta ao normal depois
-  toastEl.addEventListener(
-    "hidden.bs.toast",
-    () => {
-      toastEl.classList.remove("bg-danger");
-      toastEl.classList.add("bg-success");
-    },
-    { once: true },
-  );
+    toastEl.addEventListener("hidden.bs.toast", () => {
+        toastEl.classList.remove("bg-danger");
+        toastEl.classList.add("bg-success");
+    }, { once: true });
 }
+
 let listaCompleta = [];
 let listaFiltrada = [];
 
@@ -170,10 +133,6 @@ let modalEdicaoInstance = null;
 
 let timerBusca = null;
 
-/* =========================================================================
- * HELPERS
- * ========================================================================= */
-
 function formatarMoeda(valor) {
   return Number(valor || 0).toLocaleString("pt-BR", {
     style: "currency",
@@ -181,36 +140,39 @@ function formatarMoeda(valor) {
   });
 }
 
-/* =========================================================================
- * BOOTSTRAP
- * ========================================================================= */
-
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("🚀 [financeiro-ui] Inicializando...");
+    console.log("🚀 [financeiro-ui] Inicializando...");
 
-  // Modal de edição
-  const modalEl = document.getElementById("modalEditarFinanceiro");
-  if (modalEl && window.bootstrap) {
-    modalEdicaoInstance = new bootstrap.Modal(modalEl);
-  }
+    const modalEl = document.getElementById("modalEditarFinanceiro");
+    if (modalEl && window.bootstrap) {
+        modalEdicaoInstance = new bootstrap.Modal(modalEl);
+    }
 
-  // ✅ Listener do botão de confirmação
-  const btnConf = document.getElementById("modalConfirmacaoBtn");
-  if (btnConf) {
-    btnConf.addEventListener("click", async () => {
-      if (typeof callbackConfirmacao === "function") {
-        const cb = callbackConfirmacao;
-        callbackConfirmacao = null;
+    const btnConf = document.getElementById("modalConfirmacaoBtn");
+    if (btnConf) {
+        btnConf.addEventListener("click", async () => {
+            if (typeof callbackConfirmacao === "function") {
+                const cb = callbackConfirmacao;
+                callbackConfirmacao = null;
+                if (modalConfirmacaoInstance) modalConfirmacaoInstance.hide();
+                try {
+                    await cb();
+                } catch (err) {
+                    console.error("Erro na ação confirmada:", err);
+                }
+            }
+        });
+    }
 
-        // Fecha o modal antes de executar
-        if (modalConfirmacaoInstance) modalConfirmacaoInstance.hide();
+    configurarFiltros();
+    configurarFormularioEdicao();
+    configurarEventosTabela();
 
-        try {
-          await cb();
-        } catch (err) {
-          console.error("Erro na ação confirmada:", err);
-        }
-      }
+    escutarFinanceiro((transacoes) => {
+        console.log("📊 [financeiro-ui] Recebi", transacoes.length, "transações");
+        listaCompleta = transacoes;
+        paginaAtual = 1;
+        aplicarFiltrosERenderizar();
     });
   }
 
@@ -225,10 +187,6 @@ document.addEventListener("DOMContentLoaded", () => {
     aplicarFiltrosERenderizar();
   });
 });
-
-/* =========================================================================
- * FILTROS
- * ========================================================================= */
 
 function configurarFiltros() {
   const inputBusca = document.getElementById("busca-transacao");
@@ -271,76 +229,56 @@ function configurarFiltros() {
   }
 }
 
-/* =========================================================================
- * APLICAR FILTROS + PAGINAÇÃO + RENDERIZAR
- * ========================================================================= */
-
 function aplicarFiltrosERenderizar() {
-  // 1. Busca textual
-  let filtrados = [...listaCompleta];
+    let filtrados = [...listaCompleta];
 
-  if (termoBusca) {
-    filtrados = filtrados.filter((t) => {
-      const nome = (t.alunoNome || "").toLowerCase();
-      const curso = (t.curso || "").toLowerCase();
-      const descricao = (t.descricao || "").toLowerCase();
-      return (
-        nome.includes(termoBusca) ||
-        curso.includes(termoBusca) ||
-        descricao.includes(termoBusca)
-      );
-    });
-  }
+    if (termoBusca) {
+        filtrados = filtrados.filter((t) => {
+            const nome = (t.alunoNome || "").toLowerCase();
+            const curso = (t.curso || "").toLowerCase();
+            const descricao = (t.descricao || "").toLowerCase();
+            return nome.includes(termoBusca) || curso.includes(termoBusca) || descricao.includes(termoBusca);
+        });
+    }
 
-  // 2. Status
-  if (filtroStatus !== "todos") {
-    filtrados = filtrados.filter((t) => t.status === filtroStatus);
-  }
+    if (filtroStatus !== "todos") {
+        filtrados = filtrados.filter((t) => t.status === filtroStatus);
+    }
 
-  // 3. Forma
-  if (filtroForma !== "todas") {
-    filtrados = filtrados.filter((t) => t.formaPagamento === filtroForma);
-  }
+    if (filtroForma !== "todas") {
+        filtrados = filtrados.filter((t) => t.formaPagamento === filtroForma);
+    }
 
-  listaFiltrada = filtrados;
+    listaFiltrada = filtrados;
 
-  // 4. Paginação
-  const totalPaginas = Math.max(
-    1,
-    Math.ceil(filtrados.length / itensPorPagina),
-  );
-  if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+    const totalPaginas = Math.max(1, Math.ceil(filtrados.length / itensPorPagina));
+    if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
 
-  const inicio = (paginaAtual - 1) * itensPorPagina;
-  const fim = inicio + itensPorPagina;
-  const pagina = filtrados.slice(inicio, fim);
+    const inicio = (paginaAtual - 1) * itensPorPagina;
+    const fim = inicio + itensPorPagina;
+    const pagina = filtrados.slice(inicio, fim);
 
-  // 5. Renderiza
-  renderizarTabela(pagina);
-  renderizarContador(filtrados.length, inicio, fim);
-  renderizarPaginacao(totalPaginas);
-  atualizarKPIs();
-  renderizarGraficos();
+    renderizarTabela(pagina);
+    renderizarContador(filtrados.length, inicio, fim);
+    renderizarPaginacao(totalPaginas);
+    atualizarKPIs();
+    renderizarGraficos();
 }
 
-/* =========================================================================
- * KPIs
- * ========================================================================= */
-
 function atualizarKPIs() {
-  let recebido = 0;
-  let pendente = 0;
-  let aguardando = 0;
-  let saidas = 0;
+    let recebido = 0;
+    let pendente = 0;
+    let aguardando = 0;
+    let saidas = 0;
 
-  listaCompleta.forEach((t) => {
-    const v = Number(t.valor || 0);
-    const tipo = t.tipo || "entrada"; // ← padrão entrada (retrocompatível)
+    listaCompleta.forEach(t => {
+        const v = Number(t.valor || 0);
+        const tipo = t.tipo || "entrada";
 
-    if (tipo === "saida") {
-      saidas += v;
-      return;
-    }
+        if (tipo === "saida") {
+            saidas += v;
+            return;
+        }
 
     if (t.status === "Recebido") recebido += v;
     else if (t.status === "Pendente") pendente += v;
@@ -349,30 +287,22 @@ function atualizarKPIs() {
 
   const liquido = recebido - saidas;
 
-  // Helper
-  const set = (id, val) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = formatarMoeda(val);
-  };
+    const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = formatarMoeda(val);
+    };
 
-  // IDs REAIS do HTML
-  set("financeiro-total-recebido", recebido);
-  set("financeiro-total-pendente", pendente);
-  set("financeiro-total-aguardando", aguardando);
-  set("financeiro-total-geral", liquido);
+    set("financeiro-total-recebido", recebido);
+    set("financeiro-total-pendente", pendente);
+    set("financeiro-total-aguardando", aguardando);
+    set("financeiro-total-geral", liquido);
 
-  // KPI de Saídas (se você adicionar o card — ver Parte 2)
-  const elSaidas = document.getElementById("financeiro-total-saidas");
-  if (elSaidas) elSaidas.textContent = formatarMoeda(saidas);
+    const elSaidas = document.getElementById("financeiro-total-saidas");
+    if (elSaidas) elSaidas.textContent = formatarMoeda(saidas);
 
-  // Atualiza também o rótulo "Total Geral" pra indicar líquido
-  const labelTotal = document.querySelector('[data-kpi-label="total-geral"]');
-  if (labelTotal) labelTotal.textContent = "Total Líquido";
+    const labelTotal = document.querySelector('[data-kpi-label="total-geral"]');
+    if (labelTotal) labelTotal.textContent = "Total Líquido";
 }
-
-/* =========================================================================
- * GRÁFICOS
- * ========================================================================= */
 
 function renderizarGraficos() {
   let recebido = 0,
@@ -418,86 +348,78 @@ function renderizarGraficos() {
         scales: { y: { beginAtZero: true } },
       },
     });
-  }
 
-  // Gráfico 2 — Formas
-  const ctx2 = document
-    .getElementById("graficoFormasPagamento")
-    ?.getContext("2d");
-  if (ctx2) {
-    if (graficoFormasInstance) graficoFormasInstance.destroy();
-    graficoFormasInstance = new Chart(ctx2, {
-      type: "doughnut",
-      data: {
-        labels: ["Pix", "Cartão", "Boleto", "À Vista"],
-        datasets: [
-          {
-            data: [
-              formas["Pix"],
-              formas["Cartão de Crédito"],
-              formas["Boleto Bancário"],
-              formas["À Vista"],
-            ],
-            backgroundColor: ["#0d6efd", "#6610f2", "#6c757d", "#20c997"],
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } } },
-      },
-    });
-  }
+    const ctx1 = document.getElementById("graficoFluxoCaixa")?.getContext("2d");
+    if (ctx1) {
+        if (graficoFluxoInstance) graficoFluxoInstance.destroy();
+        graficoFluxoInstance = new Chart(ctx1, {
+            type: "bar",
+            data: {
+                labels: ["Recebido", "Pendente", "Aguardando"],
+                datasets: [{
+                    label: "R$",
+                    data: [recebido, pendente, aguardando],
+                    backgroundColor: ["#198754", "#0dcaf0", "#ffc107"],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+
+    const ctx2 = document.getElementById("graficoFormasPagamento")?.getContext("2d");
+    if (ctx2) {
+        if (graficoFormasInstance) graficoFormasInstance.destroy();
+        graficoFormasInstance = new Chart(ctx2, {
+            type: "doughnut",
+            data: {
+                labels: ["Pix", "Cartão", "Boleto", "À Vista"],
+                datasets: [{
+                    data: [formas["Pix"], formas["Cartão de Crédito"], formas["Boleto Bancário"], formas["À Vista"]],
+                    backgroundColor: ["#0d6efd", "#6610f2", "#6c757d", "#20c997"]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } } }
+            }
+        });
+    }
 }
 
-/* =========================================================================
- * TABELA
- * ========================================================================= */
-
 function renderizarTabela(pagina) {
-  const tbody = document.getElementById("financeiro-tbody");
-  if (!tbody) return;
+    const tbody = document.getElementById("financeiro-tbody");
+    if (!tbody) return;
 
-  if (pagina.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">Nenhuma transação encontrada.</td></tr>`;
-    return;
-  }
+    if (pagina.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">Nenhuma transação encontrada.</td></tr>`;
+        return;
+    }
 
-  let html = "";
+    let html = "";
 
-  pagina.forEach((t) => {
-    const dataFmt = t.criado_em
-      ? new Date(t.criado_em).toLocaleDateString("pt-BR")
-      : "—";
+    pagina.forEach((t) => {
+        const dataFmt = t.criado_em ? new Date(t.criado_em).toLocaleDateString("pt-BR") : "—";
+        const tipo = t.tipo || "entrada";
+        const tipoBadge = tipo === "saida"
+            ? `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1" style="font-size: 0.7rem;"><i class="fas fa-arrow-down me-1"></i>Saída</span>`
+            : `<span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1" style="font-size: 0.7rem;"><i class="fas fa-arrow-up me-1"></i>Entrada</span>`;
 
-    // ✅ Badge de tipo (entrada/saída)
-    const tipo = t.tipo || "entrada";
-    const tipoBadge =
-      tipo === "saida"
-        ? `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1" style="font-size: 0.7rem;">
-               <i class="fas fa-arrow-down me-1"></i>Saída
-           </span>`
-        : `<span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1" style="font-size: 0.7rem;">
-               <i class="fas fa-arrow-up me-1"></i>Entrada
-           </span>`;
+        let badgeClass = "bg-warning bg-opacity-10 text-warning border border-warning";
+        if (t.status === "Recebido") badgeClass = "bg-success bg-opacity-10 text-success border border-success";
+        else if (t.status === "Pendente") badgeClass = "bg-info bg-opacity-10 text-info border border-info";
 
-    // Badge de status
-    let badgeClass =
-      "bg-warning bg-opacity-10 text-warning border border-warning";
-    if (t.status === "Recebido")
-      badgeClass =
-        "bg-success bg-opacity-10 text-success border border-success";
-    else if (t.status === "Pendente")
-      badgeClass = "bg-info bg-opacity-10 text-info border border-info";
+        const valorHtml = tipo === "saida"
+            ? `<span class="text-danger fw-bold">-${formatarMoeda(t.valor)}</span>`
+            : `<span class="fw-bold">${formatarMoeda(t.valor)}</span>`;
 
-    // ✅ Valor com cor pra saída
-    const valorHtml =
-      tipo === "saida"
-        ? `<span class="text-danger fw-bold">-${formatarMoeda(t.valor)}</span>`
-        : `<span class="fw-bold">${formatarMoeda(t.valor)}</span>`;
-
-    html += `
+        html += `
         <tr>
             <td>${dataFmt}</td>
             <td>${tipoBadge}</td>
@@ -508,16 +430,13 @@ function renderizarTabela(pagina) {
             <td><span class="badge rounded-pill ${badgeClass} px-3 py-2">${t.status}</span></td>
             <td class="text-end">
                 <div class="d-flex justify-content-end gap-1">
-                    <button class="btn btn-sm btn-outline-success px-2 py-1 btn-validar-pagamento"
-                            data-id="${t.id}" title="Marcar como Recebido">
+                    <button class="btn btn-sm btn-outline-success px-2 py-1 btn-validar-pagamento" data-id="${t.id}" title="Marcar como Recebido">
                         <i class="fas fa-check"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-primary px-2 py-1 btn-editar-financeiro"
-                            data-id="${t.id}" title="Editar">
+                    <button class="btn btn-sm btn-outline-primary px-2 py-1 btn-editar-financeiro" data-id="${t.id}" title="Editar">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-danger px-2 py-1 btn-excluir-financeiro"
-                            data-id="${t.id}" title="Excluir">
+                    <button class="btn btn-sm btn-outline-danger px-2 py-1 btn-excluir-financeiro" data-id="${t.id}" title="Excluir">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </div>
@@ -528,10 +447,6 @@ function renderizarTabela(pagina) {
 
   tbody.innerHTML = html;
 }
-
-/* =========================================================================
- * CONTADOR + PAGINAÇÃO
- * ========================================================================= */
 
 function renderizarContador(total, inicio, fim) {
   const el = document.getElementById("contador-transacoes");
@@ -600,122 +515,98 @@ function calcularPaginasVisiveis(atual, total) {
   return paginas;
 }
 
-/* =========================================================================
- * EVENTOS DA TABELA
- * ========================================================================= */
-
 function configurarEventosTabela() {
-  const tbody = document.getElementById("financeiro-tbody");
-  if (!tbody) return;
+    const tbody = document.getElementById("financeiro-tbody");
+    if (!tbody) return;
 
-  tbody.addEventListener("click", async (e) => {
-    // ═══════════════════════════════════════════════════════════
-    // VALIDAR PAGAMENTO
-    // ═══════════════════════════════════════════════════════════
-    const btnValidar = e.target.closest(".btn-validar-pagamento");
-    if (btnValidar) {
-      const id = btnValidar.getAttribute("data-id");
+    tbody.addEventListener("click", async (e) => {
+        const btnValidar = e.target.closest(".btn-validar-pagamento");
+        if (btnValidar) {
+            const id = btnValidar.getAttribute("data-id");
+            pedirConfirmacao({
+                titulo: "Marcar como Recebido",
+                mensagem: "Deseja marcar esta transação como RECEBIDA? O status será propagado para o aluno e matrículas.",
+                textoBotao: "Marcar Recebido",
+                corBotao: "btn-success",
+                icone: "fa-check-circle",
+                onConfirmar: async () => {
+                    try {
+                        await atualizarStatusFinanceiro(id, "Recebido", "Pix");
+                        mostrarSucesso("Transação marcada como recebida!");
+                    } catch (err) {
+                        mostrarErro("Erro ao validar pagamento: " + err.message);
+                    }
+                }
+            });
+            return;
+        }
 
-      pedirConfirmacao({
-        titulo: "Marcar como Recebido",
-        mensagem:
-          "Deseja marcar esta transação como RECEBIDA? O status será propagado para o aluno e matrículas.",
-        textoBotao: "Marcar Recebido",
-        corBotao: "btn-success",
-        icone: "fa-check-circle",
-        onConfirmar: async () => {
-          try {
-            await atualizarStatusFinanceiro(id, "Recebido", "Pix");
-            mostrarSucesso("Transação marcada como recebida!");
-          } catch (err) {
-            mostrarErro("Erro ao validar pagamento: " + err.message);
-          }
-        },
-      });
-      return;
-    }
+        const btnEditar = e.target.closest(".btn-editar-financeiro");
+        if (btnEditar) {
+            const id = btnEditar.getAttribute("data-id");
+            abrirModalEdicao(id);
+            return;
+        }
 
-    // ═══════════════════════════════════════════════════════════
-    // EDITAR
-    // ═══════════════════════════════════════════════════════════
-    const btnEditar = e.target.closest(".btn-editar-financeiro");
-    if (btnEditar) {
-      const id = btnEditar.getAttribute("data-id");
-      abrirModalEdicao(id);
-      return;
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // EXCLUIR
-    // ═══════════════════════════════════════════════════════════
-    const btnExcluir = e.target.closest(".btn-excluir-financeiro");
-    if (btnExcluir) {
-      const id = btnExcluir.getAttribute("data-id");
-
-      pedirConfirmacao({
-        titulo: "Excluir Transação",
-        mensagem:
-          "Deseja excluir esta transação? A exclusão é lógica (mantém histórico), e a transação desaparecerá da listagem.",
-        textoBotao: "Excluir",
-        corBotao: "btn-danger",
-        icone: "fa-exclamation-triangle",
-        onConfirmar: async () => {
-          try {
-            await excluirTransacaoFinanceira(id);
-            mostrarSucesso("Transação excluída com sucesso!");
-          } catch (err) {
-            mostrarErro("Erro ao excluir: " + err.message);
-          }
-        },
-      });
-      return;
-    }
-  });
+        const btnExcluir = e.target.closest(".btn-excluir-financeiro");
+        if (btnExcluir) {
+            const id = btnExcluir.getAttribute("data-id");
+            pedirConfirmacao({
+                titulo: "Excluir Transação",
+                mensagem: "Deseja excluir esta transação? A exclusão é lógica (mantém histórico), e a transação desaparecerá da listagem.",
+                textoBotao: "Excluir",
+                corBotao: "btn-danger",
+                icone: "fa-exclamation-triangle",
+                onConfirmar: async () => {
+                    try {
+                        await excluirTransacaoFinanceira(id);
+                        mostrarSucesso("Transação excluída com sucesso!");
+                    } catch (err) {
+                        mostrarErro("Erro ao excluir: " + err.message);
+                    }
+                }
+            });
+            return;
+        }
+    });
 }
-/* =========================================================================
- * MODAL DE EDIÇÃO
- * ========================================================================= */
 
 function abrirModalEdicao(id) {
-  const t = listaCompleta.find((x) => x.id === id);
-  if (!t) return;
+    const t = listaCompleta.find((x) => x.id === id);
+    if (!t) return;
 
-  document.getElementById("finTransacaoId").value = t.id;
-  document.getElementById("finTipo").value = t.tipo || "entrada";
-  document.getElementById("finAlunoId").value = t.alunoId || "";
-  document.getElementById("finNomeAluno").value = t.alunoNome || "";
-  document.getElementById("finCurso").value = t.curso || "";
-  document.getElementById("finValorBase").value = t.valor || 0;
-  document.getElementById("finAjusteTipo").value = "nenhum";
-  document.getElementById("finValorAjuste").value = "0";
-  document.getElementById("finFormaPagamento").value =
-    t.formaPagamento || "Pix";
-  document.getElementById("finStatusPagamento").value =
-    t.status || "Aguardando pagamento";
-  document.getElementById("finAuditoriaNotas").value =
-    t.auditoriaFinanceira || "";
+    document.getElementById("finTransacaoId").value = t.id;
+    document.getElementById("finTipo").value = t.tipo || "entrada";
+    document.getElementById("finAlunoId").value = t.alunoId || "";
+    document.getElementById("finNomeAluno").value = t.alunoNome || "";
+    document.getElementById("finCurso").value = t.curso || "";
+    document.getElementById("finValorBase").value = t.valor || 0;
+    document.getElementById("finAjusteTipo").value = "nenhum";
+    document.getElementById("finValorAjuste").value = "0";
+    document.getElementById("finFormaPagamento").value = t.formaPagamento || "Pix";
+    document.getElementById("finStatusPagamento").value = t.status || "Aguardando pagamento";
+    document.getElementById("finAuditoriaNotas").value = t.auditoriaFinanceira || "";
 
-  // Auditoria
-  // Auditoria — última alteração (badge resumido)
-  const boxInfo = document.getElementById("infoUltimaAlteracao");
-  const textoInfo = document.getElementById("textoUltimaAlteracao");
-  if (boxInfo && textoInfo) {
-    if (t.ultimaAlteracaoEm && t.ultimaAlteracaoPor) {
-      const fmt = new Date(t.ultimaAlteracaoEm).toLocaleString("pt-BR");
-      textoInfo.innerHTML = `Última alteração por <strong>${t.ultimaAlteracaoPor}</strong> em <em>${fmt}</em>`;
-      boxInfo.style.display = "block";
-    } else {
-      boxInfo.style.display = "none";
+    const boxInfo = document.getElementById("infoUltimaAlteracao");
+    const textoInfo = document.getElementById("textoUltimaAlteracao");
+    if (boxInfo && textoInfo) {
+        if (t.ultimaAlteracaoEm && t.ultimaAlteracaoPor) {
+            const fmt = new Date(t.ultimaAlteracaoEm).toLocaleString("pt-BR");
+            textoInfo.innerHTML = `Última alteração por <strong>${t.ultimaAlteracaoPor}</strong> em <em>${fmt}</em>`;
+            boxInfo.style.display = "block";
+        } else {
+            boxInfo.style.display = "none";
+        }
     }
   }
 
-  // Auditoria — timeline completa
-  renderizarTimelineAuditoria({
-    colecao: "financeiro",
-    docId: t.id,
-    containerId: "timelineAuditoriaContainer",
-    limite: 20,
-  });
+    // ⬇️ NOVO: Chamada do componente compartilhado
+    renderizarTimelineAuditoria({
+        colecao: "financeiro",
+        docId: t.id,
+        containerId: "timelineAuditoriaContainer",
+        limite: 20
+    });
 
   if (modalEdicaoInstance) modalEdicaoInstance.show();
 }
@@ -748,150 +639,55 @@ function configurarFormularioEdicao() {
       return;
     }
 
-    // 📋 Confirmação antes de criar (padrão das outras ações do Financeiro)
-    const tipoLabel = tipo === "saida" ? "Saída de Caixa" : "Entrada (Receita)";
-    const valorFormatado = valor.toFixed(2).replace(".", ",");
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-    pedirConfirmacao({
-      tipo: "info",
-      titulo: "Confirmar Nova Transação?",
-      mensagem:
-        `Deseja criar esta transação?\n\n` +
-        `• Aluno: ${alunoObj?.nome || "Aluno"}\n` +
-        `• Tipo: ${tipoLabel}\n` +
-        `• Curso: ${curso}\n` +
-        `• Valor: R$ ${valorFormatado}\n` +
-        `• Status: ${status}\n` +
-        `• Forma: ${forma}`,
-      textoBotao: "Criar Transação",
-      corBotao: "btn-primary",
-      onConfirmar: async () => {
-        const btn = form.querySelector('button[type="submit"]');
-        const txtOriginal = btn ? btn.innerHTML : "";
-        if (btn) {
-          btn.disabled = true;
-          btn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Criando...`;
-        }
+        const id = document.getElementById("finTransacaoId").value;
+        const tipo = document.getElementById("finTipo").value || "entrada";
+        const alunoNome = document.getElementById("finNomeAluno").value;
+        const valorBase = parseFloat(document.getElementById("finValorBase").value) || 0;
+        const ajusteTipo = document.getElementById("finAjusteTipo").value;
+        const valorAjuste = parseFloat(document.getElementById("finValorAjuste").value) || 0;
+        const status = document.getElementById("finStatusPagamento").value;
+        const forma = document.getElementById("finFormaPagamento").value;
+        const obs = document.getElementById("finAuditoriaNotas").value;
 
-        try {
-          await criarTransacaoFinanceira({
-            alunoId,
-            tipo,
-            alunoNome: alunoObj?.nome || "Aluno",
-            curso,
-            valor,
-            status,
-            formaPagamento: forma,
-            dataPagamento,
-            observacoes,
-          });
+        let valorFinal = valorBase;
+        if (ajusteTipo === "desconto") valorFinal = valorBase - (valorBase * valorAjuste / 100);
+        else if (ajusteTipo === "acrescimo") valorFinal = valorBase + (valorBase * valorAjuste / 100);
 
-          if (modalNovaTransacaoInstance) modalNovaTransacaoInstance.hide();
-          mostrarSucesso("Transação criada com sucesso!");
-        } catch (err) {
-          console.error("Erro ao criar transação:", err);
-          mostrarErro("Erro ao criar: " + err.message);
-        } finally {
-          if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = txtOriginal;
-          }
-        }
-      },
+        pedirConfirmacao({
+            tipo: "warning",
+            titulo: "Confirmar Alterações?",
+            mensagem: `Deseja realmente guardar as alterações desta transação?\n\n` +
+                `• Aluno: ${alunoNome}\n` +
+                `• Valor final: R$ ${valorFinal.toFixed(2).replace(".", ",")}\n` +
+                `• Status: ${status}\n` +
+                `• Forma: ${forma}`,
+            textoBotao: "Salvar Alterações",
+            corBotao: "btn-primary",
+            onConfirmar: async () => {
+                const btn = form.querySelector('button[type="submit"]');
+                if (btn) { btn.disabled = true; btn.textContent = "A guardar..."; }
+
+                try {
+                    await editarTransacaoFinanceira(id, {
+                        tipo, alunoNome, valor: valorFinal, status,
+                        formaPagamento: forma, observacoes: obs
+                    });
+
+                    if (modalEdicaoInstance) modalEdicaoInstance.hide();
+                    mostrarSucesso("Transação atualizada com sucesso!");
+
+                } catch (err) {
+                    mostrarErro("Erro ao guardar: " + err.message);
+                } finally {
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i> Guardar'; }
+                }
+            }
+        });
     });
   });
-}
-
-/* ==========================================================================
- * AUDITORIA — TIMELINE COMPLETA
- * ========================================================================== */
-async function renderizarTimelineAuditoria(transacaoId) {
-  const container = document.getElementById("timelineAuditoriaContainer");
-  if (!container) return;
-
-  container.innerHTML = `
-        <div class="text-center py-3">
-            <div class="spinner-border spinner-border-sm text-primary"></div>
-            <small class="text-muted ms-2">Carregando histórico...</small>
-        </div>
-    `;
-
-  try {
-    const logs = await listarAuditoriaGenerica("financeiro", transacaoId, 20);
-
-    if (logs.length === 0) {
-      container.innerHTML = `
-                <div class="text-center py-3 text-muted small">
-                    <i class="fas fa-history me-1"></i>
-                    Nenhuma alteração registrada ainda.
-                </div>
-            `;
-      return;
-    }
-
-    let html = "";
-    logs.forEach((log) => {
-      const data = log.criado_em ? new Date(log.criado_em) : null;
-      const dataFmt = data
-        ? `${data.toLocaleDateString("pt-BR")} às ${data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
-        : "—";
-
-      const campos = log.campos_alterados || [];
-      let camposHtml = "";
-      if (campos.length > 0) {
-        camposHtml = `
-                    <table class="table table-sm table-borderless mb-0 mt-2" style="font-size: 0.78rem;">
-                        <tbody>
-                            ${campos
-                              .map(
-                                (c) => `
-                                <tr>
-                                    <td class="text-muted" style="width: 40%;">
-                                        <strong>${c.rotulo || c.campo}</strong>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-danger bg-opacity-10 text-danger">${formatarValorAudit(c.valor_anterior)}</span>
-                                        <i class="fas fa-arrow-right mx-1 text-muted" style="font-size: 0.65rem;"></i>
-                                        <span class="badge bg-success bg-opacity-10 text-success">${formatarValorAudit(c.valor_novo)}</span>
-                                    </td>
-                                </tr>
-                            `,
-                              )
-                              .join("")}
-                        </tbody>
-                    </table>
-                `;
-      }
-
-      html += `
-                <div class="mb-3 pb-3 border-bottom" style="border-color: #e2e8f0 !important;">
-                    <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-primary bg-opacity-10 text-primary" style="font-size: 0.7rem;">
-                                <i class="fas fa-edit me-1"></i>${log.descricao || "Alteração"}
-                            </span>
-                        </div>
-                        <small class="text-muted" style="font-size: 0.72rem;">${dataFmt}</small>
-                    </div>
-                    <small class="text-muted d-block" style="font-size: 0.75rem;">
-                        <i class="fas fa-user me-1"></i>${log.admin_email || "Sistema"}
-                    </small>
-                    ${camposHtml}
-                </div>
-            `;
-    });
-
-    container.innerHTML = html;
-  } catch (err) {
-    console.error("Erro ao carregar auditoria:", err);
-    container.innerHTML = `<small class="text-muted">Erro ao carregar histórico.</small>`;
-  }
-}
-
-function formatarValorAudit(v) {
-  if (v === null || v === undefined || v === "") return "—";
-  if (typeof v === "number") return "R$ " + v.toFixed(2).replace(".", ",");
-  return String(v);
 }
 
 /* ==========================================================================
@@ -902,43 +698,61 @@ let listaAlunosParaNova = [];
 let mapaAlunosParaNova = {};
 
 document.addEventListener("DOMContentLoaded", () => {
-  const modalEl = document.getElementById("modalNovaTransacao");
-  if (modalEl && window.bootstrap) {
-    modalNovaTransacaoInstance = new bootstrap.Modal(modalEl);
-  }
+    const modalEl = document.getElementById("modalNovaTransacao");
+    if (modalEl && window.bootstrap) {
+        modalNovaTransacaoInstance = new bootstrap.Modal(modalEl);
+    }
 
-  // Botão "+ Nova Transação"
-  const btnNova = document.getElementById("btnNovaTransacao");
-  if (btnNova) {
-    btnNova.addEventListener("click", () => {
-      // Limpa o form
-      const form = document.getElementById("formNovaTransacao");
-      if (form) form.reset();
-      document.getElementById("novaCurso").value = "";
+    const btnNova = document.getElementById("btnNovaTransacao");
+    if (btnNova) {
+        btnNova.addEventListener("click", () => {
+            const form = document.getElementById("formNovaTransacao");
+            if (form) form.reset();
+            document.getElementById("novaCurso").value = "";
 
-      const elTipo = document.getElementById("novaTipoTransacao");
-      if (elTipo) elTipo.value = "entrada";
+            document.getElementById("novaTipo").value = "entrada";
 
-      // Preenche a data de hoje
-      const hoje = new Date().toISOString().split("T")[0];
-      document.getElementById("novaData").value = hoje;
+            const hoje = new Date().toISOString().split("T")[0];
+            document.getElementById("novaData").value = hoje;
 
-      // Carrega alunos (uma vez)
-      carregarAlunosParaNova();
+            carregarAlunosParaNova();
 
-      if (modalNovaTransacaoInstance) modalNovaTransacaoInstance.show();
-    });
-  }
+            if (modalNovaTransacaoInstance) modalNovaTransacaoInstance.show();
+        });
+    }
 
-  // Select de aluno → preenche curso
-  const selectAluno = document.getElementById("novaAluno");
-  if (selectAluno) {
-    selectAluno.addEventListener("change", (e) => {
-      const alunoId = e.target.value;
-      const curso = mapaAlunosParaNova[alunoId] || "";
-      document.getElementById("novaCurso").value = curso || "Geral";
-    });
-  }
+    const selectAluno = document.getElementById("novaAluno");
+    if (selectAluno) {
+        selectAluno.addEventListener("change", (e) => {
+            const alunoId = e.target.value;
+            const curso = mapaAlunosParaNova[alunoId] || "";
+            document.getElementById("novaCurso").value = curso || "Geral";
+        });
+    }
+
+    const form = document.getElementById("formNovaTransacao");
+    if (form) {
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const alunoId = document.getElementById("novaAluno").value;
+            const tipo = document.getElementById("novaTipo").value || "entrada";
+            const alunoObj = listaAlunosParaNova.find(a => a.id === alunoId);
+            const curso = document.getElementById("novaCurso").value.trim() || "Geral";
+            const valor = parseFloat(document.getElementById("novaValor").value) || 0;
+            const status = document.getElementById("novaStatus").value;
+            const forma = document.getElementById("novaForma").value;
+            const dataPagamento = document.getElementById("novaData").value;
+            const observacoes = document.getElementById("novaObs").value.trim();
+
+            if (!alunoId) {
+                mostrarErro("Selecione um aluno.");
+                return;
+            }
+            if (valor <= 0) {
+                mostrarErro("Informe um valor maior que zero.");
+                return;
+            }
 
   // Submit do form
   const form = document.getElementById("formNovaTransacao");
@@ -1024,12 +838,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-/* ==========================================================================
- * CARREGAR ALUNOS PARA O SELECT
- * ========================================================================== */
 async function carregarAlunosParaNova() {
-  const select = document.getElementById("novaAluno");
-  if (!select) return;
+    const select = document.getElementById("novaAluno");
+    if (!select) return;
+
+    if (listaAlunosParaNova.length > 0) {
+        preencherSelectAlunos();
+        return;
+    }
+
+    select.innerHTML = `<option value="">Carregando...</option>`;
 
   // Se já carregou, não recarrega
   if (listaAlunosParaNova.length > 0) {
@@ -1053,14 +871,26 @@ async function carregarAlunosParaNova() {
       const data = d.data();
       if (data.excluido === true) return;
 
-      const aluno = {
-        id: d.id,
-        nome: data.nome || data.nome_completo || "Aluno sem nome",
-        email: data.email || "",
-      };
+        listaAlunosParaNova.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
-      listaAlunosParaNova.push(aluno);
-    });
+        await Promise.all(listaAlunosParaNova.map(async (aluno) => {
+            try {
+                const { collectionGroup, query, where, getDocs: gd } = await import("https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js");
+                const { db: dbRef } = await import("../firebase-config.js");
+
+                const matRef = collection(dbRef, "alunos", aluno.id, "matriculas");
+                const matSnap = await gd(matRef);
+
+                if (!matSnap.empty) {
+                    const primeira = matSnap.docs[0].data();
+                    mapaAlunosParaNova[aluno.id] = primeira.curso_nome || "Geral";
+                }
+            } catch (e) {
+                // ignora
+            }
+        }));
+
+        preencherSelectAlunos();
 
     // Ordena por nome
     listaAlunosParaNova.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
