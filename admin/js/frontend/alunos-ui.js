@@ -1,6 +1,7 @@
 // ==========================================================================
 // TRAINING WORK — UI DE ALUNOS (alunos-ui.js)
 // ==========================================================================
+import "../modules/modal-helper.js";
 import { notificar } from "../modules/notificacao.js";
 import { auth, db } from "../firebase-config.js";
 import { registrarAuditoriaAluno, compararAlteracoes } from "../backend/auditoria-service.js";
@@ -28,6 +29,8 @@ let iniciou = false;
 let filtroInativos = false;
 let filtroExcluidos = false;   // ⬅️ NOVO
 let unsubscribeAlunos = null;  // ⬅️ NOVO: para recriar o listener quando o toggle mudar
+
+
 
 /* ==========================================================================
  * AUTH
@@ -170,7 +173,7 @@ function renderizar() {
                     ? `<span class="badge bg-warning bg-opacity-10 text-warning">Em Débito</span>`
                     : `<span class="badge bg-success bg-opacity-10 text-success">Ativo</span>`;
 
-        // ⬇️ Ações diferentes para excluídos
+        //Ações diferentes para excluídos
         const acoes = estaExcluido
             ? `
                 <button class="btn btn-sm btn-outline-info px-2 py-1 btn-ficha" data-id="${aluno.id}">
@@ -199,22 +202,22 @@ function renderizar() {
             `;
 
         html += `
-            <tr>
-                <td>
-                    <div class="fw-bold text-dark">${aluno.nome || "Não informado"}</div>
-                    <small class="text-muted d-block">${aluno.email || ""}</small>
-                </td>
-                <td class="d-none d-lg-table-cell">${aluno.telefone || "-"}</td>
-                <td class="d-none d-lg-table-cell" style="max-width: 250px;">${cursosTags}</td>
-                <td class="d-none d-lg-table-cell">${data}</td>
-                <td>${badgeStatus}</td>
-                <td class="text-end">
-                    <div class="d-flex justify-content-end gap-1">
-                        ${acoes}
-                    </div>
-                </td>
-            </tr>
-        `;
+    <tr>
+        <td data-label="Aluno">
+            <div class="fw-bold text-dark">${aluno.nome || "Não informado"}</div>
+            <small class="text-muted d-block">${aluno.email || ""}</small>
+        </td>
+        <td data-label="Telefone" class="d-none d-lg-table-cell">${aluno.telefone || "-"}</td>
+        <td data-label="Cursos" class="d-none d-lg-table-cell">${cursosTags}</td>
+        <td data-label="Cadastro" class="d-none d-lg-table-cell">${data}</td>
+        <td data-label="Status">${badgeStatus}</td>
+        <td data-label="Ações" class="text-end">
+    <div class="d-flex justify-content-end gap-1">
+        ${acoes}
+    </div>
+</td>
+    </tr>
+`;
     });
 
     tbody.innerHTML = html;

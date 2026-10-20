@@ -166,8 +166,9 @@
 
     <!-- Modal / Editar Matrícula -->
     <div class="modal fade" id="modalNovaMatricula" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 shadow-lg">
+      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+
           <div class="modal-header bg-white border-bottom px-4 py-3">
             <h5 class="modal-title fw-bold text-dark m-0">
               <i class="fas fa-user-plus text-primary me-2"></i>Nova Matrícula
@@ -177,7 +178,6 @@
 
           <form id="formSalvarMatricula">
             <div class="modal-body p-4">
-              <!-- Alerta de Desbloqueio (Invisível por padrão) -->
               <div id="alertaInconsistencia" class="alert alert-warning border-0 shadow-sm d-none mb-3" role="alert">
                 <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
                 <strong>Atenção:</strong> Alterar valores ou dados de uma matrícula já confirmada pode gerar
@@ -185,11 +185,9 @@
               </div>
 
               <div class="row g-3">
-                <!-- Seleção do Aluno -->
                 <div class="col-md-12">
                   <div class="d-flex justify-content-between align-items-center mb-1">
                     <label class="form-label small fw-semibold text-muted m-0">Aluno</label>
-                    <!-- Botão Vermelho de Permissão de Edição -->
                     <button type="button" id="btnLiberarEdicao"
                       class="btn btn-sm btn-outline-danger py-0 px-2 rounded-pill d-none" style="font-size: 0.75rem;">
                       <i class="fas fa-lock me-1"></i> Permitir Edição
@@ -200,7 +198,6 @@
                   </select>
                 </div>
 
-                <!-- Card Resumo de Informações do Aluno -->
                 <div class="col-md-12 d-none" id="cardInfoAluno">
                   <div class="p-3 bg-light rounded-3 border d-flex justify-content-around flex-wrap gap-2 text-center"
                     style="font-size: 0.85rem;">
@@ -215,7 +212,6 @@
                   </div>
                 </div>
 
-                <!-- Seleção da Turma -->
                 <div class="col-md-12">
                   <label class="form-label small fw-semibold text-muted mb-1">Turma / Curso a Vincular</label>
                   <select class="form-select form-select-sm" id="selectTurmaMatricula" required>
@@ -223,14 +219,12 @@
                   </select>
                 </div>
 
-                <!-- Valor -->
                 <div class="col-md-4">
                   <label class="form-label small fw-semibold text-muted mb-1">Valor (R$)</label>
                   <input type="number" step="0.01" class="form-control form-control-sm" id="valorMatricula" value="0.00"
                     required>
                 </div>
 
-                <!-- Forma de Pagamento -->
                 <div class="col-md-4">
                   <label class="form-label small fw-semibold text-muted mb-1">Forma de Pagamento</label>
                   <select class="form-select form-select-sm" id="formaPagamentoMatricula">
@@ -241,7 +235,6 @@
                   </select>
                 </div>
 
-                <!-- Status -->
                 <div class="col-md-4">
                   <label class="form-label small fw-semibold text-muted mb-1">Status da Matrícula</label>
                   <select class="form-select form-select-sm" id="statusMatricula">
@@ -250,7 +243,7 @@
                   </select>
                 </div>
               </div>
-              <!-- NOVO: Histórico de Auditoria da Matrícula -->
+
               <div class="mt-4 pt-3 border-top">
                 <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.85rem;">
                   <i class="fas fa-history me-2"></i>Histórico de Alterações
@@ -263,7 +256,8 @@
                 </div>
               </div>
             </div>
-            <div class="modal-footer bg-light px-4 py-3 border-top">
+
+            <div class="modal-footer bg-light px-4 py-3 border-top d-flex justify-content-end gap-2">
               <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill"
                 data-bs-dismiss="modal">Cancelar</button>
               <button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill">
@@ -271,35 +265,40 @@
               </button>
             </div>
           </form>
+
         </div>
       </div>
     </div>
-      <!-- Modal de Confirmação de Exclusão -->
-  <div class="modal fade" id="modalConfirmacaoExclusaoMatricula" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
-      <div class="modal-content border-0 shadow-lg rounded-4">
-        <div class="modal-header border-0 pb-0">
-          <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body text-center px-4 pb-2">
-          <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle" style="width: 72px; height: 72px; background: #fee2e2;">
-            <i class="fas fa-trash-alt fa-2x" style="color: #dc2626;"></i>
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="modalConfirmacaoExclusaoMatricula" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+          <div class="modal-header border-0 pb-0">
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
           </div>
-          <h5 class="fw-bold text-dark mb-2">Excluir Matrícula?</h5>
-          <p class="text-muted mb-0">Tem certeza que deseja excluir esta matrícula? Ela será removida da lista principal, mas poderá ser restaurada depois.</p>
-        </div>
-        <div class="modal-footer border-0 px-4 pb-4 pt-3 d-flex gap-2 justify-content-center">
-          <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-danger px-4 rounded-pill fw-semibold" id="btnConfirmarExclusaoMatricula">Excluir Matrícula</button>
+          <div class="modal-body text-center px-4 pb-2">
+            <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+              style="width: 72px; height: 72px; background: #fee2e2;">
+              <i class="fas fa-trash-alt fa-2x" style="color: #dc2626;"></i>
+            </div>
+            <h5 class="fw-bold text-dark mb-2">Excluir Matrícula?</h5>
+            <p class="text-muted mb-0">Tem certeza que deseja excluir esta matrícula? Ela será removida da lista
+              principal, mas poderá ser restaurada depois.</p>
+          </div>
+          <div class="modal-footer border-0 px-4 pb-4 pt-3 d-flex gap-2 justify-content-center">
+            <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold"
+              data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-danger px-4 rounded-pill fw-semibold"
+              id="btnConfirmarExclusaoMatricula">Excluir Matrícula</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-    crossorigin="anonymous"></script>
-  <script type="module" src="js/auth/auth-guard.js"></script>
-  <script type="module" src="js/auth/sidebar.js"></script>
-  <script type="module" src="js/frontend/matriculas-ui.js"></script> <!-- ESSA LINHA PRECISA EXISTIR -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+      crossorigin="anonymous"></script>
+    <script type="module" src="js/auth/auth-guard.js"></script>
+    <script type="module" src="js/auth/sidebar.js"></script>
+    <script type="module" src="js/frontend/matriculas-ui.js"></script> <!-- ESSA LINHA PRECISA EXISTIR -->
 </body>
 
 </html>

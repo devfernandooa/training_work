@@ -529,7 +529,8 @@
             <div class="modal fade" id="modalFrequenciaTurma" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
                     <div class="modal-content border-0 shadow-lg rounded-4">
-                        <div class="modal-header border-bottom px-4 py-3">
+
+                        <div class="modal-header bg-white border-bottom px-4 py-3">
                             <div>
                                 <h5 class="modal-title fw-bold text-dark m-0">
                                     <i class="fas fa-chart-bar text-primary me-2"></i>
@@ -554,7 +555,7 @@
                                             <th class="text-center" style="width: 100px;">Ausências</th>
                                             <th class="text-center" style="width: 110px;">Justificadas</th>
                                             <th class="text-center" style="width: 120px;">Frequência</th>
-                                            <th class="text-center" style="width: 80px;">Ações</th> <!-- NOVO -->
+                                            <th class="text-center" style="width: 80px;">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody id="freqModalTbody">
@@ -565,8 +566,7 @@
                                 </table>
                             </div>
 
-                            <!-- NOVO: Container de Auditoria -->
-                            <div class="p-3 border-top">
+                            <div class="p-4 border-top">
                                 <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.85rem;">
                                     <i class="fas fa-history me-2"></i>Histórico de Alterações da Turma
                                 </h6>
@@ -579,81 +579,152 @@
                             </div>
                         </div>
 
-                        <div class="modal-footer bg-white px-4 py-3 border-top d-flex justify-content-end">
+                        <div class="modal-footer bg-light px-4 py-3 border-top d-flex justify-content-end">
                             <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill"
                                 data-bs-dismiss="modal">
                                 Fechar
                             </button>
                         </div>
+
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- MODAIS DA APLICAÇÃO -->
+            <!-- MODAIS DA APLICAÇÃO -->
 
-        <!-- 1. MODAL DE EDIÇÃO E REAGENDAMENTO DE AULA -->
-        <div class="modal fade" id="modalEditarAula" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg rounded-4">
-                    <div class="modal-header border-bottom px-4 py-3">
-                        <h5 class="modal-title fw-bold text-dark m-0">
-                            <i class="fas fa-edit text-primary me-2"></i> Reagendar / Editar Aula
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            <!-- 1. MODAL DE EDIÇÃO E REAGENDAMENTO DE AULA -->
+            <div class="modal fade" id="modalEditarAula" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-header border-bottom px-4 py-3">
+                            <h5 class="modal-title fw-bold text-dark m-0">
+                                <i class="fas fa-edit text-primary me-2"></i> Reagendar / Editar Aula
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Fechar"></button>
+                        </div>
+
+                        <form id="formEditarAula">
+                            <div class="modal-body p-4">
+                                <input type="hidden" id="editCursoId">
+                                <input type="hidden" id="editAulaId">
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold text-muted mb-1">Professor /
+                                        Instrutor</label>
+                                    <input type="text" class="form-control form-control-sm" id="editAulaInstrutor"
+                                        required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold text-muted mb-1">Nova Data</label>
+                                    <input type="date" class="form-control form-control-sm" id="editAulaData" required>
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label small fw-semibold text-muted mb-1">Hora Início</label>
+                                        <input type="time" class="form-control form-control-sm" id="editAulaHoraInicio"
+                                            required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small fw-semibold text-muted mb-1">Hora Término</label>
+                                        <input type="time" class="form-control form-control-sm" id="editAulaHoraFim"
+                                            required>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold text-muted mb-1">Sala / Local</label>
+                                    <input type="text" class="form-control form-control-sm" id="editAulaSala">
+                                </div>
+
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" id="checkNotificarAlunos"
+                                            checked>
+                                        <label class="form-check-label fw-semibold text-dark small ms-2"
+                                            for="checkNotificarAlunos">
+                                            Notificar alunos por e-mail/notificação sobre o reagendamento
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.85rem;">
+                                        <i class="fas fa-history me-2"></i>Histórico desta Aula
+                                    </h6>
+                                    <div id="aulaAuditoriaContainer"
+                                        style="max-height: 200px; overflow-y: auto; background: white; border-radius: 8px; padding: 12px; border: 1px solid #e2e8f0;">
+                                        <div class="text-center py-3 text-muted small">
+                                            <i class="fas fa-history me-1"></i> Nenhuma alteração registrada ainda.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer bg-light px-4 py-3 border-top">
+                                <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm">
+                                    <i class="fas fa-save me-1"></i> Guardar Alterações
+                                </button>
+                            </div>
+                        </form>
                     </div>
+                </div>
+            </div>
 
-                    <form id="formEditarAula">
-                        <div class="modal-body p-4">
-                            <input type="hidden" id="editCursoId">
-                            <input type="hidden" id="editAulaId">
+            <!-- 2. MODAL DE VER DETALHES DA AULA -->
+            <div class="modal fade" id="modalVerDetalhesAula" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-header bg-primary text-white border-bottom-0 px-4 py-3">
+                            <h5 class="modal-title fw-bold m-0">
+                                <i class="fas fa-calendar-day me-2"></i> Detalhes da Aula
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Fechar"></button>
+                        </div>
 
-                            <div class="mb-3">
-                                <label class="form-label small fw-semibold text-muted mb-1">Professor /
-                                    Instrutor</label>
-                                <input type="text" class="form-control form-control-sm" id="editAulaInstrutor" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label small fw-semibold text-muted mb-1">Nova Data</label>
-                                <input type="date" class="form-control form-control-sm" id="editAulaData" required>
-                            </div>
-
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <label class="form-label small fw-semibold text-muted mb-1">Hora Início</label>
-                                    <input type="time" class="form-control form-control-sm" id="editAulaHoraInicio"
-                                        required>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label small fw-semibold text-muted mb-1">Hora Término</label>
-                                    <input type="time" class="form-control form-control-sm" id="editAulaHoraFim"
-                                        required>
+                        <div class="modal-body p-4 bg-light bg-opacity-25">
+                            <div class="card border shadow-sm p-3 mb-3 bg-white rounded-3">
+                                <small class="text-muted text-uppercase fw-bold d-block mb-1"
+                                    style="font-size: 0.72rem;">Curso / Treinamento</small>
+                                <h6 class="fw-bold text-dark m-0 mb-2" id="detalheAulaCursoNome">-</h6>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary font-monospace" id="detalheAulaCodTurma">-</span>
+                                    <span class="badge bg-light text-dark border font-monospace"
+                                        id="detalheAulaCodEmenta">-</span>
                                 </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label small fw-semibold text-muted mb-1">Sala / Local</label>
-                                <input type="text" class="form-control form-control-sm" id="editAulaSala">
-                            </div>
-
-                            <div class="p-3 bg-light rounded-3 border">
-                                <div class="form-check form-switch m-0">
-                                    <input class="form-check-input" type="checkbox" id="checkNotificarAlunos" checked>
-                                    <label class="form-check-label fw-semibold text-dark small ms-2"
-                                        for="checkNotificarAlunos">
-                                        Notificar alunos por e-mail/notificação sobre o reagendamento
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.85rem;">
-                                    <i class="fas fa-history me-2"></i>Histórico desta Aula
-                                </h6>
-                                <div id="aulaAuditoriaContainer"
-                                    style="max-height: 200px; overflow-y: auto; background: white; border-radius: 8px; padding: 12px; border: 1px solid #e2e8f0;">
-                                    <div class="text-center py-3 text-muted small">
-                                        <i class="fas fa-history me-1"></i> Nenhuma alteração registrada ainda.
+                            <div class="card border shadow-sm p-3 bg-white rounded-3">
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block" style="font-size: 0.75rem;">
+                                            <i class="far fa-calendar-alt text-primary me-1"></i> Data da Aula
+                                        </small>
+                                        <strong class="text-dark d-block" id="detalheAulaData">-</strong>
+                                        <small class="text-muted d-block" id="detalheAulaDiaSemana">-</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block" style="font-size: 0.75rem;">
+                                            <i class="far fa-clock text-primary me-1"></i> Horário
+                                        </small>
+                                        <strong class="text-primary font-monospace d-block"
+                                            id="detalheAulaHorario">-</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block" style="font-size: 0.75rem;">
+                                            <i class="fas fa-user-tie text-primary me-1"></i> Professor / Instrutor
+                                        </small>
+                                        <strong class="text-dark d-block" id="detalheAulaProfessor">-</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block" style="font-size: 0.75rem;">
+                                            <i class="fas fa-door-open text-primary me-1"></i> Sala / Local
+                                        </small>
+                                        <strong class="text-dark d-block" id="detalheAulaSala">-</strong>
                                     </div>
                                 </div>
                             </div>
@@ -661,735 +732,685 @@
 
                         <div class="modal-footer bg-light px-4 py-3 border-top">
                             <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill"
-                                data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm">
-                                <i class="fas fa-save me-1"></i> Guardar Alterações
-                            </button>
+                                data-bs-dismiss="modal">Fechar</button>
                         </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- 2. MODAL DE VER DETALHES DA AULA -->
-        <div class="modal fade" id="modalVerDetalhesAula" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg rounded-4">
-                    <div class="modal-header bg-primary text-white border-bottom-0 px-4 py-3">
-                        <h5 class="modal-title fw-bold m-0">
-                            <i class="fas fa-calendar-day me-2"></i> Detalhes da Aula
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Fechar"></button>
-                    </div>
-
-                    <div class="modal-body p-4 bg-light bg-opacity-25">
-                        <div class="card border shadow-sm p-3 mb-3 bg-white rounded-3">
-                            <small class="text-muted text-uppercase fw-bold d-block mb-1"
-                                style="font-size: 0.72rem;">Curso / Treinamento</small>
-                            <h6 class="fw-bold text-dark m-0 mb-2" id="detalheAulaCursoNome">-</h6>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-primary font-monospace" id="detalheAulaCodTurma">-</span>
-                                <span class="badge bg-light text-dark border font-monospace"
-                                    id="detalheAulaCodEmenta">-</span>
-                            </div>
-                        </div>
-
-                        <div class="card border shadow-sm p-3 bg-white rounded-3">
-                            <div class="row g-3">
-                                <div class="col-6">
-                                    <small class="text-muted d-block" style="font-size: 0.75rem;">
-                                        <i class="far fa-calendar-alt text-primary me-1"></i> Data da Aula
-                                    </small>
-                                    <strong class="text-dark d-block" id="detalheAulaData">-</strong>
-                                    <small class="text-muted d-block" id="detalheAulaDiaSemana">-</small>
-                                </div>
-                                <div class="col-6">
-                                    <small class="text-muted d-block" style="font-size: 0.75rem;">
-                                        <i class="far fa-clock text-primary me-1"></i> Horário
-                                    </small>
-                                    <strong class="text-primary font-monospace d-block"
-                                        id="detalheAulaHorario">-</strong>
-                                </div>
-                                <div class="col-6">
-                                    <small class="text-muted d-block" style="font-size: 0.75rem;">
-                                        <i class="fas fa-user-tie text-primary me-1"></i> Professor / Instrutor
-                                    </small>
-                                    <strong class="text-dark d-block" id="detalheAulaProfessor">-</strong>
-                                </div>
-                                <div class="col-6">
-                                    <small class="text-muted d-block" style="font-size: 0.75rem;">
-                                        <i class="fas fa-door-open text-primary me-1"></i> Sala / Local
-                                    </small>
-                                    <strong class="text-dark d-block" id="detalheAulaSala">-</strong>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer bg-light px-4 py-3 border-top">
-                        <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill"
-                            data-bs-dismiss="modal">Fechar</button>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 3. MODAL DE REGISTRAR / EDITAR TURMA -->
-        <div class="modal fade" id="modalEditarTurma" tabindex="-1" aria-labelledby="modalEditarTurmaLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-                <div class="modal-content border-0 shadow-lg rounded-4">
-                    <div class="modal-header border-0 pb-2">
-                        <h5 class="modal-title fw-bold" id="modalEditarTurmaLabel">
-                            <i class="fas fa-laptop-code me-2 text-primary"></i> Registrar / Editar Turma
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                    </div>
+            <!-- 3. MODAL DE REGISTRAR / EDITAR TURMA -->
+            <div class="modal fade" id="modalEditarTurma" tabindex="-1" aria-labelledby="modalEditarTurmaLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-header border-0 pb-2">
+                            <h5 class="modal-title fw-bold" id="modalEditarTurmaLabel">
+                                <i class="fas fa-laptop-code me-2 text-primary"></i> Registrar / Editar Turma
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Fechar"></button>
+                        </div>
 
-                    <div class="modal-body pt-1">
-                        <form id="formSalvarTurma">
-                            <input type="hidden" id="turmaId">
+                        <div class="modal-body pt-1">
+                            <form id="formSalvarTurma">
+                                <input type="hidden" id="turmaId">
 
-                            <div class="card border shadow-sm p-3 mb-4 rounded-3 bg-light bg-opacity-10">
-                                <h6 class="fw-bold text-primary mb-3">
-                                    <i class="fas fa-info-circle me-2"></i>Informações Principais
-                                </h6>
-                                <div class="row g-2 mb-2">
-                                    <div class="col-md-8">
-                                        <label for="selectCursoBase"
-                                            class="form-label fw-semibold text-dark mb-1 small">
-                                            Curso Base / Treinamento <span class="text-danger">*</span>
-                                        </label>
-                                        <select class="form-select form-select-sm" id="selectCursoBase"
-                                            name="selectCursoBase" required>
-                                            <option value="">Selecione um curso do catálogo...</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="col-md-4">
-                                        <label for="turmaCodigoNr" class="form-label fw-semibold text-dark mb-1 small">
-                                            Código do Curso (Ementa) <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="text" class="form-control form-control-sm bg-light"
-                                            id="turmaCodigoNr" name="turmaCodigoNr" readonly placeholder="Ex: NR05-05">
-                                    </div>
-
-                                    <div class="col-md-8">
-                                        <label for="turmaNome" class="form-label fw-semibold text-dark mb-1 small">
-                                            Identificador / Código da Turma <span class="text-danger">*</span>
-                                        </label>
-                                        <div class="input-group input-group-sm">
-                                            <input type="text" class="form-control form-control-sm bg-light"
-                                                id="turmaNome" name="turmaNome" required disabled
-                                                placeholder="Ex: CIPA-TESTE">
-                                            <button class="btn btn-outline-warning btn-sm" type="button"
-                                                id="btnDesbloquearCodigoTurma" title="Desbloquear Edição do Código">
-                                                <i class="fas fa-lock" id="iconeCadeadoCodigoTurma"></i>
-                                            </button>
+                                <div class="card border shadow-sm p-3 mb-4 rounded-3 bg-light bg-opacity-10">
+                                    <h6 class="fw-bold text-primary mb-3">
+                                        <i class="fas fa-info-circle me-2"></i>Informações Principais
+                                    </h6>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-md-8">
+                                            <label for="selectCursoBase"
+                                                class="form-label fw-semibold text-dark mb-1 small">
+                                                Curso Base / Treinamento <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-select form-select-sm" id="selectCursoBase"
+                                                name="selectCursoBase" required>
+                                                <option value="">Selecione um curso do catálogo...</option>
+                                            </select>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <div class="card border shadow-sm p-3 mb-4 rounded-3 bg-light bg-opacity-10">
-                                <h6 class="fw-bold text-primary mb-3">
-                                    <i class="fas fa-sliders-h me-2"></i>Estrutura, Valores e Operação
-                                </h6>
-                                <div class="row g-3">
-                                    <div class="col-md-3">
-                                        <label for="turmaCarga" class="form-label small fw-semibold text-muted mb-1">
-                                            Carga Horária (horas) <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="number" class="form-control form-control-sm" id="turmaCarga"
-                                            placeholder="48" required>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="turmaPreco"
-                                            class="form-label small fw-semibold text-muted mb-1">Valor Base (R$)</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm bg-white"
-                                            id="turmaPreco" placeholder="480.00" readonly>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="turmaModalidade"
-                                            class="form-label small fw-semibold text-muted mb-1">
-                                            Modalidade <span class="text-danger">*</span>
-                                        </label>
-                                        <select class="form-select form-select-sm" id="turmaModalidade" required>
-                                            <option value="Presencial">Presencial</option>
-                                            <option value="Online">EAD / Online</option>
-                                            <option value="Híbrido">Híbrido</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="turmaVagas" class="form-label small fw-semibold text-muted mb-1">
-                                            Vagas Máximas <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="number" class="form-control form-control-sm" id="turmaVagas"
-                                            placeholder="20" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="turmaInstrutor"
-                                            class="form-label small fw-semibold text-muted mb-1">
-                                            Professor / Instrutor Responsável
-                                        </label>
-                                        <input type="text" class="form-control form-control-sm" id="turmaInstrutor"
-                                            placeholder="Ex: Eng. Carlos Eduardo Silva">
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="turmaDias" class="form-label small fw-semibold text-muted mb-1">
-                                            Dias da Semana <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="text" class="form-control form-control-sm" id="turmaDias"
-                                            placeholder="Ex: Terças e Quintas" required>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="turmaHorario" class="form-label small fw-semibold text-muted mb-1">
-                                            Horário das Aulas <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="text" class="form-control form-control-sm" id="turmaHorario"
-                                            placeholder="Ex: 19:00 - 22:00" required>
-                                    </div>
-                                </div>
-                            </div>
+                                        <div class="col-md-4">
+                                            <label for="turmaCodigoNr"
+                                                class="form-label fw-semibold text-dark mb-1 small">
+                                                Código do Curso (Ementa) <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" class="form-control form-control-sm bg-light"
+                                                id="turmaCodigoNr" name="turmaCodigoNr" readonly
+                                                placeholder="Ex: NR05-05">
+                                        </div>
 
-                            <div class="card border shadow-sm p-3 mb-4 rounded-3 bg-light bg-opacity-10">
-                                <h6 class="fw-bold text-primary mb-3">
-                                    <i class="fas fa-file-alt me-2"></i>Conteúdo e Observações da Turma
-                                </h6>
-                                <div class="row g-3">
-                                    <div class="col-12">
-                                        <label for="turmaDescricao"
-                                            class="form-label small fw-semibold text-muted mb-1">
-                                            Resumo Informativo / Observações Internas
-                                        </label>
-                                        <textarea class="form-control form-control-sm" id="turmaDescricao" rows="2"
-                                            placeholder="Informações específicas sobre o local, sala ou pré-requisitos..."></textarea>
-                                    </div>
-
-                                    <!-- ⬇️ NOVO: Histórico de Auditoria da Turma -->
-                                    <div class="col-12 mt-3">
-                                        <h6 class="fw-bold text-primary mb-3">
-                                            <i class="fas fa-history me-2"></i>Histórico de Alterações
-                                        </h6>
-                                        <div id="turmaAuditoriaContainer"
-                                            style="max-height: 250px; overflow-y: auto; background: white; border-radius: 8px; padding: 12px; border: 1px solid #e2e8f0;">
-                                            <div class="text-center py-3 text-muted small">
-                                                <i class="fas fa-history me-1"></i> Nenhuma alteração registrada ainda.
+                                        <div class="col-md-8">
+                                            <label for="turmaNome" class="form-label fw-semibold text-dark mb-1 small">
+                                                Identificador / Código da Turma <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="text" class="form-control form-control-sm bg-light"
+                                                    id="turmaNome" name="turmaNome" required disabled
+                                                    placeholder="Ex: CIPA-TESTE">
+                                                <button class="btn btn-outline-warning btn-sm" type="button"
+                                                    id="btnDesbloquearCodigoTurma" title="Desbloquear Edição do Código">
+                                                    <i class="fas fa-lock" id="iconeCadeadoCodigoTurma"></i>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
-                                <button type="button" class="btn btn-light px-4 rounded-pill btn-sm"
-                                    data-bs-dismiss="modal">Cancelar</button>
-                                <button type="submit" class="btn btn-primary px-4 rounded-pill btn-sm">Guardar
-                                    Turma</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+                                <div class="card border shadow-sm p-3 mb-4 rounded-3 bg-light bg-opacity-10">
+                                    <h6 class="fw-bold text-primary mb-3">
+                                        <i class="fas fa-sliders-h me-2"></i>Estrutura, Valores e Operação
+                                    </h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label for="turmaCarga"
+                                                class="form-label small fw-semibold text-muted mb-1">
+                                                Carga Horária (horas) <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="number" class="form-control form-control-sm" id="turmaCarga"
+                                                placeholder="48" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="turmaPreco"
+                                                class="form-label small fw-semibold text-muted mb-1">Valor Base
+                                                (R$)</label>
+                                            <input type="number" step="0.01"
+                                                class="form-control form-control-sm bg-white" id="turmaPreco"
+                                                placeholder="480.00" readonly>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="turmaModalidade"
+                                                class="form-label small fw-semibold text-muted mb-1">
+                                                Modalidade <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-select form-select-sm" id="turmaModalidade" required>
+                                                <option value="Presencial">Presencial</option>
+                                                <option value="Online">EAD / Online</option>
+                                                <option value="Híbrido">Híbrido</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="turmaVagas"
+                                                class="form-label small fw-semibold text-muted mb-1">
+                                                Vagas Máximas <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="number" class="form-control form-control-sm" id="turmaVagas"
+                                                placeholder="20" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="turmaInstrutor"
+                                                class="form-label small fw-semibold text-muted mb-1">
+                                                Professor / Instrutor Responsável
+                                            </label>
+                                            <input type="text" class="form-control form-control-sm" id="turmaInstrutor"
+                                                placeholder="Ex: Eng. Carlos Eduardo Silva">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="turmaDias" class="form-label small fw-semibold text-muted mb-1">
+                                                Dias da Semana <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" class="form-control form-control-sm" id="turmaDias"
+                                                placeholder="Ex: Terças e Quintas" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="turmaHorario"
+                                                class="form-label small fw-semibold text-muted mb-1">
+                                                Horário das Aulas <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" class="form-control form-control-sm" id="turmaHorario"
+                                                placeholder="Ex: 19:00 - 22:00" required>
+                                        </div>
+                                    </div>
+                                </div>
 
-        <!-- 4. MODAL DE ALUNOS MATRICULADOS E GESTÃO DA TURMA -->
-        <div class="modal fade" id="modalAlunosTurma" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-                <div class="modal-content border-0 shadow-lg rounded-4">
-                    <div class="modal-header border-bottom px-4 py-3 bg-white">
-                        <div>
-                            <h5 class="modal-title fw-bold text-dark m-0 d-flex align-items-center gap-2"
-                                id="modalAlunosTurmaTitle">
-                                <i class="fas fa-users text-primary"></i> Alunos Matriculados
-                            </h5>
-                            <div class="mt-2 d-flex align-items-center gap-2" id="modalAlunosTurmaBadges">
-                                <span class="badge bg-primary font-monospace" id="modalBadgeCodTurma">-</span>
-                                <span class="badge bg-light text-dark border font-monospace"
-                                    id="modalBadgeCodEmenta">-</span>
-                            </div>
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                    </div>
+                                <div class="card border shadow-sm p-3 mb-4 rounded-3 bg-light bg-opacity-10">
+                                    <h6 class="fw-bold text-primary mb-3">
+                                        <i class="fas fa-file-alt me-2"></i>Conteúdo e Observações da Turma
+                                    </h6>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label for="turmaDescricao"
+                                                class="form-label small fw-semibold text-muted mb-1">
+                                                Resumo Informativo / Observações Internas
+                                            </label>
+                                            <textarea class="form-control form-control-sm" id="turmaDescricao" rows="2"
+                                                placeholder="Informações específicas sobre o local, sala ou pré-requisitos..."></textarea>
+                                        </div>
 
-                    <div class="modal-body p-4 bg-light bg-opacity-25">
-                        <div class="card border shadow-sm p-3 mb-4 rounded-3 bg-white">
-                            <h6 class="fw-bold text-primary mb-3">
-                                <i class="fas fa-info-circle me-2"></i>Informações Gerais da Turma
-                            </h6>
-                            <div class="row g-3 text-sm">
-                                <div class="col-md-3">
-                                    <span class="text-muted d-block small">Instrutor Responsável</span>
-                                    <strong class="text-dark d-block" id="modalInfoInstrutor">-</strong>
+                                        <!-- ⬇️ NOVO: Histórico de Auditoria da Turma -->
+                                        <div class="col-12 mt-3">
+                                            <h6 class="fw-bold text-primary mb-3">
+                                                <i class="fas fa-history me-2"></i>Histórico de Alterações
+                                            </h6>
+                                            <div id="turmaAuditoriaContainer"
+                                                style="max-height: 250px; overflow-y: auto; background: white; border-radius: 8px; padding: 12px; border: 1px solid #e2e8f0;">
+                                                <div class="text-center py-3 text-muted small">
+                                                    <i class="fas fa-history me-1"></i> Nenhuma alteração registrada
+                                                    ainda.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <span class="text-muted d-block small">Dias da Semana</span>
-                                    <strong class="text-dark d-block" id="modalInfoDias">-</strong>
-                                </div>
-                                <div class="col-md-3">
-                                    <span class="text-muted d-block small">Horário & Modalidade</span>
-                                    <strong class="text-dark d-block" id="modalInfoHorario">-</strong>
-                                </div>
-                                <div class="col-md-3">
-                                    <span class="text-muted d-block small">Ocupação / Vagas</span>
-                                    <strong class="text-primary d-block" id="modalInfoVagas">-</strong>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="card border shadow-sm p-3 mb-4 rounded-3 bg-white">
-                            <h6 class="fw-bold text-primary mb-3">
-                                <i class="fas fa-user-plus me-2"></i>Matricular Aluno na Turma
-                            </h6>
-                            <form id="formMatricularAlunoTurma" class="row g-2 align-items-end">
-                                <div class="col-md-8">
-                                    <label for="selectAlunoParaMatricular"
-                                        class="form-label small fw-semibold text-muted mb-1">
-                                        Selecione o Aluno registrado no sistema
-                                    </label>
-                                    <select class="form-select form-select-sm" id="selectAlunoParaMatricular" required>
-                                        <option value="">A carregar lista de alunos do sistema...</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <button type="submit" class="btn btn-sm btn-primary w-100 rounded-pill">
-                                        <i class="fas fa-plus-circle me-1"></i> Confirmar Matrícula
-                                    </button>
+                                <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
+                                    <button type="button" class="btn btn-light px-4 rounded-pill btn-sm"
+                                        data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary px-4 rounded-pill btn-sm">Guardar
+                                        Turma</button>
                                 </div>
                             </form>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="card border shadow-sm rounded-3 bg-white overflow-hidden mb-4">
-                            <div
-                                class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                                <h6 class="fw-bold text-dark m-0">
-                                    <i class="fas fa-list text-muted me-2"></i>Alunos Inscritos (<span
-                                        id="totalAlunosInscritosCount">0</span>)
-                                </h6>
+            <!-- 4. MODAL DE ALUNOS MATRICULADOS E GESTÃO DA TURMA -->
+            <div class="modal fade" id="modalAlunosTurma" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-header border-bottom px-4 py-3 bg-white">
+                            <div>
+                                <h5 class="modal-title fw-bold text-dark m-0 d-flex align-items-center gap-2"
+                                    id="modalAlunosTurmaTitle">
+                                    <i class="fas fa-users text-primary"></i> Alunos Matriculados
+                                </h5>
+                                <div class="mt-2 d-flex align-items-center gap-2" id="modalAlunosTurmaBadges">
+                                    <span class="badge bg-primary font-monospace" id="modalBadgeCodTurma">-</span>
+                                    <span class="badge bg-light text-dark border font-monospace"
+                                        id="modalBadgeCodEmenta">-</span>
+                                </div>
                             </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Fechar"></button>
+                        </div>
+
+                        <div class="modal-body p-4 bg-light bg-opacity-25">
+                            <div class="card border shadow-sm p-3 mb-4 rounded-3 bg-white">
+                                <h6 class="fw-bold text-primary mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>Informações Gerais da Turma
+                                </h6>
+                                <div class="row g-3 text-sm">
+                                    <div class="col-md-3">
+                                        <span class="text-muted d-block small">Instrutor Responsável</span>
+                                        <strong class="text-dark d-block" id="modalInfoInstrutor">-</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="text-muted d-block small">Dias da Semana</span>
+                                        <strong class="text-dark d-block" id="modalInfoDias">-</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="text-muted d-block small">Horário & Modalidade</span>
+                                        <strong class="text-dark d-block" id="modalInfoHorario">-</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="text-muted d-block small">Ocupação / Vagas</span>
+                                        <strong class="text-primary d-block" id="modalInfoVagas">-</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card border shadow-sm p-3 mb-4 rounded-3 bg-white">
+                                <h6 class="fw-bold text-primary mb-3">
+                                    <i class="fas fa-user-plus me-2"></i>Matricular Aluno na Turma
+                                </h6>
+                                <form id="formMatricularAlunoTurma" class="row g-2 align-items-end">
+                                    <div class="col-md-8">
+                                        <label for="selectAlunoParaMatricular"
+                                            class="form-label small fw-semibold text-muted mb-1">
+                                            Selecione o Aluno registrado no sistema
+                                        </label>
+                                        <select class="form-select form-select-sm" id="selectAlunoParaMatricular"
+                                            required>
+                                            <option value="">A carregar lista de alunos do sistema...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="submit" class="btn btn-sm btn-primary w-100 rounded-pill">
+                                            <i class="fas fa-plus-circle me-1"></i> Confirmar Matrícula
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="card border shadow-sm rounded-3 bg-white overflow-hidden mb-4">
+                                <div
+                                    class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                                    <h6 class="fw-bold text-dark m-0">
+                                        <i class="fas fa-list text-muted me-2"></i>Alunos Inscritos (<span
+                                            id="totalAlunosInscritosCount">0</span>)
+                                    </h6>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light small">
+                                            <tr>
+                                                <th>Nome do Aluno</th>
+                                                <th>Email / Contacto</th>
+                                                <th>Data da Matrícula</th>
+                                                <th>Status</th>
+                                                <th class="text-end me-3">Ação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="modalTabelaAlunosTbody">
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-4">A carregar lista de
+                                                    alunos...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="card border shadow-sm p-3 rounded-3 bg-white">
+                                <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.85rem;">
+                                    <i class="fas fa-history me-2"></i>Histórico de Alterações da Turma
+                                </h6>
+                                <!--  O ID AQUI DEVE SER DIFERENTE -->
+                                <div id="turmaAlunosAuditoriaContainer"
+                                    style="max-height: 250px; overflow-y: auto; background: white; border-radius: 8px; padding: 12px; border: 1px solid #e2e8f0;">
+                                    <div class="text-center py-3 text-muted small">
+                                        <i class="fas fa-history me-1"></i> Nenhuma alteração registrada ainda.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="modal-footer border-top bg-light px-4 py-3 d-flex justify-content-between align-items-center">
+                            <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill"
+                                data-bs-dismiss="modal">Fechar</button>
+                            <button type="button" class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm"
+                                id="btnSalvarModalAlunosTurma">
+                                <i class="fas fa-save me-1"></i> Salvar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. MODAL DETALHES DA TURMA -->
+            <div class="modal fade" id="modalDetalhesTurma" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header bg-white border-bottom px-4 py-3">
+                            <h5 class="modal-title fw-bold text-dark m-0">
+                                <i class="fas fa-info-circle text-primary me-2"></i>Detalhes da Turma
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Fechar"></button>
+                        </div>
+
+                        <div class="modal-body p-4">
+                            <h6 class="fw-bold text-dark mb-3" id="detalheNomeTurma">-</h6>
+
+                            <div class="p-3 bg-light rounded-3 border mb-3">
+                                <div class="row g-2 text-sm">
+                                    <div class="col-6">
+                                        <span class="text-muted d-block small">Instrutor:</span>
+                                        <strong class="text-dark" id="detalheInstrutor">-</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-muted d-block small">Horário:</span>
+                                        <strong class="text-dark" id="detalheHorario">-</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-2 text-center">
+                                <div class="col-4">
+                                    <div class="p-2 border rounded bg-white">
+                                        <small class="text-muted d-block">Capacidade</small>
+                                        <span class="fw-bold text-dark h6 m-0 d-block" id="detalheTotalVagas">0</span>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="p-2 border rounded bg-white">
+                                        <small class="text-muted d-block">Matriculados</small>
+                                        <span class="fw-bold text-primary h6 m-0 d-block"
+                                            id="detalheMatriculados">0</span>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="p-2 border rounded bg-white">
+                                        <small class="text-muted d-block">Vagas Livres</small>
+                                        <span class="fw-bold text-success h6 m-0 d-block"
+                                            id="detalheVagasRestantes">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer bg-light px-4 py-3 border-top">
+                            <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill"
+                                data-bs-dismiss="modal">Fechar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. MODAL DE CONFIRMAÇÃO: ATIVAR/INATIVAR TURMA -->
+            <div class="modal fade" id="modalConfirmarStatusTurma" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-body text-center p-4 p-md-5">
+                            <button type="button" class="btn-close position-absolute end-0 top-0 m-3"
+                                data-bs-dismiss="modal" aria-label="Fechar"></button>
+
+                            <!-- Ícone circular dinâmico -->
+                            <div id="confirmStatusIconeWrap"
+                                class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+                                style="width: 72px; height: 72px; background: #fee2e2; color: #dc2626; transition: all 0.2s;">
+                                <i class="fas fa-ban fa-2x" id="confirmStatusIcone"></i>
+                            </div>
+
+                            <!-- Título dinâmico -->
+                            <h4 class="fw-bold mb-2" id="confirmStatusTitulo" style="color: #0f172a;">
+                                Inativar Turma?
+                            </h4>
+
+                            <!-- Texto dinâmico -->
+                            <p class="text-muted mb-4" id="confirmStatusTexto"
+                                style="font-size: 0.95rem; line-height: 1.5;">
+                                Deseja realmente inativar esta turma? Alunos matriculados não serão removidos.
+                            </p>
+
+                            <!-- Nome da turma destacado -->
+                            <div class="p-3 rounded-3 mb-4" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                                <small class="text-muted d-block mb-1"
+                                    style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Turma</small>
+                                <strong class="text-dark d-block" id="confirmStatusNomeTurma"
+                                    style="font-size: 0.95rem;">—</strong>
+                            </div>
+
+                            <!-- Botões -->
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold"
+                                    data-bs-dismiss="modal">
+                                    Cancelar
+                                </button>
+                                <button type="button" class="btn px-4 rounded-pill fw-semibold text-white"
+                                    id="btnConfirmarStatusTurma" style="background: #dc2626;">
+                                    Inativar Turma
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 7. MODAL DE CONFIRMAÇÃO DE AGENDAMENTO -->
+            <div class="modal fade" id="modalConfirmarAgendamento" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-header border-bottom px-4 py-3">
+                            <h5 class="modal-title fw-bold text-dark m-0">
+                                <i class="fas fa-calendar-check text-primary me-2"></i>
+                                Confirmar Agendamento
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Fechar"></button>
+                        </div>
+
+                        <div class="modal-body p-4">
+                            <p class="text-muted small mb-3">
+                                Confira os dados da aula antes de confirmar o agendamento:
+                            </p>
+
+                            <!-- Card de resumo -->
+                            <div class="p-3 rounded-3 mb-3" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                                <!-- Turma -->
+                                <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
+                                    <i class="fas fa-chalkboard-teacher text-primary mt-1 me-3"
+                                        style="width: 20px;"></i>
+                                    <div class="flex-grow-1">
+                                        <small class="text-muted d-block"
+                                            style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600;">Turma</small>
+                                        <strong class="text-dark d-block" id="confirmAulaTurma"
+                                            style="font-size: 0.92rem;">—</strong>
+                                        <small class="text-muted font-monospace" id="confirmAulaCodTurma"
+                                            style="font-size: 0.75rem;">—</small>
+                                    </div>
+                                </div>
+
+                                <!-- Data e Horário -->
+                                <div class="row g-3 mb-3 pb-3 border-bottom">
+                                    <div class="col-6">
+                                        <i class="far fa-calendar-alt text-primary me-2"></i>
+                                        <small class="text-muted d-block"
+                                            style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600;">Data</small>
+                                        <strong class="text-dark" id="confirmAulaData"
+                                            style="font-size: 0.88rem;">—</strong>
+                                        <small class="text-muted d-block" id="confirmAulaDiaSemana"
+                                            style="font-size: 0.75rem;">—</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <i class="far fa-clock text-primary me-2"></i>
+                                        <small class="text-muted d-block"
+                                            style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600;">Horário</small>
+                                        <strong class="text-primary font-monospace" id="confirmAulaHorario"
+                                            style="font-size: 0.88rem;">—</strong>
+                                    </div>
+                                </div>
+
+                                <!-- Professor -->
+                                <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
+                                    <i class="fas fa-user-tie text-primary mt-1 me-3" style="width: 20px;"></i>
+                                    <div class="flex-grow-1">
+                                        <small class="text-muted d-block"
+                                            style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600;">Professor
+                                            / Instrutor</small>
+                                        <strong class="text-dark d-block" id="confirmAulaProfessor"
+                                            style="font-size: 0.9rem;">—</strong>
+                                    </div>
+                                </div>
+
+                                <!-- Sala -->
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-door-open text-primary mt-1 me-3" style="width: 20px;"></i>
+                                    <div class="flex-grow-1">
+                                        <small class="text-muted d-block"
+                                            style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600;">Sala
+                                            /
+                                            Local</small>
+                                        <strong class="text-dark d-block" id="confirmAulaSala"
+                                            style="font-size: 0.9rem;">—</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Aviso -->
+                            <div class="alert alert-info d-flex align-items-start p-3 mb-0" style="font-size: 0.82rem;">
+                                <i class="fas fa-info-circle me-2 mt-1"></i>
+                                <div>
+                                    Após confirmar, a aula será adicionada ao cronograma da turma e ficará visível para
+                                    todos os admins.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer bg-light px-4 py-3 border-top">
+                            <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold"
+                                data-bs-dismiss="modal">
+                                Cancelar
+                            </button>
+                            <button type="button" class="btn btn-primary px-4 rounded-pill fw-semibold"
+                                id="btnConfirmarAgendamento">
+                                <i class="fas fa-check me-1"></i> Confirmar Agendamento
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 8. MODAL DE CONFIRMAÇÃO DE EDIÇÃO -->
+            <div class="modal fade" id="modalConfirmarEdicaoAula" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-body text-center p-4 p-md-5">
+                            <button type="button" class="btn-close position-absolute end-0 top-0 m-3"
+                                data-bs-dismiss="modal" aria-label="Fechar"></button>
+
+                            <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+                                style="width: 72px; height: 72px; background: #e0f2fe; color: #0284c7;">
+                                <i class="fas fa-edit fa-2x"></i>
+                            </div>
+
+                            <h4 class="fw-bold mb-2" style="color: #0f172a;">
+                                Confirmar Alterações?
+                            </h4>
+
+                            <p class="text-muted mb-4" style="font-size: 0.95rem; line-height: 1.5;">
+                                Deseja realmente salvar as alterações nesta aula? As informações serão atualizadas no
+                                cronograma.
+                            </p>
+
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold"
+                                    data-bs-dismiss="modal">
+                                    Cancelar
+                                </button>
+                                <button type="button" class="btn btn-primary px-4 rounded-pill fw-semibold"
+                                    id="btnConfirmarEdicaoAula">
+                                    <i class="fas fa-check me-1"></i> Salvar Alterações
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 9. MODAL DE CONFIRMAÇÃO DE EXCLUSÃO -->
+            <div class="modal fade" id="modalConfirmarExclusaoAula" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-body text-center p-4 p-md-5">
+                            <button type="button" class="btn-close position-absolute end-0 top-0 m-3"
+                                data-bs-dismiss="modal" aria-label="Fechar"></button>
+
+                            <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+                                style="width: 72px; height: 72px; background: #fee2e2; color: #dc2626;">
+                                <i class="fas fa-trash-alt fa-2x"></i>
+                            </div>
+
+                            <h4 class="fw-bold mb-2" style="color: #0f172a;">
+                                Remover Aula?
+                            </h4>
+
+                            <p class="text-muted mb-4" style="font-size: 0.95rem; line-height: 1.5;">
+                                Tem certeza de que deseja remover esta aula do cronograma? Esta ação não poderá ser
+                                desfeita.
+                            </p>
+
+                            <div class="p-3 rounded-3 mb-4" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                                <small class="text-muted d-block mb-1"
+                                    style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Aula</small>
+                                <strong class="text-dark d-block" id="confirmExclusaoAulaInfo"
+                                    style="font-size: 0.92rem;">—</strong>
+                            </div>
+
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold"
+                                    data-bs-dismiss="modal">
+                                    Cancelar
+                                </button>
+                                <button type="button" class="btn btn-danger px-4 rounded-pill fw-semibold"
+                                    id="btnConfirmarExclusaoAula">
+                                    <i class="fas fa-trash-alt me-1"></i> Remover Aula
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10. MODAL DE REGISTRAR PRESENÇA -->
+            <div class="modal fade" id="modalRegistrarPresenca" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-header border-bottom px-4 py-3">
+                            <div>
+                                <h5 class="modal-title fw-bold text-dark m-0">
+                                    <i class="fas fa-clipboard-check text-primary me-2"></i>
+                                    Registrar Presença
+                                </h5>
+                                <div class="mt-2 d-flex flex-wrap gap-2">
+                                    <span class="badge bg-primary font-monospace" id="presencaTurmaNome">—</span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Fechar"></button>
+                        </div>
+
+                        <div class="modal-body p-4">
+                            <!-- Info da aula -->
+                            <div class="row g-3 mb-4 p-3 rounded-3" style="background: #f8fafc;">
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Data</small>
+                                    <strong class="text-dark" id="presencaData">—</strong>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Horário</small>
+                                    <strong class="text-dark font-monospace" id="presencaAulaInfo">—</strong>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Professor</small>
+                                    <strong class="text-dark" id="presencaProfessor">—</strong>
+                                </div>
+                            </div>
+
+                            <!-- Botão marcar todos -->
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="text-muted fw-semibold">Alunos Matriculados</small>
+                                <button type="button" class="btn btn-sm btn-outline-success" id="btnTodosPresentes">
+                                    <i class="fas fa-check-double me-1"></i> Marcar todos como presente
+                                </button>
+                            </div>
+
+                            <!-- Lista de alunos -->
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
-                                    <thead class="table-light small">
+                                    <thead class="table-light">
                                         <tr>
-                                            <th>Nome do Aluno</th>
-                                            <th>Email / Contacto</th>
-                                            <th>Data da Matrícula</th>
-                                            <th>Status</th>
-                                            <th class="text-end me-3">Ação</th>
+                                            <th>Aluno</th>
+                                            <th class="text-center" style="width: 320px;">Presença</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="modalTabelaAlunosTbody">
+                                    <tbody id="presencaTbody">
                                         <tr>
-                                            <td colspan="5" class="text-center text-muted py-4">A carregar lista de
-                                                alunos...</td>
+                                            <td colspan="2" class="text-center text-muted py-4">A carregar alunos...
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
 
-                        <div class="card border shadow-sm p-3 rounded-3 bg-white">
-                            <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.85rem;">
-                                <i class="fas fa-history me-2"></i>Histórico de Alterações da Turma
-                            </h6>
-                            <!--  O ID AQUI DEVE SER DIFERENTE -->
-                            <div id="turmaAlunosAuditoriaContainer"
-                                style="max-height: 250px; overflow-y: auto; background: white; border-radius: 8px; padding: 12px; border: 1px solid #e2e8f0;">
-                                <div class="text-center py-3 text-muted small">
-                                    <i class="fas fa-history me-1"></i> Nenhuma alteração registrada ainda.
-                                </div>
+                        <div
+                            class="modal-footer bg-light px-4 py-3 border-top d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-check-circle text-success"></i> <span id="resumoPresentes">0</span>
+                                </small>
+                                <small class="text-muted">
+                                    <i class="fas fa-times-circle text-danger"></i> <span id="resumoAusentes">0</span>
+                                </small>
+                                <small class="text-muted">
+                                    <i class="fas fa-file-alt text-warning"></i> <span id="resumoJustificados">0</span>
+                                </small>
+                                <small class="text-muted fw-bold">
+                                    Taxa: <span id="resumoTaxa">0%</span>
+                                </small>
                             </div>
-                        </div>
-                    </div>
-
-                    <div
-                        class="modal-footer border-top bg-light px-4 py-3 d-flex justify-content-between align-items-center">
-                        <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill"
-                            data-bs-dismiss="modal">Fechar</button>
-                        <button type="button" class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm"
-                            id="btnSalvarModalAlunosTurma">
-                            <i class="fas fa-save me-1"></i> Salvar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 5. MODAL DETALHES DA TURMA -->
-        <div class="modal fade" id="modalDetalhesTurma" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg">
-                    <div class="modal-header bg-white border-bottom px-4 py-3">
-                        <h5 class="modal-title fw-bold text-dark m-0">
-                            <i class="fas fa-info-circle text-primary me-2"></i>Detalhes da Turma
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                    </div>
-
-                    <div class="modal-body p-4">
-                        <h6 class="fw-bold text-dark mb-3" id="detalheNomeTurma">-</h6>
-
-                        <div class="p-3 bg-light rounded-3 border mb-3">
-                            <div class="row g-2 text-sm">
-                                <div class="col-6">
-                                    <span class="text-muted d-block small">Instrutor:</span>
-                                    <strong class="text-dark" id="detalheInstrutor">-</strong>
-                                </div>
-                                <div class="col-6">
-                                    <span class="text-muted d-block small">Horário:</span>
-                                    <strong class="text-dark" id="detalheHorario">-</strong>
-                                </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-light px-4 rounded-pill"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-primary px-4 rounded-pill" id="btnSalvarPresencas">
+                                    <i class="fas fa-save me-1"></i> Salvar Presenças
+                                </button>
                             </div>
-                        </div>
-
-                        <div class="row g-2 text-center">
-                            <div class="col-4">
-                                <div class="p-2 border rounded bg-white">
-                                    <small class="text-muted d-block">Capacidade</small>
-                                    <span class="fw-bold text-dark h6 m-0 d-block" id="detalheTotalVagas">0</span>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="p-2 border rounded bg-white">
-                                    <small class="text-muted d-block">Matriculados</small>
-                                    <span class="fw-bold text-primary h6 m-0 d-block" id="detalheMatriculados">0</span>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="p-2 border rounded bg-white">
-                                    <small class="text-muted d-block">Vagas Livres</small>
-                                    <span class="fw-bold text-success h6 m-0 d-block"
-                                        id="detalheVagasRestantes">0</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer bg-light px-4 py-3 border-top">
-                        <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill"
-                            data-bs-dismiss="modal">Fechar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 6. MODAL DE CONFIRMAÇÃO: ATIVAR/INATIVAR TURMA -->
-        <div class="modal fade" id="modalConfirmarStatusTurma" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg rounded-4">
-                    <div class="modal-body text-center p-4 p-md-5">
-                        <button type="button" class="btn-close position-absolute end-0 top-0 m-3"
-                            data-bs-dismiss="modal" aria-label="Fechar"></button>
-
-                        <!-- Ícone circular dinâmico -->
-                        <div id="confirmStatusIconeWrap"
-                            class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
-                            style="width: 72px; height: 72px; background: #fee2e2; color: #dc2626; transition: all 0.2s;">
-                            <i class="fas fa-ban fa-2x" id="confirmStatusIcone"></i>
-                        </div>
-
-                        <!-- Título dinâmico -->
-                        <h4 class="fw-bold mb-2" id="confirmStatusTitulo" style="color: #0f172a;">
-                            Inativar Turma?
-                        </h4>
-
-                        <!-- Texto dinâmico -->
-                        <p class="text-muted mb-4" id="confirmStatusTexto"
-                            style="font-size: 0.95rem; line-height: 1.5;">
-                            Deseja realmente inativar esta turma? Alunos matriculados não serão removidos.
-                        </p>
-
-                        <!-- Nome da turma destacado -->
-                        <div class="p-3 rounded-3 mb-4" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                            <small class="text-muted d-block mb-1"
-                                style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Turma</small>
-                            <strong class="text-dark d-block" id="confirmStatusNomeTurma"
-                                style="font-size: 0.95rem;">—</strong>
-                        </div>
-
-                        <!-- Botões -->
-                        <div class="d-flex gap-2 justify-content-center">
-                            <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold"
-                                data-bs-dismiss="modal">
-                                Cancelar
-                            </button>
-                            <button type="button" class="btn px-4 rounded-pill fw-semibold text-white"
-                                id="btnConfirmarStatusTurma" style="background: #dc2626;">
-                                Inativar Turma
-                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <!-- 7. MODAL DE CONFIRMAÇÃO DE AGENDAMENTO -->
-        <div class="modal fade" id="modalConfirmarAgendamento" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg rounded-4">
-                    <div class="modal-header border-bottom px-4 py-3">
-                        <h5 class="modal-title fw-bold text-dark m-0">
-                            <i class="fas fa-calendar-check text-primary me-2"></i>
-                            Confirmar Agendamento
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                    </div>
-
-                    <div class="modal-body p-4">
-                        <p class="text-muted small mb-3">
-                            Confira os dados da aula antes de confirmar o agendamento:
-                        </p>
-
-                        <!-- Card de resumo -->
-                        <div class="p-3 rounded-3 mb-3" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                            <!-- Turma -->
-                            <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
-                                <i class="fas fa-chalkboard-teacher text-primary mt-1 me-3" style="width: 20px;"></i>
-                                <div class="flex-grow-1">
-                                    <small class="text-muted d-block"
-                                        style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600;">Turma</small>
-                                    <strong class="text-dark d-block" id="confirmAulaTurma"
-                                        style="font-size: 0.92rem;">—</strong>
-                                    <small class="text-muted font-monospace" id="confirmAulaCodTurma"
-                                        style="font-size: 0.75rem;">—</small>
-                                </div>
-                            </div>
-
-                            <!-- Data e Horário -->
-                            <div class="row g-3 mb-3 pb-3 border-bottom">
-                                <div class="col-6">
-                                    <i class="far fa-calendar-alt text-primary me-2"></i>
-                                    <small class="text-muted d-block"
-                                        style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600;">Data</small>
-                                    <strong class="text-dark" id="confirmAulaData"
-                                        style="font-size: 0.88rem;">—</strong>
-                                    <small class="text-muted d-block" id="confirmAulaDiaSemana"
-                                        style="font-size: 0.75rem;">—</small>
-                                </div>
-                                <div class="col-6">
-                                    <i class="far fa-clock text-primary me-2"></i>
-                                    <small class="text-muted d-block"
-                                        style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600;">Horário</small>
-                                    <strong class="text-primary font-monospace" id="confirmAulaHorario"
-                                        style="font-size: 0.88rem;">—</strong>
-                                </div>
-                            </div>
-
-                            <!-- Professor -->
-                            <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
-                                <i class="fas fa-user-tie text-primary mt-1 me-3" style="width: 20px;"></i>
-                                <div class="flex-grow-1">
-                                    <small class="text-muted d-block"
-                                        style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600;">Professor
-                                        / Instrutor</small>
-                                    <strong class="text-dark d-block" id="confirmAulaProfessor"
-                                        style="font-size: 0.9rem;">—</strong>
-                                </div>
-                            </div>
-
-                            <!-- Sala -->
-                            <div class="d-flex align-items-start">
-                                <i class="fas fa-door-open text-primary mt-1 me-3" style="width: 20px;"></i>
-                                <div class="flex-grow-1">
-                                    <small class="text-muted d-block"
-                                        style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600;">Sala /
-                                        Local</small>
-                                    <strong class="text-dark d-block" id="confirmAulaSala"
-                                        style="font-size: 0.9rem;">—</strong>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Aviso -->
-                        <div class="alert alert-info d-flex align-items-start p-3 mb-0" style="font-size: 0.82rem;">
-                            <i class="fas fa-info-circle me-2 mt-1"></i>
-                            <div>
-                                Após confirmar, a aula será adicionada ao cronograma da turma e ficará visível para
-                                todos os admins.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer bg-light px-4 py-3 border-top">
-                        <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold"
-                            data-bs-dismiss="modal">
-                            Cancelar
-                        </button>
-                        <button type="button" class="btn btn-primary px-4 rounded-pill fw-semibold"
-                            id="btnConfirmarAgendamento">
-                            <i class="fas fa-check me-1"></i> Confirmar Agendamento
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- 8. MODAL DE CONFIRMAÇÃO DE EDIÇÃO -->
-        <div class="modal fade" id="modalConfirmarEdicaoAula" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg rounded-4">
-                    <div class="modal-body text-center p-4 p-md-5">
-                        <button type="button" class="btn-close position-absolute end-0 top-0 m-3"
-                            data-bs-dismiss="modal" aria-label="Fechar"></button>
-
-                        <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
-                            style="width: 72px; height: 72px; background: #e0f2fe; color: #0284c7;">
-                            <i class="fas fa-edit fa-2x"></i>
-                        </div>
-
-                        <h4 class="fw-bold mb-2" style="color: #0f172a;">
-                            Confirmar Alterações?
-                        </h4>
-
-                        <p class="text-muted mb-4" style="font-size: 0.95rem; line-height: 1.5;">
-                            Deseja realmente salvar as alterações nesta aula? As informações serão atualizadas no
-                            cronograma.
-                        </p>
-
-                        <div class="d-flex gap-2 justify-content-center">
-                            <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold"
-                                data-bs-dismiss="modal">
-                                Cancelar
-                            </button>
-                            <button type="button" class="btn btn-primary px-4 rounded-pill fw-semibold"
-                                id="btnConfirmarEdicaoAula">
-                                <i class="fas fa-check me-1"></i> Salvar Alterações
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- 9. MODAL DE CONFIRMAÇÃO DE EXCLUSÃO -->
-        <div class="modal fade" id="modalConfirmarExclusaoAula" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg rounded-4">
-                    <div class="modal-body text-center p-4 p-md-5">
-                        <button type="button" class="btn-close position-absolute end-0 top-0 m-3"
-                            data-bs-dismiss="modal" aria-label="Fechar"></button>
-
-                        <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
-                            style="width: 72px; height: 72px; background: #fee2e2; color: #dc2626;">
-                            <i class="fas fa-trash-alt fa-2x"></i>
-                        </div>
-
-                        <h4 class="fw-bold mb-2" style="color: #0f172a;">
-                            Remover Aula?
-                        </h4>
-
-                        <p class="text-muted mb-4" style="font-size: 0.95rem; line-height: 1.5;">
-                            Tem certeza de que deseja remover esta aula do cronograma? Esta ação não poderá ser
-                            desfeita.
-                        </p>
-
-                        <div class="p-3 rounded-3 mb-4" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                            <small class="text-muted d-block mb-1"
-                                style="font-size: 0.72rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Aula</small>
-                            <strong class="text-dark d-block" id="confirmExclusaoAulaInfo"
-                                style="font-size: 0.92rem;">—</strong>
-                        </div>
-
-                        <div class="d-flex gap-2 justify-content-center">
-                            <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold"
-                                data-bs-dismiss="modal">
-                                Cancelar
-                            </button>
-                            <button type="button" class="btn btn-danger px-4 rounded-pill fw-semibold"
-                                id="btnConfirmarExclusaoAula">
-                                <i class="fas fa-trash-alt me-1"></i> Remover Aula
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 10. MODAL DE REGISTRAR PRESENÇA -->
-        <div class="modal fade" id="modalRegistrarPresenca" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                <div class="modal-content border-0 shadow-lg rounded-4">
-                    <div class="modal-header border-bottom px-4 py-3">
-                        <div>
-                            <h5 class="modal-title fw-bold text-dark m-0">
-                                <i class="fas fa-clipboard-check text-primary me-2"></i>
-                                Registrar Presença
-                            </h5>
-                            <div class="mt-2 d-flex flex-wrap gap-2">
-                                <span class="badge bg-primary font-monospace" id="presencaTurmaNome">—</span>
-                            </div>
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                    </div>
-
-                    <div class="modal-body p-4">
-                        <!-- Info da aula -->
-                        <div class="row g-3 mb-4 p-3 rounded-3" style="background: #f8fafc;">
-                            <div class="col-md-4">
-                                <small class="text-muted d-block">Data</small>
-                                <strong class="text-dark" id="presencaData">—</strong>
-                            </div>
-                            <div class="col-md-4">
-                                <small class="text-muted d-block">Horário</small>
-                                <strong class="text-dark font-monospace" id="presencaAulaInfo">—</strong>
-                            </div>
-                            <div class="col-md-4">
-                                <small class="text-muted d-block">Professor</small>
-                                <strong class="text-dark" id="presencaProfessor">—</strong>
-                            </div>
-                        </div>
-
-                        <!-- Botão marcar todos -->
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small class="text-muted fw-semibold">Alunos Matriculados</small>
-                            <button type="button" class="btn btn-sm btn-outline-success" id="btnTodosPresentes">
-                                <i class="fas fa-check-double me-1"></i> Marcar todos como presente
-                            </button>
-                        </div>
-
-                        <!-- Lista de alunos -->
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Aluno</th>
-                                        <th class="text-center" style="width: 320px;">Presença</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="presencaTbody">
-                                    <tr>
-                                        <td colspan="2" class="text-center text-muted py-4">A carregar alunos...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div
-                        class="modal-footer bg-light px-4 py-3 border-top d-flex justify-content-between align-items-center">
-                        <div class="d-flex gap-3">
-                            <small class="text-muted">
-                                <i class="fas fa-check-circle text-success"></i> <span id="resumoPresentes">0</span>
-                            </small>
-                            <small class="text-muted">
-                                <i class="fas fa-times-circle text-danger"></i> <span id="resumoAusentes">0</span>
-                            </small>
-                            <small class="text-muted">
-                                <i class="fas fa-file-alt text-warning"></i> <span id="resumoJustificados">0</span>
-                            </small>
-                            <small class="text-muted fw-bold">
-                                Taxa: <span id="resumoTaxa">0%</span>
-                            </small>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-light px-4 rounded-pill"
-                                data-bs-dismiss="modal">Cancelar</button>
-                            <button type="button" class="btn btn-primary px-4 rounded-pill" id="btnSalvarPresencas">
-                                <i class="fas fa-save me-1"></i> Salvar Presenças
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </main>
 
     <!-- SCRIPTS -->
