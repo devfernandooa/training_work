@@ -373,3 +373,11 @@ versionado no Git e é acessível a qualquer momento.
 - **C5 (Turmas):** Modal de Alunos agora renderiza o histórico de adições/remoções.
 - **Separação:** Editar Turma mostra alterações gerais; Alunos mostra apenas entradas/saídas.
 - **Melhoria:** O log de matrícula passou a gravar o nome do aluno em vez do ID no Firestore.
+
+
+### M3 Completo — Refatoração do Financeiro ✅
+**Status:** Concluído · **PR:** [#XXX](https://github.com/devfernandooa/training_work/pull/XXX)
+**Data:** 20/10/2026
+- Removida a função `renderizarTimelineAuditoria` duplicada no `financeiro-ui.js`.
+- O módulo Financeiro agora usa o componente compartilhado.
+- Corrigido o erro de redeclaração que quebrava a tela do Financeiro.
