@@ -106,3 +106,131 @@ table.table td.cell-wrap {
     min-width: 200px;
 }
 
+/* ==========================================================================
+   TABELAS: MOBILE E TABLET (< 992px) - Modo Acordeão
+   ========================================================================== */
+@media (max-width: 991.98px) {
+
+    /* 1. O container da tabela perde o scroll e ocupa 100% */
+    .table-responsive {
+        overflow: visible !important;
+        width: 100%;
+        display: block;
+    }
+
+    .table-responsive table {
+        display: block;
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    /* 2. Esconde o cabeçalho */
+    .table-responsive thead {
+        display: none !important;
+    }
+
+    /* 3. O Card (a linha da tabela) ocupa 100% da largura */
+    .table-responsive tbody tr {
+        display: flex !important;
+        flex-direction: column;
+        width: 100% !important;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        overflow: hidden;
+    }
+
+    /* As células também precisam ser 100% */
+    .table-responsive tbody td,
+    .table-responsive tbody tr.aberto td {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+    @media (max-width: 991.98px) {
+    .table-responsive table,
+    .table-responsive table tbody,
+    .table-responsive table tr,
+    .table-responsive table td {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+}
+
+    /* 4. Cabeçalho do Card: Nome + Botões sempre visíveis */
+    /* Assumindo que a coluna 1 é o Nome e a última é Ações */
+    .table-responsive tbody td[data-label="Aluno"] {
+        display: flex !important;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e2e8f0;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    /* Adiciona a setinha no nome do aluno */
+    .table-responsive tbody td[data-label="Aluno"]::after {
+        content: '\f078';
+        /* FontAwesome seta para baixo */
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        color: #64748b;
+        transition: transform 0.3s ease;
+    }
+
+    /* Esconde o rótulo "ALUNO" no topo do card para ficar mais limpo */
+    .table-responsive tbody td[data-label="Aluno"]::before {
+        display: none;
+    }
+
+    /* 5. Quando aberto, gira a seta */
+    .table-responsive tbody tr.aberto td[data-label="Aluno"]::after {
+        transform: rotate(180deg);
+    }
+
+    /* 6. Esconde todos os outros dados por padrão */
+    .table-responsive tbody td {
+        display: none !important;
+        width: 100%;
+    }
+
+    /* 7. Quando aberto, mostra os outros dados */
+    .table-responsive tbody tr.aberto td {
+        display: flex !important;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        text-align: right;
+    }
+
+    /* Mostra o rótulo dos dados na esquerda */
+    .table-responsive tbody tr.aberto td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        font-size: 0.75rem;
+        color: #64748b;
+        text-transform: uppercase;
+        text-align: left;
+    }
+
+    /* 8. A linha de Ações fica sempre visível no rodapé do card */
+    .table-responsive tbody td[data-label="Ações"] {
+        display: flex !important;
+        justify-content: flex-end !important;
+        padding: 0.75rem 1rem !important;
+        background: #f8f9fa;
+        border-top: 1px solid #e2e8f0;
+        border-bottom: none !important;
+    }
+
+    /* Esconde o rótulo "Ações" */
+    .table-responsive tbody td[data-label="Ações"]::before {
+        display: none;
+    }
+}

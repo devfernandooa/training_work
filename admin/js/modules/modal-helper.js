@@ -40,19 +40,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-
-// Ativa o modo acordeão nas tabelas no mobile
 document.addEventListener('click', (e) => {
-    // Verifica se está no mobile
-    if (window.innerWidth >= 768) return;
+    // Apenas no mobile/tablet
+    if (window.innerWidth >= 992) return;
 
-    // Verifica se clicou na célula do Aluno
     const tdAluno = e.target.closest('td[data-label="Aluno"]');
     if (!tdAluno) return;
 
     const tr = tdAluno.closest('tr');
-    if (!tr) return;
-
-    // Alterna a classe 'aberto'
-    tr.classList.toggle('aberto');
+    if (tr) {
+        tr.classList.toggle('aberto');
+    }
 });

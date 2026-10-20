@@ -202,22 +202,22 @@ function renderizar() {
             `;
 
         html += `
-    <tr>
-        <td data-label="Aluno">
-            <div class="fw-bold text-dark">${aluno.nome || "Não informado"}</div>
-            <small class="text-muted d-block">${aluno.email || ""}</small>
-        </td>
-        <td data-label="Telefone" class="d-none d-lg-table-cell">${aluno.telefone || "-"}</td>
-        <td data-label="Cursos" class="d-none d-lg-table-cell">${cursosTags}</td>
-        <td data-label="Cadastro" class="d-none d-lg-table-cell">${data}</td>
-        <td data-label="Status">${badgeStatus}</td>
-        <td data-label="Ações" class="text-end">
-    <div class="d-flex justify-content-end gap-1">
-        ${acoes}
-    </div>
-</td>
-    </tr>
-`;
+            <tr>
+                <td data-label="Aluno">
+                    <div class="fw-bold text-dark">${aluno.nome || "Não informado"}</div>
+                    <small class="text-muted d-block">${aluno.email || ""}</small>
+                </td>
+                <td data-label="Telefone" class="d-none d-lg-table-cell">${aluno.telefone || "-"}</td>
+                <td data-label="Cursos" class="d-none d-lg-table-cell">${cursosTags}</td>
+                <td data-label="Data" class="d-none d-lg-table-cell">${data}</td>
+                <td data-label="Status">${badgeStatus}</td>
+                <td data-label="Ações" class="text-end">
+                    <div class="d-flex justify-content-end gap-1">
+                        ${acoes}
+                    </div>
+                </td>
+            </tr>
+        `;
     });
 
     tbody.innerHTML = html;
