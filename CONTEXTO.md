@@ -4,7 +4,7 @@
 > de qualquer nova sessão de trabalho (por humano ou IA) para retomar o contexto sem
 > perder o fio da meada. Mantenha-o atualizado ao fim de cada bloco de trabalho.
 
-**Última atualização:** 19/10/2026
+**Última atualização:** 20/10/2026
 **Responsável:** Fernando (devfernandooa)
 **Repo:** https://github.com/devfernandooa/training_work
 
@@ -164,7 +164,7 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 | #      | Item                                                                 | Duração | Dificuldade |
 | ------ | -------------------------------------------------------------------- | ------- | ----------- |
 | M1     | "Ver Frequência": adicionar editar + auditoria                       | 6–8h    | Média       |
-| M2     | Refatorar módulo de Matrículas (inteiro)                             | 16–24h  | Alta        |
+| ~~M2~~   | ~~Refatorar módulo de Matrículas (inteiro)~~ ✅ CONCLUÍDO (20/10) | 16–24h  | Alta        |
 | ~~M3~~ | ~~Unificar componente de auditoria reutilizável~~ ✅ PARCIAL (17/10) | 8–12h   | Média       |
 | M4     | Auditoria em exclusões (UI) — complementa S1                         | 6–8h    | Média       |
 
@@ -180,21 +180,19 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 
 ### Ordem recomendada de execução
 
-1. ~~S1 → S2 → S3 → S4 → S5~~ ✅ (segurança — concluído em 16/10)
-2. ~~C3 → C3.5~~ ✅ (correções visuais — concluído em 16/10)
-3. ~~C1 → C2 → C4 → C5 → C6 → C7~~ ✅ (auditoria visual completa na UI — concluído em 19/10)
-4. M3 completo (migrar financeiro-ui para o módulo)
-5. M1 → M2 (Frequência + Matrículas)
-6. Longo prazo em paralelo
+1. ~~S1 → S2 → S3 → S4 → S5~~ ✅ (segurança — 16/10)
+2. ~~C1 → C2 → C3 → C3.5 → C4 → C5 → C6 → C7~~ ✅ (auditoria visual + correções — 17/10)
+3. ~~M1 → M2 → M3~~ ✅ (Frequência + Matrículas + Financeiro unificado — 20/10)
+4. **L1 → L2 → L3 → L4 → L5** (Longo prazo: auditoria login, exportação, UX, testes, documentação)
 
 ### Totais restantes
 
 | Prazo              | Horas        | Dias úteis (8h) |
 | ------------------ | ------------ | --------------- |
 | 🟠 Curto           | 0h           | 0               |
-| 🟡 Médio           | 30–44h       | 4–6             |
+| 🟡 Médio           | 0h           | 0               |
 | 🟢 Longo           | 46–70h       | 6–9             |
-| **TOTAL restante** | **~76–114h** | **~10–15**      |
+| **TOTAL restante** | **~46–70h**  | **~6–9**        |
 
 ---
 
@@ -381,3 +379,28 @@ versionado no Git e é acessível a qualquer momento.
 - Removida a função `renderizarTimelineAuditoria` duplicada no `financeiro-ui.js`.
 - O módulo Financeiro agora usa o componente compartilhado.
 - Corrigido o erro de redeclaração que quebrava a tela do Financeiro.
+
+
+---
+
+### M2 — Refatoração do módulo de Matrículas ✅
+**Status:** Concluído · **PR:** [#XXX](https://github.com/devfernandooa/training_work/pull/XXX)
+**Data:** 20/10/2026
+
+**O que entrou:**
+- Migração para subcoleção `turmas/{turmaId}/matriculas`.
+- Auditoria em criar/editar/excluir/restaurar (registra em `turmas/{turmaId}/auditoria`).
+- Soft delete + restaurar matrícula.
+- Paginação, busca, filtro "Mostrar Excluídos" e modal de exclusão padronizado.
+- Confirmação antes de salvar (padrão das outras telas).
+- Validação de duplicidade: aluno não pode ter 2 matrículas no mesmo curso.
+- Validação de vaga máxima da turma mantida.
+
+**Impacto:**
+- ✅ Item **M2** concluído
+- ✅ **Médio Prazo 100% concluído** (M1, M2, M3)
+- ✅ Módulo de Matrículas alinhado ao padrão do resto do sistema
+
+**Observações:**
+- A coleção raiz `matriculas` deixa de ser lida. Dados antigos podem ser migrados via script ou ignorados.
+- Integração futura: ao alterar valor de matrícula, sugerir ajuste no Financeiro (nova transação de diferença, não reescrever a antiga).
