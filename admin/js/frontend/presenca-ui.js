@@ -6,7 +6,7 @@
 //   - Cards de turmas na aba "Controle de Presença"
 //   - Modal de frequência por aluno
 // ==========================================================================
-
+import { renderizarTimelineAuditoria } from "../modules/auditoria-timeline.js";
 import { notificar } from "../modules/notificacao.js";
 import {
     escutarTurmas,
@@ -316,7 +316,8 @@ function renderizarCardsTurmas() {
  * MODAL DE FREQUÊNCIA
  * ========================================================================= */
 
-function abrirModalFrequencia(turmaId) {
+async function abrirModalFrequencia(turmaId) {
+
     const turma = listaTurmasGlobal.find(t => t.id === turmaId);
     if (!turma) return;
 
@@ -335,6 +336,16 @@ function abrirModalFrequencia(turmaId) {
         let html = "";
         stats.forEach(s => {
             const badgeClasse = s.taxa >= 75 ? "bg-success" : s.taxa >= 50 ? "bg-warning text-dark" : "bg-danger";
+
+            // ⬇️ Verifica se a turma tem pelo menos uma aula agendada
+            const temAula = turma.cronograma && turma.cronograma.length > 0;
+            const idPrimeiraAula = temAula ? turma.cronograma[0].id : null;
+
+            // Se não tem aula, o botão fica desabilitado
+            const botaoEditar = temAula
+                ? `<button class="btn btn-sm btn-outline-primary px-2 py-1" onclick="window.abrirModalPresenca('${turma.id}', '${idPrimeiraAula}')" title="Editar Presenças"><i class="fas fa-pen"></i></button>`
+                : `<button class="btn btn-sm btn-outline-secondary px-2 py-1" disabled title="Nenhuma aula agendada"><i class="fas fa-pen"></i></button>`;
+
             html += `
                 <tr>
                     <td><strong class="text-dark">${s.aluno_nome}</strong></td>
@@ -345,12 +356,20 @@ function abrirModalFrequencia(turmaId) {
                     <td class="text-center">
                         <span class="badge ${badgeClasse}" style="min-width: 50px;">${s.taxa}%</span>
                     </td>
+                    <td class="text-center">${botaoEditar}</td>
                 </tr>
             `;
         });
         tbody.innerHTML = html;
-    }
 
+        await renderizarTimelineAuditoria({
+            colecao: "turmas",
+            docId: turmaId,
+            containerId: "frequenciaAuditoriaContainer",
+            filtroExcluirTipo: ["adicao_aluno", "remocao_aluno"], // Esconde os logs de matrícula
+            limite: 20
+        });
+    }
     const modalEl = document.getElementById("modalFrequenciaTurma");
     if (modalEl && window.bootstrap) {
         const m = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
