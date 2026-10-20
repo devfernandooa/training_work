@@ -105,132 +105,137 @@ table.table td.cell-wrap {
     white-space: normal;
     min-width: 200px;
 }
-
 /* ==========================================================================
-   TABELAS: MOBILE E TABLET (< 992px) - Modo Acordeão
+   TABELAS: MOBILE E TABLET (< 992px) - Modo Acordeão Clean
    ========================================================================== */
 @media (max-width: 991.98px) {
-
-    /* 1. O container da tabela perde o scroll e ocupa 100% */
+    /* Container geral */
     .table-responsive {
         overflow: visible !important;
         width: 100%;
-        display: block;
     }
 
-    .table-responsive table {
-        display: block;
-        width: 100%;
-        border-collapse: collapse;
+    .table-responsive table,
+    .table-responsive table tbody {
+        display: block !important;
+        width: 100% !important;
     }
 
-    /* 2. Esconde o cabeçalho */
     .table-responsive thead {
         display: none !important;
     }
 
-    /* 3. O Card (a linha da tabela) ocupa 100% da largura */
-    .table-responsive tbody tr {
+    /* O Card */
+    .table-responsive table tbody tr {
         display: flex !important;
         flex-direction: column;
         width: 100% !important;
         background: #fff;
         border: 1px solid #e2e8f0;
         border-radius: 8px;
-        margin-bottom: 0.75rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         overflow: hidden;
     }
 
-    /* As células também precisam ser 100% */
-    .table-responsive tbody td,
-    .table-responsive tbody tr.aberto td {
-        width: 100% !important;
-        flex: 1 1 100% !important;
-    }
-    @media (max-width: 991.98px) {
-    .table-responsive table,
-    .table-responsive table tbody,
-    .table-responsive table tr,
-    .table-responsive table td {
-        display: block !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-    }
-}
-
-    /* 4. Cabeçalho do Card: Nome + Botões sempre visíveis */
-    /* Assumindo que a coluna 1 é o Nome e a última é Ações */
+    /* ====================================================
+       CABEÇALHO DO CARD (Nome + Seta)
+       ==================================================== */
     .table-responsive tbody td[data-label="Aluno"] {
         display: flex !important;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
+        flex-direction: column;
+        padding: 1rem !important;
         background: #f8f9fa;
-        border-bottom: 1px solid #e2e8f0;
         cursor: pointer;
-        width: 100%;
+        position: relative;
+        width: 100% !important;
+        text-align: left !important;
     }
 
-    /* Adiciona a setinha no nome do aluno */
+    /* Nome do aluno (negrito) */
+    .table-responsive tbody td[data-label="Aluno"] .fw-bold {
+        font-size: 1rem;
+        color: #1e293b;
+    }
+
+    /* Email do aluno (menor e cinza) */
+    .table-responsive tbody td[data-label="Aluno"] small {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-top: 0.2rem;
+    }
+
+    /* Seta no canto direito do cabeçalho */
     .table-responsive tbody td[data-label="Aluno"]::after {
-        content: '\f078';
-        /* FontAwesome seta para baixo */
+        content: '\f078'; /* FontAwesome seta para baixo */
         font-family: 'Font Awesome 5 Free';
         font-weight: 900;
         color: #64748b;
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
         transition: transform 0.3s ease;
     }
 
-    /* Esconde o rótulo "ALUNO" no topo do card para ficar mais limpo */
+    /* Esconde o rótulo "Aluno" */
     .table-responsive tbody td[data-label="Aluno"]::before {
         display: none;
     }
 
-    /* 5. Quando aberto, gira a seta */
+    /* Seta gira quando aberto */
     .table-responsive tbody tr.aberto td[data-label="Aluno"]::after {
-        transform: rotate(180deg);
+        transform: translateY(-50%) rotate(180deg);
     }
 
-    /* 6. Esconde todos os outros dados por padrão */
+    /* ====================================================
+       DADOS DO CARD (Escondidos por padrão)
+       ==================================================== */
     .table-responsive tbody td {
         display: none !important;
-        width: 100%;
     }
 
-    /* 7. Quando aberto, mostra os outros dados */
-    .table-responsive tbody tr.aberto td {
+    /* Quando aberto, mostra os dados em formato de lista (Rótulo em cima, valor embaixo) */
+    .table-responsive tbody tr.aberto td:not([data-label="Aluno"]):not([data-label="Ações"]) {
         display: flex !important;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid #e2e8f0;
-        text-align: right;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.75rem 1rem !important;
+        border-bottom: 1px solid #f1f5f9;
+        width: 100% !important;
+        text-align: left !important;
     }
 
-    /* Mostra o rótulo dos dados na esquerda */
-    .table-responsive tbody tr.aberto td::before {
+    /* Rótulo (Telefone, Cursos, etc) */
+    .table-responsive tbody tr.aberto td:not([data-label="Aluno"]):not([data-label="Ações"])::before {
         content: attr(data-label);
         font-weight: 600;
-        font-size: 0.75rem;
-        color: #64748b;
+        font-size: 0.7rem;
+        color: #94a3b8;
         text-transform: uppercase;
-        text-align: left;
+        margin-bottom: 0.25rem;
     }
 
-    /* 8. A linha de Ações fica sempre visível no rodapé do card */
+    /* ====================================================
+       RODAPÉ DO CARD (Botões de Ação)
+       ==================================================== */
     .table-responsive tbody td[data-label="Ações"] {
         display: flex !important;
         justify-content: flex-end !important;
+        align-items: center;
         padding: 0.75rem 1rem !important;
         background: #f8f9fa;
         border-top: 1px solid #e2e8f0;
-        border-bottom: none !important;
+        width: 100% !important;
     }
 
-    /* Esconde o rótulo "Ações" */
     .table-responsive tbody td[data-label="Ações"]::before {
         display: none;
+    }
+
+    /* Ajuste dos botões no mobile para não quebrarem */
+    .table-responsive tbody td[data-label="Ações"] .d-flex {
+        flex-wrap: wrap;
+        gap: 0.5rem !important;
     }
 }
