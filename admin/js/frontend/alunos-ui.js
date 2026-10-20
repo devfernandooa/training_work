@@ -27,9 +27,10 @@ let listaAlunos = [];
 let matriculasPorAluno = {};
 let iniciou = false;
 let filtroInativos = false;
-let filtroExcluidos = false;   // ⬅️ NOVO
-let unsubscribeAlunos = null;  // ⬅️ NOVO: para recriar o listener quando o toggle mudar
-
+let filtroExcluidos = false;   
+let unsubscribeAlunos = null;  
+let paginaAtual = 1;
+let itensPorPagina = 10; // Quantidade de alunos por página
 
 
 /* ==========================================================================
@@ -115,18 +116,14 @@ function renderizar() {
     set("metric-alunos-inativos", inativos);
     set("metric-alunos-debitos", debitos);
 
-    // Filtro
+    // Filtro (igual ao que você já tinha)
     const filtrados = listaAlunos.filter(a => {
         const status = (a.status || "ativo").toLowerCase();
         const estaExcluido = a.excluido === true;
 
-        // Quando "Mostrar Excluídos" está ligado, mostra SÓ excluídos
         if (filtroExcluidos && !estaExcluido) return false;
-
-        // Quando desligado, o service já filtrou os excluídos, mas por segurança:
         if (!filtroExcluidos && estaExcluido) return false;
 
-        // Filtro ativo/inativo (não se aplica à visão de excluídos)
         if (!filtroExcluidos) {
             if (filtroInativos && status !== "inativo") return false;
             if (!filtroInativos && status === "inativo") return false;
@@ -142,15 +139,29 @@ function renderizar() {
     });
 
     if (filtrados.length === 0) {
-        const msg = filtroExcluidos
-            ? "Nenhum aluno excluído."
-            : "Nenhum aluno encontrado.";
+        const msg = filtroExcluidos ? "Nenhum aluno excluído." : "Nenhum aluno encontrado.";
         tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">${msg}</td></tr>`;
+        renderizarPaginacao(0, 0, 0, 0); // Limpa a paginação
         return;
     }
 
+    // ============================================
+    // PAGINAÇÃO
+    // ============================================
+    const totalAlunos = filtrados.length;
+    const totalPaginas = Math.ceil(totalAlunos / itensPorPagina);
+    
+    if (paginaAtual > totalPaginas) paginaAtual = 1;
+
+    const indexInicio = (paginaAtual - 1) * itensPorPagina;
+    const indexFim = indexInicio + itensPorPagina;
+    const alunosDaPagina = filtrados.slice(indexInicio, indexFim);
+
+    // ============================================
+    // RENDERIZAÇÃO
+    // ============================================
     let html = "";
-    filtrados.forEach(aluno => {
+    alunosDaPagina.forEach(aluno => {  // <--- MUDOU AQUI (era filtrados.forEach)
         const cursos = matriculasPorAluno[aluno.id] || [];
         const cursosTags = cursos.length > 0
             ? cursos.map(c => `<span class="badge bg-light text-secondary border m-1">${c}</span>`).join(" ")
@@ -164,7 +175,6 @@ function renderizar() {
         const statusAtual = (aluno.status || "ativo").toLowerCase();
         const estaExcluido = aluno.excluido === true;
 
-        // Badge de status (se excluído, mostra "Excluído")
         const badgeStatus = estaExcluido
             ? `<span class="badge bg-danger bg-opacity-10 text-danger">Excluído</span>`
             : statusAtual === "inativo"
@@ -173,7 +183,6 @@ function renderizar() {
                     ? `<span class="badge bg-warning bg-opacity-10 text-warning">Em Débito</span>`
                     : `<span class="badge bg-success bg-opacity-10 text-success">Ativo</span>`;
 
-        //Ações diferentes para excluídos
         const acoes = estaExcluido
             ? `
                 <button class="btn btn-sm btn-outline-info px-2 py-1 btn-ficha" data-id="${aluno.id}">
@@ -221,8 +230,10 @@ function renderizar() {
     });
 
     tbody.innerHTML = html;
-}
 
+    // Chama a função que desenha os botões de navegação
+    renderizarPaginacao(totalPaginas, totalAlunos, indexInicio, indexFim);
+}
 /* ==========================================================================
  * DELEGAÇÃO DE CLIQUES
  * ========================================================================== */
@@ -358,8 +369,14 @@ document.addEventListener("click", (e) => {
 // Busca
 document.addEventListener("DOMContentLoaded", () => {
     const busca = document.getElementById("inputBuscaAluno");
-    if (busca) busca.addEventListener("input", renderizar);
+    if (busca) {
+        busca.addEventListener("input", () => {
+            paginaAtual = 1; // Reseta a página ao buscar
+            renderizar();
+        });
+    }
 });
+
 
 
 /* ==========================================================================
@@ -824,3 +841,63 @@ window.__alunosDebug = {
 
 console.log("✅ [alunos-ui] listeners registrados. Use __alunosDebug no console.");
 console.log("✅ [alunos-ui] listeners registrados");
+
+
+function renderizarPaginacao(totalPaginas, totalAlunos, indexInicio, indexFim) {
+    const ul = document.getElementById("paginacao-alunos");
+    const info = document.getElementById("info-paginacao-alunos");
+    if (!ul || !info) return;
+
+    // Texto de contagem (igual ao que aparece no print)
+    const fimExibido = Math.min(indexFim, totalAlunos);
+    info.textContent = totalAlunos === 0 
+        ? "Nenhum aluno encontrado" 
+        : `Mostrando ${indexInicio + 1}-${fimExibido} de ${totalAlunos} alunos`;
+
+    if (totalPaginas <= 1) {
+        ul.innerHTML = "";
+        return;
+    }
+
+    let html = "";
+
+    // Botão Anterior (Seta)
+    html += `<li class="page-item ${paginaAtual === 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" data-pagina="${paginaAtual - 1}" aria-label="Anterior">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+    </li>`;
+
+    // Números das Páginas
+    for (let i = 1; i <= totalPaginas; i++) {
+        // Lógica para mostrar apenas 5 páginas: a atual, 2 antes e 2 depois
+        if (i === 1 || i === totalPaginas || (i >= paginaAtual - 1 && i <= paginaAtual + 1)) {
+            html += `<li class="page-item ${paginaAtual === i ? 'active' : ''}">
+                <a class="page-link" href="#" data-pagina="${i}">${i}</a>
+            </li>`;
+        } else if (i === paginaAtual - 2 || i === paginaAtual + 2) {
+            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+    }
+
+    // Botão Próxima (Seta)
+    html += `<li class="page-item ${paginaAtual === totalPaginas ? 'disabled' : ''}">
+        <a class="page-link" href="#" data-pagina="${paginaAtual + 1}" aria-label="Próxima">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+    </li>`;
+
+    ul.innerHTML = html;
+
+    // Evento de clique
+    ul.querySelectorAll(".page-link").forEach(link => {
+        link.addEventListener("click", (e) => {
+            e.preventDefault();
+            const novaPagina = parseInt(link.getAttribute("data-pagina"));
+            if (novaPagina >= 1 && novaPagina <= totalPaginas) {
+                paginaAtual = novaPagina;
+                renderizar();
+            }
+        });
+    });
+}
