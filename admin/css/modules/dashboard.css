@@ -468,37 +468,12 @@ table.tabela-leads td.col-analise {
   color: #ffffff !important;
 }
 
-/* Limita a altura do modal para encaixar perfeitamente em qualquer ecrã com rolagem interna */
-.modal-dialog-scrollable .modal-body {
-  max-height: 75vh !important;
-  overflow-y: auto !important;
-}
 
 /* Compacta os blocos internos para ganhar espaço vertical */
 #editLeadModal .p-3 {
   padding: 0.75rem !important;
 }
 
-/* ============================================================
- * FIX — Modal de Ficha do Aluno
- * ============================================================ */
-#modalFichaAluno.show {
-    display: block !important;
-    opacity: 1 !important;
-    z-index: 9999 !important;
-}
-#modalFichaAluno .modal-dialog {
-    transform: none !important;
-}
-#modalFichaAluno .modal-content {
-    min-height: 400px;
-    opacity: 1 !important;
-}
-#fichaConteudo {
-    width: 100% !important;
-    min-height: 200px;
-    display: block !important;
-}
 
 /* ============================================================
  * MODAL DE EDITAR PERFIL
