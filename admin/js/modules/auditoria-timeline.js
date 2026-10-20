@@ -8,11 +8,21 @@ import {
  * e busca o rótulo amigável no dicionário.
  */
 function obterNomeAmigavel(campo) {
-  let nome = campo;
-  if (nome.startsWith("cronograma.aula_")) {
-    nome = nome.split(".").pop();
-  }
-  return obterRotuloCampo(nome) || nome;
+    let nome = campo;
+    
+    // Limpa campos do cronograma (aulas)
+    if (nome.startsWith("cronograma.aula_")) {
+        nome = nome.split('.').pop();
+    }
+    
+    // Limpa campos de presença (ex: presenca.aula_123.aluno_030)
+    if (nome.startsWith("presenca.aula_")) {
+        const partes = nome.split('.');
+        const alunoId = partes.pop(); // Pega o "aluno_030"
+        return `Presença (Aluno: ${alunoId})`;
+    }
+
+    return obterRotuloCampo(nome) || nome;
 }
 
 /**
