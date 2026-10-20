@@ -1,53 +1,60 @@
 // ==========================================================================
-// TRAINING WORK - SERVICE: MATRÍCULAS (COM VALIDAÇÃO DE VAGAS DA TURMA)
+// TRAINING WORK - SERVICE: MATRÍCULAS (M2 refatorado)
 // ==========================================================================
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import { 
-    getFirestore, 
-    collection, 
-    getDocs, 
-    doc, 
-    addDoc, 
-    updateDoc, 
+import { db, auth } from "../firebase-config.js";
+import {
+    collection,
+    collectionGroup,
+    doc,
     getDoc,
-    query, 
-    where 
+    getDocs,
+    addDoc,
+    updateDoc
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { registrarAuditoriaGenerica, compararAlteracoes } from "./auditoria-service.js";
 
-let db;
+/* ==========================================================================
+ * LISTAGEM
+ * ========================================================================== */
+export async function listarMatriculasService(opcoes = {}) {
+    const incluirExcluidos = opcoes.incluirExcluidos === true;
+    const lista = [];
 
-function getDbInstance() {
-    if (!db) {
-        db = getFirestore();
-    }
-    return db;
-}
-
-export async function listarMatriculasService() {
-    const firestore = getDbInstance();
     try {
-        const ref = collection(firestore, "matriculas");
-        const snap = await getDocs(ref);
+        const turmasRef = collection(db, "turmas");
+        const turmasSnap = await getDocs(turmasRef);
 
-        const lista = [];
-        snap.forEach(docSnap => {
-            const data = docSnap.data();
-            if (data.excluido === true) return;
+        for (const turmaDoc of turmasSnap.docs) {
+            const turmaId = turmaDoc.id;
+            const turmaData = turmaDoc.data();
+            const nomeTurma = turmaData.nome_turma || turmaData.nome || turmaData.curso_nome || "Turma sem nome";
 
-            lista.push({
-                id: docSnap.id,
-                aluno_id: data.aluno_id || "",
-                aluno_nome: data.aluno_nome || "Aluno não identificado",
-                aluno_email: data.aluno_email || "",
-                turma_id: data.turma_id || data.turmaId || "",
-                turma_nome: data.curso_nome || data.turma_nome || "Sem Turma Vinculada",
-                valor: Number(data.valor || 0),
-                forma_pagamento: data.forma_pagamento || "Pix",
-                status: data.status_matricula || data.status || "confirmada"
+            const matriculasRef = collection(db, "turmas", turmaId, "matriculas");
+            const matriculasSnap = await getDocs(matriculasRef);
+
+            matriculasSnap.forEach(matDoc => {
+                const data = matDoc.data();
+                if (!incluirExcluidos && data.excluido === true) return;
+
+                lista.push({
+                    id: matDoc.id,
+                    turmaId: turmaId,
+                    aluno_id: data.aluno_id || "",
+                    aluno_nome: data.aluno_nome || "Aluno não identificado",
+                    aluno_email: data.aluno_email || "",
+                    turma_nome: data.curso_nome || data.turma_nome || nomeTurma,
+                    valor: Number(data.valor || 0),
+                    forma_pagamento: data.forma_pagamento || "Pix",
+                    status: data.status_matricula || data.status || "confirmada",
+                    excluido: data.excluido === true,
+                    criado_em: data.criado_em || "",
+                    atualizado_em: data.ultima_alteracao_em || data.atualizado_em || ""
+                });
             });
-        });
+        }
 
+        lista.sort((a, b) => (b.criado_em || "").localeCompare(a.criado_em || ""));
         return lista;
     } catch (error) {
         console.error("Erro ao listar matrículas:", error);
@@ -55,90 +62,109 @@ export async function listarMatriculasService() {
     }
 }
 
-/**
- * Atualiza e vincula a matrícula SOMENTE SE houver vaga disponível na turma
- */
-export async function atualizarMatriculaService(id, dados) {
-    const firestore = getDbInstance();
+/* ==========================================================================
+ * VALIDAÇÃO DE VAGA
+ * ========================================================================== */
+async function validarVagaTurma(turmaId, matriculaIdIgnorar = null) {
+    if (!turmaId) return;
 
-    // 1. Tenta validar lotação (com tratamento de permissão)
-    if (dados.turma_id) {
-        try {
-            const turmaRef = doc(firestore, "turmas", dados.turma_id);
-            const turmaSnap = await getDoc(turmaRef);
+    const turmaRef = doc(db, "turmas", turmaId);
+    const turmaSnap = await getDoc(turmaRef);
+    if (!turmaSnap.exists()) throw new Error("Turma não encontrada.");
 
-            if (turmaSnap.exists()) {
-                const vagasMaximas = Number(turmaSnap.data().vagas_maximas || 20);
-                const matriculasRef = collection(firestore, "matriculas");
-                const snapMatriculas = await getDocs(matriculasRef);
+    const vagasMaximas = Number(turmaSnap.data().vagas_maximas || 20);
+    const refMatriculas = collection(db, "turmas", turmaId, "matriculas");
+    const snap = await getDocs(refMatriculas);
 
-                let ocupadas = 0;
-                snapMatriculas.forEach(docSnap => {
-                    const m = docSnap.data();
-                    const idTurmaDoc = m.turma_id || m.turmaId;
-                    const statusLower = String(m.status_matricula || m.status || "").toLowerCase();
-                    const isAtivo = statusLower.includes("confirmad") || statusLower.includes("pago") || statusLower.includes("recebido");
+    let ocupadas = 0;
+    snap.forEach(d => {
+        const m = d.data();
+        if (d.id === matriculaIdIgnorar) return;
+        if (m.excluido === true) return;
 
-                    if (idTurmaDoc === dados.turma_id && isAtivo && docSnap.id !== id && m.excluido !== true) {
-                        ocupadas++;
-                    }
-                });
+        const statusLower = String(m.status_matricula || m.status || "").toLowerCase();
+        const isAtivo = statusLower.includes("confirmad") || statusLower.includes("pago") || statusLower.includes("recebido");
+        if (isAtivo) ocupadas++;
+    });
 
-                if (ocupadas >= vagasMaximas) {
-                    throw new Error(`A turma selecionada já atinge o limite de ${vagasMaximas} vagas.`);
-                }
-            }
-        } catch (errPermissao) {
-            // Se for erro de permissão na contagem, apenas gera aviso e prossegue com a escrita do documento
-            if (errPermissao.message && errPermissao.message.includes("limite")) {
-                throw errPermissao;
-            }
-            console.warn("Aviso: Não foi possível validar contagem de vagas devido às regras do Firestore.", errPermissao);
-        }
-    }
-
-    // 2. Gravação dos dados no documento da matrícula
-    try {
-        const refDoc = doc(firestore, "matriculas", id);
-        const camposAtualizacao = {
-            turma_id: dados.turma_id,
-            curso_nome: dados.turma_nome,
-            ultima_alteracao_em: new Date().toISOString()
-        };
-
-        if (dados.valor !== undefined) camposAtualizacao.valor = String(dados.valor);
-        if (dados.forma_pagamento) camposAtualizacao.forma_pagamento = dados.forma_pagamento;
-        if (dados.status) camposAtualizacao.status_matricula = dados.status;
-
-        await updateDoc(refDoc, camposAtualizacao);
-        return true;
-    } catch (error) {
-        console.error("Erro na atualização do documento Firestore:", error);
-        throw error;
+    if (ocupadas >= vagasMaximas) {
+        throw new Error(`A turma selecionada já atinge o limite de ${vagasMaximas} vagas.`);
     }
 }
+/* ==========================================================================
+ * VALIDAÇÃO: ALUNO JÁ MATRICULADO NESTE CURSO?
+ * ========================================================================== */
+async function validarDuplicidadeCurso(alunoId, cursoNome, matriculaIdIgnorar = null) {
+    if (!alunoId || !cursoNome) return;
 
+    const turmasSnap = await getDocs(collection(db, "turmas"));
+    const nomeCursoLimpo = cursoNome.trim().toLowerCase();
+
+    for (const turmaDoc of turmasSnap.docs) {
+        const turmaData = turmaDoc.data();
+        const nomeTurma = turmaData.nome_turma || turmaData.nome || turmaData.curso_nome || "";
+
+        // Se o nome da turma bate com o curso (ou vice-versa)
+        const mesmaTurmaCurso = nomeTurma.toLowerCase().includes(nomeCursoLimpo) || nomeCursoLimpo.includes(nomeTurma.toLowerCase());
+
+        if (mesmaTurmaCurso) {
+            const matriculasSnap = await getDocs(collection(db, "turmas", turmaDoc.id, "matriculas"));
+
+            let jaMatriculado = false;
+            matriculasSnap.forEach(d => {
+                const m = d.data();
+                if (d.id === matriculaIdIgnorar) return;
+                if (m.excluido === true) return;
+
+                if (m.aluno_id === alunoId) jaMatriculado = true;
+            });
+
+            if (jaMatriculado) {
+                throw new Error(`Este aluno já está matriculado no curso "${nomeTurma}".`);
+            }
+        }
+    }
+}
+/* ==========================================================================
+ * CRIAR
+ * ========================================================================== */
 export async function criarMatriculaService(dadosMatricula) {
-    const firestore = getDbInstance();
-    try {
-        const ref = collection(firestore, "matriculas");
-        
-        const novaMatricula = {
-            aluno_id: dadosMatricula.aluno_id,
-            aluno_nome: dadosMatricula.aluno_nome,
-            aluno_email: dadosMatricula.aluno_email || "",
-            turma_id: dadosMatricula.turma_id || "",
-            curso_nome: dadosMatricula.turma_nome || "",
-            valor: String(dadosMatricula.valor || "0.00"),
-            forma_pagamento: dadosMatricula.forma_pagamento || "Pix",
-            status_matricula: dadosMatricula.status || "confirmada",
-            status_pagamento: "Recebido (Pago)",
-            ultima_alteracao: new Date().toISOString(),
-            ultima_alteracao_em: new Date().toISOString(),
-            excluido: false
-        };
+    const turmaId = dadosMatricula.turma_id;
+    if (!turmaId) throw new Error("Selecione uma turma.");
 
+    await validarVagaTurma(turmaId);
+    await validarDuplicidadeCurso(dadosMatricula.aluno_id, dadosMatricula.turma_nome);
+
+    const adminEmail = auth?.currentUser?.email || "Sistema";
+    const agora = new Date().toISOString();
+
+    const novaMatricula = {
+        aluno_id: dadosMatricula.aluno_id,
+        aluno_nome: dadosMatricula.aluno_nome,
+        aluno_email: dadosMatricula.aluno_email || "",
+        turma_id: turmaId,
+        curso_nome: dadosMatricula.turma_nome || "",
+        valor: String(dadosMatricula.valor || "0.00"),
+        forma_pagamento: dadosMatricula.forma_pagamento || "Pix",
+        status_matricula: dadosMatricula.status || "confirmada",
+        status_pagamento: "Recebido (Pago)",
+        criado_em: agora,
+        atualizado_em: agora,
+        atualizado_por: adminEmail,
+        excluido: false
+    };
+
+    try {
+        const ref = collection(db, "turmas", turmaId, "matriculas");
         const docRef = await addDoc(ref, novaMatricula);
+
+        await registrarAuditoriaGenerica("turmas", turmaId, {
+            tipo: "criacao_matricula",
+            entidade: "matricula",
+            descricao: `Matrícula criada: ${novaMatricula.aluno_nome}`,
+            campos_alterados: []
+        });
+
         return { id: docRef.id, ...novaMatricula };
     } catch (error) {
         console.error("Erro ao criar matrícula:", error);
@@ -146,23 +172,115 @@ export async function criarMatriculaService(dadosMatricula) {
     }
 }
 
-export async function excluirMatriculaService(id) {
-    const firestore = getDbInstance();
+/* ==========================================================================
+ * ATUALIZAR
+ * ========================================================================== */
+export async function atualizarMatriculaService(id, turmaId, dados) {
+    if (!id || !turmaId) throw new Error("Parâmetros inválidos.");
+
+    await validarVagaTurma(turmaId, id);
+    if (dados.turma_nome) {
+        await validarDuplicidadeCurso(dados.aluno_id, dados.turma_nome, id);
+    }
+    const refDoc = doc(db, "turmas", turmaId, "matriculas", id);
+    const snapAntes = await getDoc(refDoc);
+    const antes = snapAntes.exists() ? snapAntes.data() : {};
+
+    const adminEmail = auth?.currentUser?.email || "Sistema";
+    const agora = new Date().toISOString();
+
+    const camposAtualizacao = {
+        valor: dados.valor !== undefined ? String(dados.valor) : antes.valor,
+        forma_pagamento: dados.forma_pagamento || antes.forma_pagamento,
+        status_matricula: dados.status || antes.status_matricula,
+        atualizado_em: agora,
+        atualizado_por: adminEmail
+    };
+
+    if (dados.turma_nome) camposAtualizacao.curso_nome = dados.turma_nome;
+
     try {
-        const refDoc = doc(firestore, "matriculas", id);
-        await updateDoc(refDoc, { excluido: true });
+        await updateDoc(refDoc, camposAtualizacao);
+
+        const camposAlterados = compararAlteracoes(antes, camposAtualizacao);
+        if (camposAlterados.length > 0) {
+            await registrarAuditoriaGenerica("turmas", turmaId, {
+                tipo: "alteracao_matricula",
+                entidade: "matricula",
+                descricao: `Matrícula de ${antes.aluno_nome || "aluno"} alterada`,
+                campos_alterados: camposAlterados
+            });
+        }
+
         return true;
     } catch (error) {
-        console.error("Erro ao excluir matrícula:", error);
+        console.error("Erro ao atualizar matrícula:", error);
         throw error;
     }
 }
 
+/* ==========================================================================
+ * EXCLUIR / RESTAURAR
+ * ========================================================================== */
+export async function excluirMatriculaService(id, turmaId) {
+    if (!id || !turmaId) throw new Error("Parâmetros inválidos.");
+
+    const refDoc = doc(db, "turmas", turmaId, "matriculas", id);
+    const snap = await getDoc(refDoc);
+    if (!snap.exists()) throw new Error("Matrícula não encontrada.");
+
+    const adminEmail = auth?.currentUser?.email || "Sistema";
+    const agora = new Date().toISOString();
+
+    await updateDoc(refDoc, {
+        excluido: true,
+        excluido_em: agora,
+        excluido_por: adminEmail,
+        atualizado_em: agora,
+        atualizado_por: adminEmail
+    });
+
+    await registrarAuditoriaGenerica("turmas", turmaId, {
+        tipo: "exclusao_matricula",
+        entidade: "matricula",
+        descricao: `Matrícula de ${snap.data().aluno_nome || "aluno"} excluída`,
+        campos_alterados: []
+    });
+
+    return true;
+}
+
+export async function restaurarMatriculaService(id, turmaId) {
+    if (!id || !turmaId) throw new Error("Parâmetros inválidos.");
+
+    const refDoc = doc(db, "turmas", turmaId, "matriculas", id);
+    const adminEmail = auth?.currentUser?.email || "Sistema";
+    const agora = new Date().toISOString();
+
+    await updateDoc(refDoc, {
+        excluido: false,
+        excluido_em: null,
+        excluido_por: null,
+        atualizado_em: agora,
+        atualizado_por: adminEmail
+    });
+
+    await registrarAuditoriaGenerica("turmas", turmaId, {
+        tipo: "restauracao_matricula",
+        entidade: "matricula",
+        descricao: `Matrícula restaurada`,
+        campos_alterados: []
+    });
+
+    return true;
+}
+
+/* ==========================================================================
+ * AUXILIARES
+ * ========================================================================== */
 export async function obterAlunosParaMatriculaService() {
-    const firestore = getDbInstance();
     try {
-        const ref = collection(firestore, "alunos");
-        const snap = await getDocs(ref);
+        const snap = await getDocs(collection(db, "alunos"));
         const alunos = [];
         snap.forEach(d => {
             const data = d.data();
@@ -182,37 +300,36 @@ export async function obterAlunosParaMatriculaService() {
 }
 
 export async function obterTurmasParaMatriculaService() {
-    const firestore = getDbInstance();
     const turmas = [];
-    const idsProcessados = new Set();
-
     try {
-        const refTurmas = collection(firestore, "turmas");
-        const snapTurmas = await getDocs(refTurmas);
-        snapTurmas.forEach(d => {
+        const snap = await getDocs(collection(db, "turmas"));
+        snap.forEach(d => {
             const data = d.data();
             if (data.excluido === true) return;
             const nome = data.nome_turma || data.nome || data.titulo || data.curso_nome || "Turma sem nome";
             turmas.push({ id: d.id, nome_turma: nome, valor: Number(data.valor || data.preco || 0) });
-            idsProcessados.add(d.id);
         });
-    } catch (eTurmas) {
-        console.warn("Aviso na coleção turmas:", eTurmas);
+        return turmas;
+    } catch (e) {
+        console.warn("Erro ao carregar turmas:", e);
+        return [];
     }
+}
 
+export async function listarMatriculasDaTurma(turmaId) {
+    if (!turmaId) return [];
     try {
-        const refCursos = collection(firestore, "cursos");
-        const snapCursos = await getDocs(refCursos);
-        snapCursos.forEach(d => {
-            if (idsProcessados.has(d.id)) return;
+        const ref = collection(db, "turmas", turmaId, "matriculas");
+        const snap = await getDocs(ref);
+        const lista = [];
+        snap.forEach(d => {
             const data = d.data();
             if (data.excluido === true) return;
-            const nome = data.nome || data.nome_curso || data.titulo || data.codigo_nr || "Curso sem nome";
-            turmas.push({ id: d.id, nome_turma: nome, valor: Number(data.valor || data.preco || 0) });
+            lista.push({ id: d.id, ...data });
         });
-    } catch (eCursos) {
-        console.warn("Aviso na coleção cursos:", eCursos);
+        return lista;
+    } catch (error) {
+        console.error("Erro ao listar matrículas da turma:", error);
+        return [];
     }
-
-    return turmas;
 }
