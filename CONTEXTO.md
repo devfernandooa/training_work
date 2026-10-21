@@ -4,7 +4,7 @@
 > de qualquer nova sessão de trabalho (por humano ou IA) para retomar o contexto sem
 > perder o fio da meada. Mantenha-o atualizado ao fim de cada bloco de trabalho.
 
-**Última atualização:** 20/10/2026
+**Última atualização:** 21/10/2026
 **Responsável:** Fernando (devfernandooa)
 **Repo:** https://github.com/devfernandooa/training_work
 
@@ -174,7 +174,7 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 | --- | ----------------------------------------------- | ------- | ----------- |
 | L1  | Auditoria de login/logout e sessão              | 6–8h    | Média       |
 | L2  | Exportação de relatórios de auditoria (CSV/PDF) | 8–12h   | Média       |
-| L3  | Revisão geral de UX do admin (consistência)     | 12–20h  | Alta        |
+| ~~L3~~   | ~~Revisão geral de UX do admin (consistência)~~ ✅ CONCLUÍDO (21/10) | 12–20h  | Alta        |
 | L4  | Testes automatizados / smoke tests              | 16–24h  | Alta        |
 | L5  | Documentação de arquitetura e fluxos            | 4–6h    | Baixa       |
 
@@ -183,7 +183,8 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 1. ~~S1 → S2 → S3 → S4 → S5~~ ✅ (segurança — 16/10)
 2. ~~C1 → C2 → C3 → C3.5 → C4 → C5 → C6 → C7~~ ✅ (auditoria visual + correções — 17/10)
 3. ~~M1 → M2 → M3~~ ✅ (Frequência + Matrículas + Financeiro unificado — 20/10)
-4. **L1 → L2 → L3 → L4 → L5** (Longo prazo: auditoria login, exportação, UX, testes, documentação)
+4. ~~L3~~ ✅ (Revisão de UX e Responsividade — 21/10)
+5. **L1 → L2 → L4 → L5** (Longo prazo: auditoria login, exportação, testes, documentação)
 
 ### Totais restantes
 
@@ -210,6 +211,10 @@ Apenas lista o registro, sem diff visual nem observações. Presente em:
 - **Firestore Rules:** bloqueio no fim + `isAdmin()` server-side; auditoria imutável
 - **Form público de leads:** validação server-side via `leadValido()`
 - **Labels de auditoria:** dicionário `ROTULOS_CAMPOS` no `auditoria-service.js` (compartilhado entre módulos)
+- **Modais:** usam `modal-helper.js` para alinhamento dinâmico com a sidebar; padronização visual (cabeçalho cinza, blocos com borda azul, rodapé alinhado).
+- **Responsividade:** tabelas viram Cards Acordeão em telas < 992px (via CSS + classes `data-label` + JS de toggle).
+- **Paginação:** componente global reutilizável em `js/modules/paginacao.js`.
+- **Auditoria:** o componente `auditoria-timeline.js` usa `div` flexíveis (não tabela) para o diff, garantindo quebra de linha no mobile.
 
 ---
 
@@ -404,3 +409,22 @@ versionado no Git e é acessível a qualquer momento.
 **Observações:**
 - A coleção raiz `matriculas` deixa de ser lida. Dados antigos podem ser migrados via script ou ignorados.
 - Integração futura: ao alterar valor de matrícula, sugerir ajuste no Financeiro (nova transação de diferença, não reescrever a antiga).
+
+---
+
+### L3 — Revisão de UX, Responsividade e Componentes Reutilizáveis ✅
+**Status:** Concluído · **PR:** [#XXX](https://github.com/devfernandooa/training_work/pull/XXX)
+**Data:** 21/10/2026
+
+**O que entrou:**
+- **Modais:** alinhamento dinâmico com a sidebar (`modal-helper.js`), cabeçalho cinza, blocos com borda azul e rodapé padronizado. Modais ocupam a tela inteira em < 992px.
+- **Tabelas:** transformação em Cards Acordeão no mobile (nome e botões visíveis, detalhes expansíveis).
+- **Paginação:** criação do componente reutilizável `paginacao.js` e aplicação no módulo de Alunos.
+- **Auditoria:** diff visual responsivo (badges quebram linha no mobile).
+
+**Impacto:**
+- ✅ Item **L3** concluído.
+- ✅ Sistema visualmente padronizado em desktop e mobile.
+- ✅ Componentes globais (`paginacao.js`, `modal-helper.js`) prontos para os próximos módulos.
+- ✅ Base sólida para escalar a interface sem retrabalho.
+- ➡️ Próximo: L1 (Auditoria de Login/Logout).
