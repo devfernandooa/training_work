@@ -2,6 +2,7 @@
 // TRAINING WORK — UI DE ALUNOS (alunos-ui.js)
 // ==========================================================================
 import "../modules/modal-helper.js";
+import { renderizarPaginacaoGlobal } from "../modules/paginacao.js";
 import { notificar } from "../modules/notificacao.js";
 import { auth, db } from "../firebase-config.js";
 import { registrarAuditoriaAluno, compararAlteracoes } from "../backend/auditoria-service.js";
@@ -232,7 +233,20 @@ function renderizar() {
     tbody.innerHTML = html;
 
     // Chama a função que desenha os botões de navegação
-    renderizarPaginacao(totalPaginas, totalAlunos, indexInicio, indexFim);
+       renderizarPaginacaoGlobal({
+        totalPaginas: totalPaginas,
+        paginaAtual: paginaAtual,
+        totalItens: totalAlunos,
+        indexInicio: indexInicio,
+        indexFim: indexFim,
+        containerId: "paginacao-alunos",
+        infoId: "info-paginacao-alunos",
+        nomeItem: "alunos",
+        onPageChange: (novaPagina) => {
+            paginaAtual = novaPagina;
+            renderizar();
+        }
+    });
 }
 /* ==========================================================================
  * DELEGAÇÃO DE CLIQUES
