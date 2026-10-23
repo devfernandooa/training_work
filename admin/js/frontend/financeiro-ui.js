@@ -374,9 +374,9 @@ function renderizarTabela(pagina) {
 
         html += `
         <tr>
-            <td>${dataFmt}</td>
-            <td>${tipoBadge}</td>
-            <td><strong>${t.alunoNome || "—"}</strong></td>
+        <td data-label="Aluno"><strong>${t.alunoNome || "—"}</strong></td>
+            <td data-label="Data">${dataFmt}</td>
+            <td data-label="Tipo">${tipoBadge}</td>
             <td>${t.curso || "—"}</td>
             <td><span class="badge bg-light text-dark border">${t.formaPagamento}</span></td>
             <td>${valorHtml}</td>
