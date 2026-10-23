@@ -101,6 +101,31 @@ const HTML_MODAL_CONFIRM = `
 `;
 
 /* ==========================================================================
+ * HTML DO MODAL DE CONFIRMAÇÃO DE SALVAR PERFIL
+ * ========================================================================== */
+const HTML_MODAL_CONFIRM_SAVE = `
+<div class="modal fade" id="modalConfirmarSalvarPerfil" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body text-center p-4">
+                <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle" style="width: 64px; height: 64px; background: #e0f2fe; color: #0284c7;">
+                    <i class="fas fa-save fa-2x"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Salvar Alterações?</h5>
+                <p class="text-muted small mb-4">Deseja realmente atualizar seus dados de perfil?</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-light px-3 rounded-pill btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary px-3 rounded-pill btn-sm" id="btnConfirmarSalvarPerfil">
+                        <i class="fas fa-check me-1"></i> Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+`;
+
+/* ==========================================================================
  * INJETA OS MODAIS NO DOM
  * ========================================================================== */
 function injetarModais() {
@@ -113,6 +138,12 @@ function injetarModais() {
         const wrapperConfirm = document.createElement("div");
         wrapperConfirm.innerHTML = HTML_MODAL_CONFIRM.trim();
         document.body.appendChild(wrapperConfirm.firstChild);
+    }
+
+    if (!document.getElementById("modalConfirmarSalvarPerfil")) {
+        const wrapperConfirmSave = document.createElement("div");
+        wrapperConfirmSave.innerHTML = HTML_MODAL_CONFIRM_SAVE.trim();
+        document.body.appendChild(wrapperConfirmSave.firstChild);
     }
 }
 
@@ -131,7 +162,7 @@ window.abrirModalPerfil = async function () {
 
         const perfil = await obterPerfil();
         const iniciais = gerarIniciais(perfil.nome);
-        
+
         document.getElementById("perfilAvatarIniciais").innerHTML = `<span class="perfil-avatar-iniciais">${iniciais}</span>`;
         document.getElementById("perfilNomeExibir").textContent = perfil.nome || "Sem nome";
         document.getElementById("perfilEmailExibir").textContent = perfil.email || "—";
@@ -156,10 +187,28 @@ window.abrirModalPerfil = async function () {
 document.addEventListener("DOMContentLoaded", () => {
     injetarModais();
 
-    // --- BOTÃO SALVAR PERFIL ---
+        // --- BOTÃO SALVAR PERFIL ---
     const btnSalvar = document.getElementById("btnSalvarPerfil");
     if (btnSalvar) {
-        btnSalvar.addEventListener("click", async () => {
+        btnSalvar.addEventListener("click", () => {
+            // Abre o modal de confirmação customizado
+            const modalConfirmEl = document.getElementById("modalConfirmarSalvarPerfil");
+            if (modalConfirmEl) {
+                const modalConfirm = new bootstrap.Modal(modalConfirmEl);
+                modalConfirm.show();
+            }
+        });
+    }
+
+    // --- BOTÃO CONFIRMAR SALVAR (DENTRO DO NOVO MODAL) ---
+    const btnConfirmarSalvar = document.getElementById("btnConfirmarSalvarPerfil");
+    if (btnConfirmarSalvar) {
+        btnConfirmarSalvar.addEventListener("click", async () => {
+            const modalConfirmEl = document.getElementById("modalConfirmarSalvarPerfil");
+            const modalConfirm = bootstrap.Modal.getInstance(modalConfirmEl);
+            if (modalConfirm) modalConfirm.hide();
+
+            const btnSalvar = document.getElementById("btnSalvarPerfil");
             const txt = btnSalvar.innerHTML;
             btnSalvar.disabled = true;
             btnSalvar.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Salvando...`;
@@ -183,6 +232,24 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Função auxiliar para realizar o salvamento
+    async function salvarPerfilReal(nome, telefone, cargo, btnSalvar) {
+        const txt = btnSalvar.innerHTML;
+        btnSalvar.disabled = true;
+        btnSalvar.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Salvando...`;
+
+        try {
+            await atualizarPerfil({ nome, telefone, cargo });
+            if (_modalPerfilInstance) _modalPerfilInstance.hide();
+            notificar("Perfil atualizado com sucesso.", "sucesso");
+        } catch (err) {
+            console.error("Erro ao salvar perfil:", err);
+            notificar("Erro ao salvar perfil.", "erro");
+        } finally {
+            btnSalvar.disabled = false;
+            btnSalvar.innerHTML = txt;
+        }
+    }
     // --- BOTÃO RESET DE SENHA (ABRE MODAL) ---
     const btnReset = document.getElementById("btnEnviarResetSenha");
     if (btnReset) {

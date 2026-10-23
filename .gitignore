@@ -5,6 +5,7 @@ serviceAccountKey*.json
 serviceAccountKey.json.json
 index copy.html
 anotações.txt
+MIGRACAO_REACT.md
 
 arquivos_removidos/
 /admin/js/modules/leads.js
