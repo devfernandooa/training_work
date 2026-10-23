@@ -452,3 +452,47 @@ div.table-responsive:has(.tabela-cronograma) {
         font-size: 0.82rem;
     }
 }
+
+/* ==========================================================================
+   FIX: PRÉVIA DE RELATÓRIO (TABELA COMPACTA)
+   ========================================================================== */
+#cardPrevia {
+    background: #ffffff;
+    padding: 15px !important;
+    margin: 0 !important;
+}
+
+#tabelaPrevia {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    margin-bottom: 0 !important;
+}
+
+#tabelaPrevia thead th {
+    background-color: #f8fafc !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+    padding: 10px 8px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    color: #334155 !important;
+    white-space: normal !important;
+    vertical-align: middle !important;
+}
+
+#tabelaPrevia tbody td {
+    padding: 8px !important; /* Reduz o padding interno */
+    font-size: 0.75rem !important;
+    color: #475569 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    vertical-align: middle !important; /* Alinha o texto no meio da célula */
+    height: auto !important; /* Impede altura fixa */
+}
+
+/* Remove qualquer altura mínima que o Bootstrap tenha colocado */
+#tabelaPrevia tr {
+    height: auto !important;
+}
