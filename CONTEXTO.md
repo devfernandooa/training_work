@@ -4,7 +4,7 @@
 > de qualquer nova sessão de trabalho (por humano ou IA) para retomar o contexto sem
 > perder o fio da meada. Mantenha-o atualizado ao fim de cada bloco de trabalho.
 
-**Última atualização:** 21/10/2026
+**Última atualização:** 23/10/2026
 **Responsável:** Fernando (devfernandooa)
 **Repo:** https://github.com/devfernandooa/training_work
 
@@ -394,3 +394,14 @@ versionado no Git e é acessível a qualquer momento.
 - Sessão expira ao fechar a aba (`browserSessionPersistence`)
 - Modal de perfil corrigido para notebooks (largura 600px, scroll interno, rodapé fixo)
 - Substituição do `alert` nativo por modal de confirmação estilizado no botão "Redefinir senha"
+
+
+### Refatoração de Responsividade e UX Mobile ✅
+**Status:** Concluído · **PR:** [#XXX](https://github.com/devfernandooa/training_work/pull/XXX)
+**Data:** 23/10/2026
+
+- **Cards Mobile:** Todas as tabelas (Alunos, Financeiro, Cursos, Turmas, Matrículas, Dashboard, Leads) agora viram Cards no mobile.
+- **Design System:** Estrutura de Card dividida em Header (destaque), Body (dados) e Footer (ações).
+- **Acordeão:** Mantido exclusivamente para a tabela de Alunos.
+- **Botões:** Padronizados para formato quadrado e alinhados à esquerda no mobile.
+- **Correções:** Resolvido bug de modal de confirmação travado no Firefox.
