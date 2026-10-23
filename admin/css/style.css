@@ -1,11 +1,17 @@
-/* 1. Importação das regras globais de layout e tipografia */
-@import url('modules/global.css');
+/* ==========================================================================
+   STYLE.CSS — Ponto de entrada dos estilos
+   ========================================================================== */
 
-/* 2. Importação dos módulos específicos por tela */
-@import url('modules/alunos.css');
-@import url('modules/cursos.css');
-@import url('modules/dashboard.css');
-@import url('modules/leadsETriagem.css');
-@import url('modules/matriculas.css');
-@import url('modules/modais.css');
-@import url('modules/sidebar.css');
+/* 1. Base */
+@import url('base.css');
+
+/* 2. Componentes */
+@import url('componentes.css');
+
+/* 3. Páginas */
+@import url('paginas.css');
+
+/* 4. Sidebar (mantido separado) */
+@import url('sidebar.css');
+
+@import url('sidebar.css');
