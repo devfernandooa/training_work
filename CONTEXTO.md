@@ -405,3 +405,13 @@ versionado no Git e é acessível a qualquer momento.
 - **Acordeão:** Mantido exclusivamente para a tabela de Alunos.
 - **Botões:** Padronizados para formato quadrado e alinhados à esquerda no mobile.
 - **Correções:** Resolvido bug de modal de confirmação travado no Firefox.
+
+### Refatoração e Limpeza do CSS ✅
+**Status:** Concluído · **PR:** [#148](https://github.com/devfernandooa/training_work/pull/148)
+**Data:** 23/10/2026
+
+- Consolidação do CSS em 3 arquivos (base, componentes, páginas).
+- Remoção de 8 arquivos obsoletos e regras duplicadas.
+- Isolamento do `login.css` e `sidebar.css`.
+- Padronização de modais (larguras, z-index e scroll).
+- Base pronta para a migração para Tailwind.
