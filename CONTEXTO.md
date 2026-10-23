@@ -99,6 +99,7 @@ Histórico cronológico visual com:
 - **Presença:** listagem OK; auditoria OK (S2)
 - **Calendário de Aulas:** auditoria OK (C7)
 - **Matrículas:** módulo refatorado com auditoria, soft delete, paginação e validação de duplicidade (M2)
+- **Relatórios:** Central de relatórios funcional (CSV/PDF, prévia, filtros de data e relatório 360º do financeiro).
 
 ### 🎉 Concluído em 16/10/2026
 
@@ -144,7 +145,7 @@ Histórico cronológico visual com:
    - Contexto: CPF opcional desde 15/10 (S5 confirmou risco zero). Email passa a ser a barreira contra duplicidade.
 4. **Pendência visual (baixa):** modal de confirmação no Financeiro não escurece o de baixo quando empilhado (funcional, só estético)
 5. **Criação de novos usuários admin:** não há tela para isso. Adicionar como item futuro (L6 - Gestão de Admins).
-
+6. **Inconsistência Financeira:** O botão "Marcar como Recebido" atualiza o status do aluno, mas não cria/atualiza o documento na coleção raiz `/financeiro`. Investigar e sincronizar as duas fontes de dados.
 ---
 
 ## 4. Cronograma de Refatoração
@@ -186,7 +187,7 @@ Histórico cronológico visual com:
 | #   | Item                                            | Duração | Dificuldade |
 | --- | ----------------------------------------------- | ------- | ----------- |
 | ~~L1~~   | ~~Auditoria de login/logout e sessão~~ ✅ CONCLUÍDO (21/10) | 6–8h    | Média       |
-| L2  | Exportação de relatórios de auditoria (CSV/PDF) | 8–12h   | Média       |
+| ~~L2~~ | ~~Exportação de relatórios de auditoria (CSV/PDF)~~ ✅ CONCLUÍDO (23/10) | 8–12h   | Média       |
 | ~~L3~~   | ~~Revisão geral de UX do admin (consistência)~~ ✅ CONCLUÍDO (21/10) | 12–20h  | Alta        |
 | L4  | Testes automatizados / smoke tests              | 16–24h  | Alta        |
 | L5  | Documentação de arquitetura e fluxos            | 4–6h    | Baixa       |
@@ -198,7 +199,8 @@ Histórico cronológico visual com:
 3. ~~M1 → M2 → M3~~ ✅ (Frequência + Matrículas + Financeiro unificado — 20/10)
 4. ~~L3~~ ✅ (Revisão de UX e Responsividade — 21/10)
 5. ~~L1~~ ✅ (Auditoria de Login/Logout — 21/10)
-6. **L5 → L2 → L4** (Documentação, Exportação e Testes)
+6. ~~L2~~ ✅ (Exportação de Relatórios — 23/10)
+7. **L4 → L5** (Longo prazo: testes e documentação final)
 
 ### Totais restantes
 
@@ -415,3 +417,17 @@ versionado no Git e é acessível a qualquer momento.
 - Isolamento do `login.css` e `sidebar.css`.
 - Padronização de modais (larguras, z-index e scroll).
 - Base pronta para a migração para Tailwind.
+
+### L2 — Central de Relatórios e Exportação ✅
+**Status:** Concluído · **PR:** [#XXX](https://github.com/devfernandooa/training_work/pull/XXX)
+**Data:** 23/10/2026
+
+- Criação da página `admin/relatorios.html` com design padronizado.
+- Módulo de exportação (`exportar.js`) suportando CSV e PDF.
+- Prévia em HTML antes do download.
+- Relatório 360º (Financeiro): cruza dados do aluno, transações e logs de auditoria.
+- Filtros de data (inicial e final).
+- Cabeçalho de auditoria em todos os arquivos gerados (quem gerou, data/hora e filtros).
+
+**Pendência registrada:**
+- ⚠️ Sincronização financeira: O botão "Marcar como Recebido" não reflete na coleção raiz `/financeiro`. (Registrado na seção 3).
