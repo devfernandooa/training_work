@@ -126,7 +126,6 @@
           </div>
         </div>
       </div>
-      <!-- Card: Saídas -->
       <div class="col">
         <div class="card border-0 shadow-sm p-3 rounded-3 bg-white">
           <div class="d-flex align-items-center gap-3">
@@ -185,7 +184,6 @@
         </h5>
 
         <div class="d-flex flex-wrap align-items-center gap-2">
-          <!-- Busca -->
           <div class="input-group input-group-sm" style="width: 240px;">
             <span class="input-group-text bg-white border-end-0">
               <i class="fas fa-search text-muted"></i>
@@ -194,7 +192,6 @@
               placeholder="Buscar aluno ou curso..." autocomplete="off">
           </div>
 
-          <!-- Filtro de status -->
           <select id="filtroStatusFinanceiro" class="form-select form-select-sm" style="width: 170px;">
             <option value="todos">Todos os status</option>
             <option value="Recebido">Recebido</option>
@@ -202,7 +199,6 @@
             <option value="Aguardando pagamento">Aguardando pagamento</option>
           </select>
 
-          <!-- Filtro de forma de pagamento -->
           <select id="filtroFormaPagamento" class="form-select form-select-sm" style="width: 170px;">
             <option value="todas">Todas as formas</option>
             <option value="Pix">Pix</option>
@@ -211,7 +207,6 @@
             <option value="À Vista">À Vista</option>
           </select>
 
-          <!-- Itens por página -->
           <select id="itens-por-pagina-financeiro" class="form-select form-select-sm" style="width: 130px;">
             <option value="10">10 por página</option>
             <option value="20" selected>20 por página</option>
@@ -253,10 +248,8 @@
         </table>
       </div>
 
-      <!-- PAGINAÇÃO -->
       <nav class="d-flex justify-content-center mt-3" aria-label="Navegação de páginas">
         <ul class="pagination pagination-sm mb-0" id="paginacao-financeiro">
-          <!-- Botões gerados via JS -->
         </ul>
       </nav>
     </section>
@@ -264,73 +257,77 @@
 
   <!-- MODAL DE EDIÇÃO -->
   <div class="modal fade" id="modalEditarFinanceiro" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <!-- Tamanho do modal igual ao de Leads -->
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content shadow-lg border-0">
         <div class="modal-header bg-white border-bottom py-3">
-          <h5 class="modal-title text-dark fw-bold">
+          <h5 class="modal-title text-dark fw-bold fs-5">
             <i class="fas fa-file-invoice-dollar text-primary me-2"></i>Gestão Financeira
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
-        <form id="formEditarFinanceiro">
-          <div class="modal-body bg-light">
+        <form id="formEditarFinanceiro" class="d-flex flex-column m-0" style="min-height: 0; overflow: hidden;">
+          <div class="modal-body bg-white" style="overflow-y: auto; flex: 1 1 auto;">
             <input type="hidden" id="finTransacaoId">
             <input type="hidden" id="finAlunoId">
 
             <!-- Bloco 1: Cadastrais -->
-            <div class="card border mb-3 shadow-sm">
-              <div class="card-body">
-                <h6 class="text-primary fw-bold mb-3">
+            <div class="card border mb-3 shadow-sm bg-light">
+              <div class="card-body p-3">
+                <h6 class="text-primary fw-bold mb-3" style="font-size: 0.9rem;">
                   <i class="fas fa-user-graduate me-2"></i>Dados Cadastrais
                 </h6>
                 <div class="row g-3">
                   <div class="col-md-6">
-                    <label for="finNomeAluno" class="form-label small fw-bold text-muted">Nome do Aluno</label>
-                    <input type="text" class="form-control" id="finNomeAluno" required>
+                    <label for="finNomeAluno" class="form-label small fw-semibold text-muted mb-1">Nome do Aluno</label>
+                    <!-- Adicionado form-control-sm -->
+                    <input type="text" class="form-control form-control-sm" id="finNomeAluno" required>
                   </div>
                   <div class="col-md-6">
-                    <label for="finCurso" class="form-label small fw-bold text-muted">Curso</label>
-                    <input type="text" class="form-control bg-white" id="finCurso" readonly>
+                    <label for="finCurso" class="form-label small fw-semibold text-muted mb-1">Curso</label>
+                    <input type="text" class="form-control form-control-sm bg-white" id="finCurso" readonly>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Bloco 2: Financeiro -->
-            <div class="card border mb-3 shadow-sm">
-              <div class="card-body">
-                <h6 class="text-primary fw-bold mb-3">
+            <div class="card border mb-3 shadow-sm bg-light">
+              <div class="card-body p-3">
+                <h6 class="text-primary fw-bold mb-3" style="font-size: 0.9rem;">
                   <i class="fas fa-wallet me-2"></i>Informações Financeiras
                 </h6>
                 <div class="row g-3">
                   <div class="col-md-4">
-                    <label for="finTipo" class="form-label small fw-bold text-muted">Tipo *</label>
-                    <select class="form-select" id="finTipo" required>
+                    <label for="finTipo" class="form-label small fw-semibold text-muted mb-1">Tipo *</label>
+                    <select class="form-select form-select-sm" id="finTipo" required>
                       <option value="entrada">Entrada (Receita)</option>
                       <option value="saida">Saída de Caixa (Despesa)</option>
                     </select>
                   </div>
                   <div class="col-md-4">
-                    <label for="finValorBase" class="form-label small fw-bold text-muted">Valor Base (R$)</label>
-                    <input type="number" step="0.01" class="form-control" id="finValorBase" required>
+                    <label for="finValorBase" class="form-label small fw-semibold text-muted mb-1">Valor Base
+                      (R$)</label>
+                    <input type="number" step="0.01" class="form-control form-control-sm" id="finValorBase" required>
                   </div>
                   <div class="col-md-4">
-                    <label for="finAjusteTipo" class="form-label small fw-bold text-muted">Ajuste</label>
-                    <select class="form-select" id="finAjusteTipo">
+                    <label for="finAjusteTipo" class="form-label small fw-semibold text-muted mb-1">Ajuste</label>
+                    <select class="form-select form-select-sm" id="finAjusteTipo">
                       <option value="nenhum">Nenhum</option>
                       <option value="desconto">% Desconto</option>
                       <option value="acrescimo">% Acréscimo</option>
                     </select>
                   </div>
                   <div class="col-md-4">
-                    <label for="finValorAjuste" class="form-label small fw-bold text-muted">Valor do Ajuste</label>
-                    <input type="number" step="0.01" class="form-control" id="finValorAjuste" value="0">
+                    <label for="finValorAjuste" class="form-label small fw-semibold text-muted mb-1">Valor do
+                      Ajuste</label>
+                    <input type="number" step="0.01" class="form-control form-control-sm" id="finValorAjuste" value="0">
                   </div>
                   <div class="col-md-4">
-                    <label for="finFormaPagamento" class="form-label small fw-bold text-muted">Forma de
+                    <label for="finFormaPagamento" class="form-label small fw-semibold text-muted mb-1">Forma de
                       Pagamento</label>
-                    <select class="form-select" id="finFormaPagamento">
+                    <select class="form-select form-select-sm" id="finFormaPagamento">
                       <option value="Pix">Pix</option>
                       <option value="Cartão de Crédito">Cartão de Crédito</option>
                       <option value="Boleto Bancário">Boleto Bancário</option>
@@ -338,8 +335,8 @@
                     </select>
                   </div>
                   <div class="col-md-4">
-                    <label for="finStatusPagamento" class="form-label small fw-bold text-muted">Status</label>
-                    <select class="form-select" id="finStatusPagamento">
+                    <label for="finStatusPagamento" class="form-label small fw-semibold text-muted mb-1">Status</label>
+                    <select class="form-select form-select-sm" id="finStatusPagamento">
                       <option value="Recebido">Recebido</option>
                       <option value="Pendente">Pendente</option>
                       <option value="Aguardando pagamento">Aguardando pagamento</option>
@@ -350,34 +347,37 @@
             </div>
 
             <!-- Bloco 3: Auditoria -->
-            <div class="p-3 bg-light rounded-3 border mb-3">
-              <span class="d-block small fw-bold text-secondary mb-2">
-                <i class="fas fa-history me-1 text-primary"></i> Auditoria
-              </span>
-              <div class="alert alert-light border small mb-2" id="infoUltimaAlteracao" style="display: none;">
-                <i class="fas fa-info-circle me-1 text-primary"></i>
-                <span id="textoUltimaAlteracao">—</span>
-              </div>
-
-              <!-- Timeline completa de alterações -->
-              <div id="timelineAuditoriaContainer"
-                style="max-height: 250px; overflow-y: auto; background: white; border-radius: 8px; padding: 12px; border: 1px solid #e2e8f0;">
-                <div class="text-center py-3 text-muted small">
-                  <i class="fas fa-history me-1"></i>
-                  Nenhuma alteração registrada ainda.
+            <div class="card border mb-3 shadow-sm bg-light">
+              <div class="card-body p-3">
+                <h6 class="text-primary fw-bold mb-3" style="font-size: 0.9rem;">
+                  <i class="fas fa-history me-2"></i>Auditoria
+                </h6>
+                <div class="alert alert-light border small mb-2" id="infoUltimaAlteracao" style="display: none;">
+                  <i class="fas fa-info-circle me-1 text-primary"></i>
+                  <span id="textoUltimaAlteracao">—</span>
                 </div>
-              </div>
 
-              <label for="finAuditoriaNotas" class="form-label small text-muted mb-1 mt-3">Observações</label>
-              <textarea class="form-control form-control-sm" id="finAuditoriaNotas" rows="2"
-                placeholder="Ex: Desconto especial concedido..."></textarea>
+                <div id="timelineAuditoriaContainer"
+                  style="max-height: 200px; overflow-y: auto; background: white; border-radius: 4px; padding: 10px; border: 1px solid #e2e8f0;">
+                  <div class="text-center py-3 text-muted small">
+                    <i class="fas fa-history me-1"></i>
+                    Nenhuma alteração registrada ainda.
+                  </div>
+                </div>
+
+                <label for="finAuditoriaNotas"
+                  class="form-label small fw-semibold text-muted mb-1 mt-3">Observações</label>
+                <textarea class="form-control form-control-sm" id="finAuditoriaNotas" rows="2"
+                  placeholder="Ex: Desconto especial concedido..."></textarea>
+              </div>
             </div>
           </div>
 
-          <div class="modal-footer bg-white border-top py-3">
-            <button type="button" class="btn btn-outline-secondary px-4 rounded-pill"
+          <!-- Rodapé igual ao do Lead (fundo branco, botões sem pílula e menores) -->
+          <div class="modal-footer bg-white border-top py-3 flex-shrink-0">
+            <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill"
               data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-primary px-4 rounded-pill">
+            <button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill">
               <i class="fas fa-save me-1"></i> Salvar
             </button>
           </div>
@@ -386,113 +386,72 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════
-     MODAL DE CONFIRMAÇÃO (versão ampliada)
-     ═══════════════════════════════════════════════════════════ -->
-  <div class="modal fade" id="modalConfirmacao" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
-      <div class="modal-content border-0 shadow-lg rounded-4">
-        <div class="modal-header border-0 pb-0">
-          <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Fechar"></button>
-        </div>
-
-        <div class="modal-body text-center px-4 pb-2">
-          <!-- Ícone grande -->
-          <div id="modalConfirmacaoIcone"
-            class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
-            style="width: 72px; height: 72px; background: #fef3c7;">
-            <i class="fas fa-question-circle fa-2x" style="color: #f59e0b;"></i>
-          </div>
-
-          <!-- Título -->
-          <h5 class="fw-bold text-dark mb-2" id="modalConfirmacaoTitulo">
-            Confirmação
-          </h5>
-
-          <!-- Mensagem -->
-          <p class="text-muted mb-0 text-start" id="modalConfirmacaoMensagem"
-            style="font-size: 0.95rem; line-height: 1.6;">
-          </p>
-        </div>
-
-        <div class="modal-footer border-0 px-4 pb-4 pt-3 d-flex gap-2 justify-content-center">
-          <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold"
-            data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-primary px-4 rounded-pill fw-semibold"
-            id="modalConfirmacaoBtn">Confirmar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================================
-     MODAL DE NOVA TRANSAÇÃO
-     ============================================================ -->
+  <!-- MODAL DE NOVA TRANSAÇÃO -->
   <div class="modal fade" id="modalNovaTransacao" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content border-0 shadow-lg rounded-4">
-
+      <div class="modal-content border-0 shadow-lg">
         <div class="modal-header border-bottom px-4 py-3">
-          <h5 class="modal-title fw-bold text-dark m-0">
-            <i class="fas fa-plus-circle text-primary me-2"></i>
-            Nova Transação
+          <h5 class="modal-title fw-bold text-dark m-0 fs-5">
+            <i class="fas fa-plus-circle text-primary me-2"></i> Nova Transação
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
 
-        <form id="formNovaTransacao">
-          <div class="modal-body bg-light">
+        <form id="formNovaTransacao" class="d-flex flex-column m-0" style="min-height: 0; overflow: hidden;">
+          <div class="modal-body bg-white" style="overflow-y: auto; flex: 1 1 auto;">
 
-            <!-- Bloco 1: Cadastrais -->
-            <div class="card border mb-3 shadow-sm">
-              <div class="card-body">
-                <h6 class="text-primary fw-bold mb-3">
+            <div class="card border mb-3 shadow-sm bg-light">
+              <div class="card-body p-3">
+                <h6 class="text-primary fw-bold mb-3" style="font-size: 0.9rem;">
                   <i class="fas fa-user-graduate me-2"></i>Dados Cadastrais
                 </h6>
                 <div class="row g-3">
                   <div class="col-md-4">
-                    <label for="novaTipoTransacao" class="form-label small fw-bold text-muted">Tipo *</label>
-                    <select class="form-select" id="novaTipoTransacao" required>
+                    <label for="novaTipoTransacao" class="form-label small fw-semibold text-muted mb-1">Tipo *</label>
+                    <select class="form-select form-select-sm" id="novaTipoTransacao" required>
                       <option value="entrada">Entrada (Receita)</option>
                       <option value="saida">Saída de Caixa (Despesa)</option>
                     </select>
                   </div>
                   <div class="col-md-4">
-                    <label for="novaAluno" class="form-label small fw-bold text-muted">Aluno *</label>
-                    <select class="form-select" id="novaAluno" required>
+                    <label for="novaAluno" class="form-label small fw-semibold text-muted mb-1">Aluno *</label>
+                    <select class="form-select form-select-sm" id="novaAluno" required>
                       <option value="">Carregando alunos...</option>
                     </select>
                   </div>
                   <div class="col-md-4">
-                    <label for="novaCurso" class="form-label small fw-bold text-muted">Curso / Descrição</label>
-                    <input type="text" class="form-control bg-white" id="novaCurso" placeholder="Auto" readonly>
+                    <label for="novaCurso" class="form-label small fw-semibold text-muted mb-1">Curso /
+                      Descrição</label>
+                    <input type="text" class="form-control form-control-sm bg-white" id="novaCurso" placeholder="Auto"
+                      readonly>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Bloco 2: Financeiro -->
-            <div class="card border mb-3 shadow-sm">
-              <div class="card-body">
-                <h6 class="text-primary fw-bold mb-3">
+            <div class="card border mb-3 shadow-sm bg-light">
+              <div class="card-body p-3">
+                <h6 class="text-primary fw-bold mb-3" style="font-size: 0.9rem;">
                   <i class="fas fa-wallet me-2"></i>Informações Financeiras
                 </h6>
                 <div class="row g-3">
                   <div class="col-md-4">
-                    <label for="novaValor" class="form-label small fw-bold text-muted">Valor (R$) *</label>
-                    <input type="number" step="0.01" class="form-control" id="novaValor" required placeholder="0,00">
+                    <label for="novaValor" class="form-label small fw-semibold text-muted mb-1">Valor (R$) *</label>
+                    <input type="number" step="0.01" class="form-control form-control-sm" id="novaValor" required
+                      placeholder="0,00">
                   </div>
                   <div class="col-md-4">
-                    <label for="novaStatus" class="form-label small fw-bold text-muted">Status *</label>
-                    <select class="form-select" id="novaStatus" required>
+                    <label for="novaStatus" class="form-label small fw-semibold text-muted mb-1">Status *</label>
+                    <select class="form-select form-select-sm" id="novaStatus" required>
                       <option value="Recebido">Recebido</option>
                       <option value="Pendente">Pendente</option>
                       <option value="Aguardando pagamento">Aguardando pagamento</option>
                     </select>
                   </div>
                   <div class="col-md-4">
-                    <label for="novaForma" class="form-label small fw-bold text-muted">Forma de Pagamento *</label>
-                    <select class="form-select" id="novaForma" required>
+                    <label for="novaForma" class="form-label small fw-semibold text-muted mb-1">Forma de Pagamento
+                      *</label>
+                    <select class="form-select form-select-sm" id="novaForma" required>
                       <option value="Pix">Pix</option>
                       <option value="Cartão de Crédito">Cartão de Crédito</option>
                       <option value="Boleto Bancário">Boleto Bancário</option>
@@ -500,30 +459,34 @@
                     </select>
                   </div>
                   <div class="col-md-4">
-                    <label for="novaData" class="form-label small fw-bold text-muted">Data do Pagamento</label>
-                    <input type="date" class="form-control" id="novaData">
+                    <label for="novaData" class="form-label small fw-semibold text-muted mb-1">Data do Pagamento</label>
+                    <input type="date" class="form-control form-control-sm" id="novaData">
                   </div>
                   <div class="col-md-8">
-                    <label for="novaObs" class="form-label small fw-bold text-muted">Observações</label>
-                    <input type="text" class="form-control" id="novaObs"
+                    <label for="novaObs" class="form-label small fw-semibold text-muted mb-1">Observações</label>
+                    <input type="text" class="form-control form-control-sm" id="novaObs"
                       placeholder="Ex: Cobrança extra, parcelamento...">
                   </div>
                 </div>
               </div>
-              <!-- ⬇️ RODAPÉ — garanta que está aqui -->
-              <div class="modal-footer bg-white border-top py-3">
-                <button type="button" class="btn btn-outline-secondary px-4 rounded-pill"
-                  data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary px-4 rounded-pill">
-                  <i class="fas fa-plus-circle me-1"></i> Criar Transação
-                </button>
-              </div>
+            </div>
+          </div>
 
+          <div class="modal-footer bg-white border-top py-3 flex-shrink-0">
+            <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill"
+              data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill">
+              <i class="fas fa-plus-circle me-1"></i> Criar Transação
+            </button>
+          </div>
         </form>
       </div>
     </div>
   </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <script type="module" src="js/auth/auth-guard.js"></script>
   <script type="module" src="js/auth/sidebar.js"></script>
   <script type="module" src="js/frontend/financeiro-ui.js"></script>
