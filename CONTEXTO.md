@@ -4,7 +4,7 @@
 > de qualquer nova sessão de trabalho (por humano ou IA) para retomar o contexto sem
 > perder o fio da meada. Mantenha-o atualizado ao fim de cada bloco de trabalho.
 
-**Última atualização:** 23/10/2026
+**Última atualização:** 24/10/2026
 **Responsável:** Fernando (devfernandooa)
 **Repo:** https://github.com/devfernandooa/training_work
 
@@ -51,6 +51,7 @@ Site + painel administrativo da **Training_Work**.
 - 20/10/2026 — `refactor(matriculas)`: M2 concluído + M3 finalizado
 - 21/10/2026 — `refactor(ux)`: L3 concluído (modais, responsividade, paginação)
 - 21/10/2026 — `feat(auth)`: L1 concluído (auditoria de login/logout + perfil)
+- 24/10/2026 — `fix(financeiro)`: correção de travamento de modais e padronização visual
 
 ---
 
@@ -83,7 +84,7 @@ Histórico cronológico visual com:
 
 ---
 
-## 3. Status dos Módulos (21/10/2026)
+## 3. Status dos Módulos (24/10/2026)
 
 ### ✅ Funcionando / Concluído
 
@@ -92,7 +93,7 @@ Histórico cronológico visual com:
 - **Login/Logout:** OK; sessão expira ao fechar aba (L1)
 - **Dashboard:** KPIs OK; ações rápidas OK
 - **Leads & Triagem:** KPIs, excluir, editar OK; auditoria OK (C1)
-- **Financeiro:** KPIs, marcar recebido, excluir, filtros, pesquisa, paginação OK; editar e auditoria OK (M3)
+- **Financeiro:** KPIs, marcar recebido, excluir, filtros, pesquisa, paginação OK; editar e auditoria OK (M3); UI padronizada e modais corrigidos (24/10)
 - **Cursos:** KPIs, pesquisa, exibição, adicionar, excluir, reativar OK; auditoria OK (C2)
 - **Turmas:** gestão, cadastro, inativar/ativar, editar OK; auditoria OK (C6 + C5)
 - **Alunos:** KPIs, pesquisa, ver, editar, inativar/ativar, excluir OK; auditoria OK
@@ -100,6 +101,12 @@ Histórico cronológico visual com:
 - **Calendário de Aulas:** auditoria OK (C7)
 - **Matrículas:** módulo refatorado com auditoria, soft delete, paginação e validação de duplicidade (M2)
 - **Relatórios:** Central de relatórios funcional (CSV/PDF, prévia, filtros de data e relatório 360º do financeiro).
+
+### 🎉 Concluído em 24/10/2026
+
+1. **Correção Crítica (Financeiro):** Substituição do modal de confirmação do Bootstrap pelo SweetAlert2, eliminando o bug de tela cinza/travada ao empilhar modais.
+2. **Correção de Bug:** Remoção da abertura automática do modal de edição ao carregar a página.
+3. **Padronização de UI:** Modais do Financeiro (Editar e Nova Transação) ajustados para o mesmo padrão visual do módulo de Leads (inputs menores com `form-control-sm`, botões sem `rounded-pill`, fontes e espaçamentos ajustados).
 
 ### 🎉 Concluído em 16/10/2026
 
@@ -143,9 +150,9 @@ Histórico cronológico visual com:
    - C-new.1 — Adicionar verificação de email único ao criar **aluno**
    - C-new.2 — Adicionar verificação de email único ao criar **lead**
    - Contexto: CPF opcional desde 15/10 (S5 confirmou risco zero). Email passa a ser a barreira contra duplicidade.
-4. **Pendência visual (baixa):** modal de confirmação no Financeiro não escurece o de baixo quando empilhado (funcional, só estético)
-5. **Criação de novos usuários admin:** não há tela para isso. Adicionar como item futuro (L6 - Gestão de Admins).
-6. **Inconsistência Financeira:** O botão "Marcar como Recebido" atualiza o status do aluno, mas não cria/atualiza o documento na coleção raiz `/financeiro`. Investigar e sincronizar as duas fontes de dados.
+4. **Criação de novos usuários admin:** não há tela para isso. Adicionar como item futuro (L6 - Gestão de Admins).
+5. **Inconsistência Financeira:** O botão "Marcar como Recebido" atualiza o status do aluno, mas não cria/atualiza o documento na coleção raiz `/financeiro`. Investigar e sincronizar as duas fontes de dados.
+
 ---
 
 ## 4. Cronograma de Refatoração
@@ -229,7 +236,7 @@ Histórico cronológico visual com:
 - **Labels de auditoria:** dicionário `ROTULOS_CAMPOS` no `auditoria-service.js` (compartilhado entre módulos)
 - **Auditoria de Auth:** logs centralizados na coleção global `auditoria_auth`
 - **Paginação:** componente global reutilizável em `js/modules/paginacao.js`
-- **Modais:** alinhamento dinâmico com a sidebar via `js/modules/modal-helper.js`; visual padronizado (cabeçalho cinza, blocos com borda azul, rodapé alinhado)
+- **Modais (UI):** O alinhamento lateral (modal-helper) foi descontinuado. O padrão agora usa `modal-dialog-centered` do Bootstrap 5. Confirmações usam a biblioteca **SweetAlert2** para evitar conflitos de z-index, e os formulários usam Flexbox para controle de altura (max 90vh).
 - **Tabelas (Mobile):** viram Acordeão em telas < 992px (via `data-label` + JS de toggle)
 
 ---
@@ -242,13 +249,54 @@ Leia o CONTEXTO.md na raiz do repo.
 Ponto de parada atual: [descrever]
 Próximo passo: [descrever]
 
-
 Isso substitui a necessidade de relembrar conversas antigas — o contexto fica
 versionado no Git e é acessível a qualquer momento.
 
 ---
 
 ## 7. Histórico de Entregas
+
+### Correção de Modais e Padronização Visual do Financeiro ✅
+**Status:** Concluído · **Data:** 24/10/2026
+
+- Substituição do modal de confirmação nativo do Bootstrap pela biblioteca **SweetAlert2**. Isso resolveu definitivamente o bug da "tela cinza" que travava e bloqueava o clique nos botões ao tentar salvar/excluir.
+- Remoção do `modal-helper.js` (scripts de manipulação de `z-index` e margens laterais) e de regras conflitantes no CSS. Os modais agora usam o `modal-dialog-centered` nativo.
+- Removida a chamada de código que abria o modal de edição sozinho no carregamento da página.
+- Modais de Edição e Nova Transação refatorados visualmente para seguir o padrão da "Ficha do Lead": inputs menores (`form-control-sm`), botões retangulares (removido `rounded-pill`), fundo dos cards em `bg-light` e uso de Flexbox para garantir que os botões de ação nunca sumam no rodapé.
+
+### Refatoração de Responsividade e UX Mobile ✅
+**Status:** Concluído · **PR:** [#XXX](https://github.com/devfernandooa/training_work/pull/XXX)
+**Data:** 23/10/2026
+
+- **Cards Mobile:** Todas as tabelas (Alunos, Financeiro, Cursos, Turmas, Matrículas, Dashboard, Leads) agora viram Cards no mobile.
+- **Design System:** Estrutura de Card dividida em Header (destaque), Body (dados) e Footer (ações).
+- **Acordeão:** Mantido exclusivamente para a tabela de Alunos.
+- **Botões:** Padronizados para formato quadrado e alinhados à esquerda no mobile.
+- **Correções:** Resolvido bug de modal de confirmação travado no Firefox.
+
+### Refatoração e Limpeza do CSS ✅
+**Status:** Concluído · **PR:** [#148](https://github.com/devfernandooa/training_work/pull/148)
+**Data:** 23/10/2026
+
+- Consolidação do CSS em 3 arquivos (base, componentes, páginas).
+- Remoção de 8 arquivos obsoletos e regras duplicadas.
+- Isolamento do `login.css` e `sidebar.css`.
+- Padronização de modais (larguras, z-index e scroll).
+- Base pronta para a migração para Tailwind.
+
+### L2 — Central de Relatórios e Exportação ✅
+**Status:** Concluído · **PR:** [#XXX](https://github.com/devfernandooa/training_work/pull/XXX)
+**Data:** 23/10/2026
+
+- Criação da página `admin/relatorios.html` com design padronizado.
+- Módulo de exportação (`exportar.js`) suportando CSV e PDF.
+- Prévia em HTML antes do download.
+- Relatório 360º (Financeiro): cruza dados do aluno, transações e logs de auditoria.
+- Filtros de data (inicial e final).
+- Cabeçalho de auditoria em todos os arquivos gerados (quem gerou, data/hora e filtros).
+
+**Pendência registrada:**
+- ⚠️ Sincronização financeira: O botão "Marcar como Recebido" não reflete na coleção raiz `/financeiro`. (Registrado na seção 3).
 
 ### S1 — Soft delete e auditoria em exclusões/inativações ✅
 **Status:** Concluído · **PR:** [#119](https://github.com/devfernandooa/training_work/pull/119)
@@ -396,38 +444,3 @@ versionado no Git e é acessível a qualquer momento.
 - Sessão expira ao fechar a aba (`browserSessionPersistence`)
 - Modal de perfil corrigido para notebooks (largura 600px, scroll interno, rodapé fixo)
 - Substituição do `alert` nativo por modal de confirmação estilizado no botão "Redefinir senha"
-
-
-### Refatoração de Responsividade e UX Mobile ✅
-**Status:** Concluído · **PR:** [#XXX](https://github.com/devfernandooa/training_work/pull/XXX)
-**Data:** 23/10/2026
-
-- **Cards Mobile:** Todas as tabelas (Alunos, Financeiro, Cursos, Turmas, Matrículas, Dashboard, Leads) agora viram Cards no mobile.
-- **Design System:** Estrutura de Card dividida em Header (destaque), Body (dados) e Footer (ações).
-- **Acordeão:** Mantido exclusivamente para a tabela de Alunos.
-- **Botões:** Padronizados para formato quadrado e alinhados à esquerda no mobile.
-- **Correções:** Resolvido bug de modal de confirmação travado no Firefox.
-
-### Refatoração e Limpeza do CSS ✅
-**Status:** Concluído · **PR:** [#148](https://github.com/devfernandooa/training_work/pull/148)
-**Data:** 23/10/2026
-
-- Consolidação do CSS em 3 arquivos (base, componentes, páginas).
-- Remoção de 8 arquivos obsoletos e regras duplicadas.
-- Isolamento do `login.css` e `sidebar.css`.
-- Padronização de modais (larguras, z-index e scroll).
-- Base pronta para a migração para Tailwind.
-
-### L2 — Central de Relatórios e Exportação ✅
-**Status:** Concluído · **PR:** [#XXX](https://github.com/devfernandooa/training_work/pull/XXX)
-**Data:** 23/10/2026
-
-- Criação da página `admin/relatorios.html` com design padronizado.
-- Módulo de exportação (`exportar.js`) suportando CSV e PDF.
-- Prévia em HTML antes do download.
-- Relatório 360º (Financeiro): cruza dados do aluno, transações e logs de auditoria.
-- Filtros de data (inicial e final).
-- Cabeçalho de auditoria em todos os arquivos gerados (quem gerou, data/hora e filtros).
-
-**Pendência registrada:**
-- ⚠️ Sincronização financeira: O botão "Marcar como Recebido" não reflete na coleção raiz `/financeiro`. (Registrado na seção 3).
